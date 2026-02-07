@@ -1,0 +1,68 @@
+:root {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2a2a2a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #666666;
+  
+  --accent-win: #00ff00; /* Matrix Green */
+  --accent-loss: #ff4444;
+  --accent-highlight: #00d2ff;
+  --border-color: #333333;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Roboto Mono', 'SF Mono', Consolas, monospace;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* App feel */
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.text-win { color: var(--accent-win); }
+.text-loss { color: var(--accent-loss); }
+.text-muted { color: var(--text-muted); }
+
+/* Animation Utility */
+@keyframes flash-green {
+  0% { background-color: rgba(0, 255, 0, 0.3); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  0% { background-color: rgba(255, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: flash-green 0.5s ease-out;
+}
+.flash-down {
+  animation: flash-red 0.5s ease-out;
+}
