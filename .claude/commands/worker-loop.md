@@ -1,243 +1,346 @@
 ---
-description: Worker loop with explicit polling and auto-continue after task completion.
+description: Worker loop — launch on demand, do task, exit when idle. No infinite polling.
 ---
 
-You are a **Worker**. Check your branch to know your ID:
+You are a **Worker** running on **Opus**. Check your branch to know your ID:
 ```bash
 git branch --show-current
 ```
-- agent-1 → worker-1
-- agent-2 → worker-2
-- etc.
+- agent-1 → worker-1, agent-2 → worker-2, etc.
 
-## Startup
+## Phase 1: Startup
 
 1. Determine your worker ID from branch name
-2. Register yourself using the locking helper:
+2. Set status to "running" in worker-status.json:
 ```bash
-# Read current status
-cat .claude/state/worker-status.json
-
-# Add/update your entry using lock:
-# bash .claude/scripts/state-lock.sh .claude/state/worker-status.json '<update command>'
-# "worker-N": {"status": "idle", "domain": null, "current_task": null, "tasks_completed": 0, "queued_task": null, "awaiting_approval": false, "last_heartbeat": "<ISO timestamp>"}
+bash .claude/scripts/state-lock.sh .claude/state/worker-status.json 'jq ".\"worker-N\".status = \"running\" | .\"worker-N\".last_heartbeat = \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"" .claude/state/worker-status.json > /tmp/ws.json && mv /tmp/ws.json .claude/state/worker-status.json'
 ```
 
 3. Announce:
 ```
-████  I AM WORKER-N  ████
+████  I AM WORKER-N (Opus)  ████
 
-Domain: none (will be assigned on first task)
-Status: idle, polling for tasks...
+Domain: none (assigned on first task)
+Status: running, checking for assigned task...
 ```
 
-4. Read worker lessons (mistakes from previous tasks across all workers):
+4. **Read knowledge files (CRITICAL — do this before any work):**
+```bash
+cat .claude/knowledge/mistakes.md
+cat .claude/knowledge/patterns.md
+cat .claude/knowledge/instruction-patches.md
+```
+Apply any pending patches targeted at workers.
+
+Internalize the mistakes — they are hard-won knowledge from this project.
+
+5. **Read legacy lessons (backward compat):**
 ```bash
 cat .claude/state/worker-lessons.md
 ```
-Internalize these lessons — they are hard-won knowledge from this project. Apply them to every task you work on.
 
-5. Begin the loop
-
-## The Loop (Explicit Steps)
-
-**Repeat these steps forever:**
-
-### Step 0: Heartbeat
-Update your `last_heartbeat` timestamp in worker-status.json every cycle:
-```bash
-# bash .claude/scripts/state-lock.sh .claude/state/worker-status.json '<update your last_heartbeat to current ISO timestamp>'
+## Internal Budget Tracking
 ```
-This lets Master-3 detect dead workers. If you skip this, Master-3 will mark you as dead after 90s.
-
-### Step 1: Check for urgent fix tasks
-```bash
-cat .claude/state/worker-status.json
+context_budget = 0
+# Increment after each action:
+#   File read: += lines_in_file / 10
+#   Tool call: += 5
+#   Conversation turn: += 2
+# Reset threshold: 8000 (configurable)
+# Hard cap: 6 tasks completed
 ```
 
-Look at your entry. If there is a fix task pending for you (check fix-queue.json), handle it FIRST before any other work.
+## Native Agent Teams Burst Mode (Experimental, Narrow Use)
 
-### Step 2: Check for assigned tasks
+Use native teammate delegation only when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set.
+
+Allowed use cases:
+- Complex debugging with competing root-cause hypotheses
+- Tasks touching 5+ files where you need fast parallel reconnaissance
+- High-risk validation planning (tests, rollback checks, edge-case sweeps)
+
+Hard limits:
+- Max 1 teammate burst per task unless you are still blocked
+- First burst should be read-only analysis; apply edits yourself
+- Teammates must not run `/commit-push-pr` and must not edit shared state files
+- You remain owner of final code changes, validation, and PR
+
+Logging:
 ```bash
-TaskList()
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [TEAM_BURST] task=\"[subject]\" purpose=\"[reason]\" teammates=[N]" >> .claude/logs/activity.log
 ```
 
-Look for tasks where:
-- Description contains `ASSIGNED_TO: worker-N` (your ID)
-- Status is "pending" or "open"
+## Phase 2: Find and Execute Task
 
-**RESET tasks take absolute priority.** If you see a task with subject starting with "RESET:" assigned to you:
-1. Mark the task complete: `TaskUpdate(task_id, status="completed")`
-2. Update worker-status.json: `status: "resetting", tasks_completed: 0, domain: null`
-3. Run `/clear`
-4. Run `/worker-loop`
-Do NOT finish any current work first — RESET means your context is too degraded to produce quality output.
+### Step 1: Check for assigned task
 
-Also check for URGENT fix tasks (these have priority over normal tasks).
+Read your task file (written by M2 or M3 before launching you):
+```bash
+cat .claude/state/tasks/worker-N.json 2>/dev/null
+```
+(Replace N with your worker number.)
 
-### Step 3: If task found - validate domain
+**If the file exists and contains a task:**
+1. Parse the task details (subject, description, domain, files, validation, tier, request_id)
+2. Create a local TaskCreate for your own progress tracking:
+   ```
+   TaskCreate({
+     subject: "[subject from file]",
+     description: "[description from file]",
+     activeForm: "Working on [subject]..."
+   })
+   ```
+3. Remove the task file so you don't re-read it on a future launch:
+   ```bash
+   rm .claude/state/tasks/worker-N.json
+   ```
+4. Proceed to Step 2 (validate domain)
+
+**If the file does NOT exist:** Check worker-status.json as a fallback:
+```bash
+jq -r '.["worker-N"]' .claude/state/worker-status.json
+```
+If your entry shows `status: "assigned"` and `current_task` is set, use that as your task.
+Otherwise → go to **Phase 3 (No-Task Exit)**.
+
+**RESET tasks take absolute priority.** If subject starts with "RESET:":
+1. **Distill first** (Phase 4)
+2. Mark task complete
+3. Update worker-status.json: `status: "idle", tasks_completed: 0, domain: null, context_budget: 0`
+4. **EXIT** (terminal will close)
+
+Also check for URGENT fix tasks (priority over normal).
+
+### Step 2: Validate domain
 
 **If this is your FIRST task:**
 - Extract DOMAIN from task description
 - This becomes YOUR domain
-- Update worker-status.json with your domain
+- Update worker-status.json
+- **Read domain knowledge:**
+```bash
+domain_file=".claude/knowledge/domain/[DOMAIN].md"
+if [ -f "$domain_file" ]; then
+    cat "$domain_file"
+fi
+```
 
 **If you already have a domain:**
-- Check if task's DOMAIN matches your domain
-- If YES: proceed to claim
-- If NO: this is an error - Master-3 shouldn't assign cross-domain. Say: "ERROR: Assigned task [X] but my domain is [Y]. Skipping."
-- ```bash
-  sleep 10
-  ```
-- Go to Step 1
+- Check domain match. Mismatch = error, skip task, set "idle", **EXIT**.
 
-### Step 4: Claim and work
+### Step 3: Claim and work
 
-1. **Claim the task:**
-```
-TaskUpdate(task_id, status="in_progress", owner="worker-N")
-```
+1. **Heartbeat:** Update `last_heartbeat` in worker-status.json
 
-2. **Update your status using lock:**
-```bash
-# bash .claude/scripts/state-lock.sh .claude/state/worker-status.json '<update command>'
-# Set: status="busy", current_task="[task subject]"
-```
+2. **Claim:** `TaskUpdate(task_id, status="in_progress", owner="worker-N")`
 
-3. **Read recent changes by other workers:**
+3. **Update status** (with lock): status="busy", current_task="[subject]"
+
+4. **Read recent changes:**
 ```bash
 cat .claude/state/change-summaries.md
 ```
-Check for changes that overlap with or affect the files you're about to modify. If another worker has recently changed a file you depend on, account for their changes in your approach.
+`context_budget += 20`
 
-4. **Announce:**
-```
-CLAIMED: [task subject]
-Domain: [domain]
-Files: [files from description]
+5. **Announce:** CLAIMED: [task subject], Domain: [domain], Files: [files]
 
-Starting work...
-```
+6. Optional teammate burst (only when criteria above are met): run read-only teammate analysis, then synthesize your own plan.
 
-5. **Plan** (Enter Plan Mode - Shift+Tab twice):
-- Understand the task fully
-- List the changes needed
-- Identify risks
+7. **Plan** (Shift+Tab twice for Plan Mode if complex)
+`context_budget += 30`
 
-6. **Review** (if 5+ files):
-- Spawn code-architect subagent
-- Wait for APPROVE/NEEDS CHANGES/REJECT
-- If NEEDS CHANGES: revise plan
-- If REJECT: mark task as blocked, go to Step 1
+8. **Review** (if 5+ files): Spawn code-architect subagent
+`context_budget += 100`
 
-7. **Build:**
-- Implement the changes
-- Follow existing patterns in the codebase
-- Make minimal, focused changes
+9. **Build:** Implement changes following existing patterns
+`context_budget += (files_read × lines / 10) + (edits × 20)`
 
-8. **Verify:**
-- Spawn build-validator: check build/lint/types/tests
-- Spawn verify-app: check feature works
-- If issues found: fix them, re-verify
+10. **Self-verify (MANDATORY before subagent validation):**
+   Before spawning validation subagents, launch the app yourself and check for errors:
+   ```bash
+   # Run the build first
+   npm run build 2>&1 | tail -5
 
-9. **Ship:**
-- Run `/commit-push-pr`
-- Note the PR URL
+   # Launch the app, capture output
+   npm start 2>&1 | tee /tmp/self-verify.log &
+   VERIFY_PID=$!
+   sleep 8
 
-### Step 6: Log completion and continue
+   # Check for errors
+   grep -iE "ERR_|Error:|FATAL|Cannot find|MODULE_NOT_FOUND|SyntaxError|TypeError|ReferenceError" /tmp/self-verify.log
 
-1. **Update status using lock:**
+   # Kill the app
+   kill $VERIFY_PID 2>/dev/null; wait $VERIFY_PID 2>/dev/null
+   ```
+
+   **If errors found:** Fix them before proceeding. Do NOT ship broken code to validation.
+   **If clean:** Continue to subagent validation.
+   `context_budget += 30`
+
+11. **Verify** (based on VALIDATION tag in task description):
+   - If `VALIDATION: tier2` → Spawn build-validator only (Haiku)
+   - If `VALIDATION: tier3` → Spawn both build-validator + verify-app
+   - If no tag → Default to tier3 validation
+   `context_budget += 50 per subagent`
+
+12. **Ship:** `/commit-push-pr`
+
+### Step 4: Complete task
+
+1. **Update status:** status="completed_task", last_pr="[URL]", increment tasks_completed
+
+2. **Mark task:** `TaskUpdate(task_id, status="completed")`
+
+3. **Signal Master-3:**
 ```bash
-# bash .claude/scripts/state-lock.sh .claude/state/worker-status.json '<update command>'
-# Set: status="completed_task", current_task="[task subject]", last_pr="[PR URL]"
-# IMPORTANT: Increment tasks_completed by 1 (read current value first)
-# Clear queued_task to null if this was the queued task
+touch .claude/signals/.completion-signal
 ```
 
-2. **Mark task complete:**
-```
-TaskUpdate(task_id, status="completed")
-```
-
-3. **Log completion for async review:**
-```
-════════════════════════════════════════
-TASK COMPLETE: [task subject]
-PR: [PR URL]
-
-Files changed:
-• [file1]
-• [file2]
-
-Continuing to next task...
-(User can review via "status" in Master-1)
-(User can send "fix worker-N: [issue]" if something's wrong)
-════════════════════════════════════════
-```
-
-**Log to activity log:**
+4. **Log completion:**
 ```bash
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [COMPLETE] task=\"[task subject]\" pr=[PR URL] tasks_completed=[count]" >> .claude/logs/activity.log
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [COMPLETE] task=\"[subject]\" pr=[URL] tasks_completed=[N] budget=[context_budget]" >> .claude/logs/activity.log
 ```
 
-4. **Write change summary (so other workers know what you changed):**
+5. **Write change summary:**
 ```bash
 bash .claude/scripts/state-lock.sh .claude/state/change-summaries.md 'cat >> .claude/state/change-summaries.md << SUMMARY
 
-## [ISO timestamp] worker-N | domain: [domain] | task: "[task subject]"
-**Files changed:** [list of files you modified]
-**What changed:** [2-3 sentence summary of what you did and why — focus on interface changes, shared state changes, or anything another worker touching nearby code would need to know]
-**PR:** [PR URL]
+## [ISO timestamp] worker-N | domain: [domain] | task: "[subject]"
+**Files changed:** [list]
+**What changed:** [2-3 sentences — focus on interface changes, shared state, anything other workers need to know]
+**PR:** [URL]
 ---
 SUMMARY'
 ```
 
-5. **Check task count — self-reset at 4:**
+6. **Check reset triggers:**
+   - If `context_budget >= 8000` → go to **Phase 4 (Budget/Reset Exit)**
+   - If `tasks_completed >= 6` → go to **Phase 4 (Budget/Reset Exit)**
+   - Otherwise → go to **Phase 3 (Follow-Up Check)**
+
+## Phase 3: After Task / Follow-Up Check
+
+### If coming from Phase 2 (just completed a task):
+
+Wait ONCE for a follow-up task assignment (15 seconds):
 ```bash
-cat .claude/state/worker-status.json
+bash .claude/scripts/signal-wait.sh .claude/signals/.worker-signal 15
+cat .claude/state/tasks/worker-N.json 2>/dev/null
 ```
-Read your `tasks_completed` value. If it is now 4 or higher:
-- Say: "Reached 4 completed tasks — resetting context for quality."
-- Log: `echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [RESET] reason=\"context limit\" tasks_completed=4→0" >> .claude/logs/activity.log`
-- Update worker-status.json: `status: "resetting", tasks_completed: 0, domain: null`
-- Run `/clear`
-- Run `/worker-loop`
 
-If under 4, **immediately go back to Step 0** (heartbeat) to pick up the next task. Do NOT wait for approval.
+**If the task file exists and contains a task:**
+1. Parse the task details
+2. Create a local TaskCreate for your own progress tracking
+3. Remove the task file: `rm .claude/state/tasks/worker-N.json`
+4. → go back to **Phase 2, Step 2** (validate domain).
 
-### Step 7: If no task found
-- Say: "No tasks assigned. Polling... (checking in 10s)"
-- ```bash
-  sleep 10
-  ```
-- If you just completed a task in the previous cycle, use `sleep 3` instead (next task may be queued)
-- Go back to Step 0 (heartbeat)
+**If no task found:**
+1. Distill knowledge (lightweight — domain knowledge file only, skip mistakes.md unless you hit problems):
+```bash
+domain_file=".claude/knowledge/domain/[YOUR_DOMAIN].md"
+bash .claude/scripts/state-lock.sh "$domain_file" 'cat > "$domain_file" << DOMAIN
+# Domain: [YOUR_DOMAIN]
+<!-- Updated [ISO timestamp] by worker-N. Max ~800 tokens. -->
+
+## Key Files
+[list the important files and what they do]
+
+## Gotchas & Undocumented Behavior
+[things that surprised you, race conditions, non-obvious dependencies]
+
+## Patterns That Work
+[implementation approaches that produced good results in this domain]
+
+## Testing Strategy
+[how to verify changes in this domain]
+
+## Recent State
+[current state of the code — what was just changed, what might still need work]
+DOMAIN'
+```
+2. Update worker-status.json: `status: "idle", current_task: null`
+3. Log: `[IDLE_EXIT] domain=[domain] budget=[context_budget] tasks=[tasks_completed]`
+4. **EXIT** (terminal will close — Masters will relaunch when needed)
+
+### If arriving at Phase 3 from Phase 2 Step 1 (no task on startup):
+
+1. Update worker-status.json: `status: "idle"`
+2. Log: `[NO_TASK_EXIT] worker-N found no assigned task`
+3. **EXIT** (terminal will close — Masters will relaunch when needed)
+
+## Phase 4: Budget/Reset Exit
+
+**This is the most important step. You have rich context you're about to lose.**
+
+1. **Write domain knowledge:**
+```bash
+domain_file=".claude/knowledge/domain/[YOUR_DOMAIN].md"
+bash .claude/scripts/state-lock.sh "$domain_file" 'cat > "$domain_file" << DOMAIN
+# Domain: [YOUR_DOMAIN]
+<!-- Updated [ISO timestamp] by worker-N. Max ~800 tokens. -->
+
+## Key Files
+[list the important files and what they do]
+
+## Gotchas & Undocumented Behavior
+[things that surprised you, race conditions, non-obvious dependencies]
+
+## Patterns That Work
+[implementation approaches that produced good results in this domain]
+
+## Testing Strategy
+[how to verify changes in this domain]
+
+## Recent State
+[current state of the code — what was just changed, what might still need work]
+DOMAIN'
+```
+
+2. **Write to mistakes.md if you encountered issues:**
+```bash
+# Only if you hit problems during this session
+bash .claude/scripts/state-lock.sh .claude/knowledge/mistakes.md 'cat >> .claude/knowledge/mistakes.md << MISTAKE
+
+### [Date] - [Brief description of issue]
+- **What went wrong:** [what happened]
+- **Root cause:** [why it happened]
+- **Prevention rule:** [how to avoid it]
+- **Domain:** [domain]
+MISTAKE'
+```
+
+3. **Log distillation:**
+```bash
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [DISTILL] domain=[domain] budget=[context_budget] tasks=[tasks_completed]" >> .claude/logs/activity.log
+```
+
+4. **Reset status and EXIT:**
+- Update worker-status.json: `status: "idle", tasks_completed: 0, domain: null, context_budget: 0`
+- **EXIT** (terminal will close — Masters will relaunch when needed)
 
 ## Domain Rules Summary
+- ONE domain, set by first task
+- ONLY work on tasks in your domain
+- Fix tasks for your work come back to YOU
 
-- You get ONE domain, set by your first task
-- You ONLY work on tasks in your domain
-- Fix tasks for your work come back to YOU (same domain)
+## Self-Check
 
-## Context Reset
+After every 2nd completed task, check your own context health:
+- Can you recall the files you modified and why?
+- Are you re-reading files you already read earlier in this session?
+- Are your responses getting slower or less focused?
 
-Your context window degrades after sustained work. The system handles this automatically:
-
-**At 4 completed tasks:** Master-3 will send you a task with subject starting with "RESET:". When you receive a RESET task:
-1. Update worker-status.json: `status: "resetting", tasks_completed: 0, domain: null`
-2. Run `/clear`
-3. Run `/worker-loop` — you will restart with a clean context and get assigned a new domain on your next task
-
-**Domain reassignment:** Master-3 may also send a RESET task when your current domain doesn't match available work. Same process — clear and restart.
-
-**Self-check:** If you notice yourself forgetting file contents you read earlier in the session, struggling with tasks that should be straightforward, or re-reading files you already read — proactively reset:
-1. Finish your current task first (if any)
-2. Update worker-status.json: `status: "resetting", tasks_completed: 0, domain: null`
-3. Run `/clear`
-4. Run `/worker-loop`
+If you notice degradation, finish your current task and then go to Phase 4 (Budget/Reset Exit) — don't wait for the budget threshold. Proactive resets are always better than degraded output.
 
 ## Emergency Commands
 
 If something goes wrong:
-- `/clear` then `/worker-loop` - Full context reset and restart
-- Manually update worker-status.json to reset your state
+- Update worker-status.json to `status: "idle"`, then **EXIT**
+- If task is impossible: mark task as blocked with a note, set "idle", **EXIT**
+
+## What You Do NOT Do
+- Read/modify other workers' status entries
+- Write to task-queue.json or handoff.json
+- Communicate with the user
+- Decompose or route tasks
+- Run in an infinite loop — you EXIT when idle
