@@ -533,7 +533,107 @@ Ordered by immediate applicability:
 
 ---
 
-## 10. Kalshi API Integration Spec
+## 10. Price Ladder / Order Book Tools
+
+The open source landscape for dedicated price ladder trading tools is thin — most production DOM tools (Jigsaw Trading, CScalp, Bookmap) are commercial. What exists in open source breaks into three layers: UI visualization components, backend matching engines, and hotkey-driven execution tools. All three layers are needed for KalshiAlpha's DOM panel.
+
+---
+
+### mihailgaberov/orderbook ← Best UI Reference
+- **Repo:** https://github.com/mihailgaberov/orderbook
+- **Stars:** 334 | **Status:** Active | **License:** MIT
+- **Stack:** React, TypeScript (98.6%), WebSockets (`react-use-websocket`), SASS
+- **Live demo:** orderbook-mihailgaberov.vercel.app
+- **What it has:**
+  - Dual-sided bid/ask price ladder — price levels with size and cumulative total columns
+  - Depth visualization — colored background bars proportional to size at each level (the standard DOM depth fill)
+  - **Adjustable price level grouping** — combine levels by configurable tick size (e.g. 0.5, 1, 2.5); rounds down to nearest group size
+  - Market switching — toggle between feeds with automatic grouping recalculation
+  - Kill/restart button — pause and resume the WebSocket stream
+  - Real-time WebSocket feed from Kraken; fully live, not mocked
+- **What it lacks:** No order entry, no hotkeys, no position display. Visualization only.
+- **KalshiAlpha use:**
+  - **Primary UI reference for the KalshiAlpha DOM component.** The depth fill bar pattern, cumulative size column, and grouping control are exactly what the Kalshi YES/NO ladder needs.
+  - The grouping logic (round price levels to nearest tick size) maps directly to Kalshi's 1-cent tick — implement a "group by 2¢, 5¢, 10¢" control for low-liquidity markets.
+  - The kill/restart pattern is useful for the reconnect button in the terminal when the WebSocket drops.
+  - Replace the Kraken WebSocket feed with the Kalshi `orderbook_delta` channel; apply the YES/NO inversion algorithm before rendering.
+  - The cumulative total column is essential for DOM usability — shows the total contracts available up to each price level.
+
+---
+
+### fasenderos/nodejs-order-book ← Backend Matching Engine
+- **Repo:** https://github.com/fasenderos/nodejs-order-book
+- **Stars:** 194 | **Status:** Actively maintained (1,074 commits, Feb 2026) | **License:** MIT
+- **Stack:** TypeScript, Node.js, CircleCI
+- **Performance:** 300,000+ trades/second on 11th Gen Intel i7
+- **What it has:**
+  - Full limit order book implementation with price-time priority matching
+  - Order types: limit, market, stop-limit, stop-market, OCO
+  - Time-in-force: GTC, FOK, IOC
+  - Post-only orders, order modification, cancellation
+  - Snapshot and journaling for server recovery
+  - Price-level organization with FIFO order queues per level
+  - `limit()`, `market()`, `stopLimit()`, `stopMarket()`, `oco()`, `modify()`, `cancel()` API
+- **KalshiAlpha use:**
+  - **Backend order book engine for paper trading / simulation mode.** Run a local order book that mirrors Kalshi's state for simulating fills without sending live orders.
+  - Use to power KalshiAlpha's paper trading mode — feed it Kalshi `orderbook_delta` snapshots to maintain a live local book, then simulate order matching locally.
+  - The snapshot/journal feature enables persisting the local book state across restarts.
+  - Reference the price-time priority matching logic when building KalshiAlpha's queue position display.
+
+---
+
+### joaquinbejar/OrderBook-rs ← High-Performance Analytics Engine
+- **Repo:** https://github.com/joaquinbejar/OrderBook-rs
+- **Stars:** 296 | **Status:** Active development | **License:** MIT + Apache 2.0
+- **Stack:** Rust
+- **Performance:** 200,000+ operations/second across 30 concurrent threads (Apple M4 Max)
+- **What it has:**
+  - Lock-free architecture using atomics and concurrent data structures
+  - Order types: limit, iceberg, post-only, FOK, IOC, and more
+  - Thread-safe price levels with concurrent modification
+  - Built-in analytics: **VWAP, spread analysis, micro price estimation, order book imbalance detection, market impact simulation**
+  - DashMap (O(1) order lookups by ID) + SegQueue (FIFO matching order)
+- **KalshiAlpha use:**
+  - **Order flow analytics layer.** The built-in imbalance detection, VWAP, and micro price estimation are directly usable as scanner signals on Kalshi order books.
+  - Order book imbalance (bid qty vs ask qty at top N levels) is a real-time alpha signal — surface this in the KalshiAlpha DOM as a colored imbalance indicator.
+  - Micro price estimation gives a fair value estimate between the YES bid and YES ask; use as the "true price" display in the terminal header.
+  - If KalshiAlpha needs a native performance tier, compile this to WASM or call it from a Node.js native addon.
+
+---
+
+### nawwa_scalper_terminal ← Hotkey Execution Reference
+- **Repo:** https://github.com/CryptoNawwa/nawwa_scalper_terminal
+- **Stars:** 48 | **Status:** Last active Feb 2023 | **License:** Not specified
+- **Stack:** TypeScript, Node.js, Yarn; pre-built binaries for Windows/macOS/Linux
+- **Exchanges:** Binance, Bybit
+- **What it has:**
+  - **Scale orders** — place a ladder of reduce-only limit orders distributed across a % range from entry; configurable count and range
+  - **Auto Take-Profit (ATP)** — detects new positions on any pair and automatically places configured TP orders
+  - **Customizable command shortcuts** via JSON config — map any action to a short alias
+  - Command history (arrow keys) and tab autocomplete in the CLI
+  - Seamless exchange switching with persistent API key storage
+  - Pre-built binaries — no build step for end users
+- **KalshiAlpha use:**
+  - **Reference for the scale-order feature** — placing a ladder of limit orders at evenly distributed probability levels (e.g. place 5 limit buys between 35¢ and 45¢ in 2¢ increments) is a high-value terminal feature for Kalshi.
+  - The ATP pattern maps to a Kalshi equivalent: auto-place a take-profit limit when a contract position opens (e.g. if bought at 40¢, auto-post a sell at 55¢).
+  - The JSON shortcut/alias config is a clean pattern for KalshiAlpha's hotkey system — map keyboard shortcuts to order actions in a user-editable config file.
+
+---
+
+### Landscape Summary
+
+| Project | Stars | Layer | Key Value for KalshiAlpha |
+|---|---|---|---|
+| mihailgaberov/orderbook | 334 | UI visualization | Depth fill bars, grouping control, cumulative column — copy the DOM layout |
+| joaquinbejar/OrderBook-rs | 296 | Analytics engine (Rust) | Imbalance detection, VWAP, micro price — DOM signal overlays |
+| fasenderos/nodejs-order-book | 194 | Backend engine (TS) | Paper trading engine; local order book simulation; queue position logic |
+| nawwa_scalper_terminal | 48 | Execution CLI | Scale order ladder pattern; ATP auto-orders; hotkey config system |
+
+> **Note on the gap:** No single open source project delivers a complete interactive price ladder with order entry, hotkeys, DOM visualization, and position display equivalent to Jigsaw Trading or CScalp. KalshiAlpha will need to assemble this from the layers above: mihailgaberov/orderbook for the DOM UI, fasenderos for the backend engine, and nawwa_scalper_terminal for the scale-order and hotkey patterns.
+
+---
+
+## 11. Kalshi API Integration Spec
 
 Translated from the Kalshi Architectural Blueprint (internal PDF, Feb 2026). Stripped of prose — structured for direct implementation use.
 
