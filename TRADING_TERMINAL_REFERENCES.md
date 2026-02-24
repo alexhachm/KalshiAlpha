@@ -869,4 +869,250 @@ Do not implement these in the initial build:
 
 ---
 
+## 11. Scanner-Specific Repositories
+
+Focused research on open source market scanners and screeners — tools that filter, sort, and screen instruments in real time. Organized by relevance to KalshiAlpha.
+
+---
+
+### Prediction Market Scanners (Most Relevant)
+
+#### pmxt
+- **Repo:** https://github.com/pmxt-dev/pmxt
+- **Stars:** 718 | **Status:** Active | **License:** MIT
+- **Stack:** TypeScript (78%), Python (11%)
+- **Markets:** Polymarket, Kalshi, Limitless, Baozi, Myriad, Manifold, Metaculus, PredictIt
+- **Filters:** Keyword search, market matching within events, query param filtering
+- **UI:** npm package (`pmxtjs`) + pip package (`pmxt`) — library only, no UI
+- **Real-time:** Both REST and WebSocket
+- **KalshiAlpha use:** **This is the CCXT equivalent for prediction markets.** 48k+ downloads. Build the KalshiAlpha multi-venue scanner layer on top of this — handles Kalshi + Polymarket + others through a unified interface. Study the normalized Event → Market → Outcome schema.
+
+---
+
+#### dr-manhattan
+- **Repo:** https://github.com/guzus/dr-manhattan
+- **Stars:** 164 | **Status:** Active | **License:** Not specified
+- **Stack:** Python
+- **Markets:** Polymarket, Kalshi, Opinion, Limitless, Predict.fun
+- **Filters:** Market fetching and programmatic discovery
+- **UI:** Backend library only
+- **Real-time:** WebSocket streaming + REST
+- **KalshiAlpha use:** Python-native alternative to pmxt. Includes MCP server integration — Claude Desktop can query prediction markets directly. Reference for the Python backend client architecture. Dependencies: `requests`, `websockets`, `python-socketio`, `pandas`.
+
+---
+
+#### polymarket-arbitrage (ImMike)
+- **Repo:** https://github.com/ImMike/polymarket-arbitrage
+- **Stars:** 52 | **Status:** Active | **License:** MIT
+- **Stack:** Python, FastAPI
+- **Markets:** Polymarket + Kalshi (5,000+ markets)
+- **Filters:** Minimum edge threshold (default 1% after fees), spread floor (5¢), position limits, global exposure caps, daily loss limits
+- **UI:** FastAPI web dashboard at `localhost:8000` — live opportunity feed
+- **Real-time:** Yes — WebSocket streaming for continuous orderbook updates
+- **KalshiAlpha use:** **Cross-venue arb scanner** between Kalshi and Polymarket. Uses text similarity (60% threshold) to auto-match equivalent predictions across platforms. Reference for building a Kalshi ↔ Polymarket spread scanner column. WebSocket + live dashboard architecture is directly reusable.
+
+---
+
+#### polyterm
+- **Repo:** https://github.com/NYTEMODEONLY/polyterm
+- **Stars:** 18 | **Status:** Active | **License:** MIT
+- **Stack:** Python
+- **Markets:** Polymarket + Kalshi cross-platform comparison
+- **Filters:** Volume thresholds, probability range, category, whale wallet activity (70%+ win rate), transaction volume, risk scoring (A–F), arb spread threshold (0.025+), intra-market YES+NO sum under $1.00
+- **UI:** TUI (terminal interactive menus)
+- **Real-time:** Live monitoring mode (continuous polling) + `--once` batch run + JSON/CSV export
+- **KalshiAlpha use:** Best ready-to-use prediction market terminal scanner. Reference for scanner filter criteria design — specifically the whale activity, risk scoring, and arb detection logic. The YES+NO sum < $1.00 filter is a direct Kalshi-applicable arb signal.
+
+---
+
+#### Kalshi-Claw
+- **Repo:** https://github.com/Kirubel125/Kalshi-Claw
+- **Stars:** 551 | **Status:** Active | **License:** MIT
+- **Stack:** TypeScript + Rust (napi-rs bridge)
+- **Markets:** Kalshi only
+- **Filters:** 24h volume sort, keyword search, hedge opportunity discovery with LLM-powered logic, Kelly criterion position sizing (Rust engine)
+- **UI:** CLI with ANSI-formatted terminal output
+- **Real-time:** Hybrid — live REST queries + batch hedge scanning
+- **KalshiAlpha use:** Kalshi-native scanner with Kelly sizing already implemented in Rust. Reference the hedge discovery logic and Kelly criterion implementation. The TypeScript + Rust napi-rs architecture is a useful pattern if KalshiAlpha needs performance-critical computation in a JS/TS codebase.
+
+---
+
+#### prediction-market-analysis (Jon-Becker)
+- **Repo:** https://github.com/Jon-Becker/prediction-market-analysis
+- **Stars:** 2,000 | **Status:** Active | **License:** MIT
+- **Stack:** Python
+- **Markets:** Polymarket + Kalshi
+- **Filters:** Historical batch analysis; claims to be the largest publicly available prediction market dataset
+- **UI:** CLI scripts, Parquet/CSV/JSON/PNG/PDF output
+- **Real-time:** Batch only — data stored in Parquet via Cloudflare R2
+- **KalshiAlpha use:** Historical dataset for building and validating scanner criteria. Use to determine what volume/momentum thresholds are meaningful in prediction markets. Train scanner alert thresholds on this data before going live.
+
+---
+
+#### ryanschwarting/polymarket-api
+- **Repo:** https://github.com/ryanschwarting/polymarket-api
+- **Stars:** 1 | **Status:** Active | **License:** MIT
+- **Stack:** Next.js 14, TypeScript, Tailwind CSS, Framer Motion
+- **Markets:** Polymarket + Kalshi unified
+- **Filters:** Category (Sports, Politics, Crypto, Economy), keyword search, sort by volume or liquidity, active status, pagination
+- **UI:** The most polished prediction market web scanner UI found — full Next.js React frontend
+- **Real-time:** Polling via Next.js API routes
+- **KalshiAlpha use:** **Primary UI reference for the KalshiAlpha scanner page.** Despite only 1 star it has the exact layout — filter sidebar, sortable market table, category chips — that KalshiAlpha needs. Study the component structure and adapt.
+
+---
+
+### Stock Scanner Engines (Architecture Reference)
+
+#### TradingView-Screener
+- **Repo:** https://github.com/shner-elmo/TradingView-Screener
+- **Stars:** 664 | **Status:** Active | **License:** MIT
+- **Stack:** Python
+- **Markets:** Stocks, Crypto, Forex, Futures, Bonds (all TradingView instruments)
+- **Filters:** 3,000+ fields via SQL-like Python DSL — `col("volume") > 1e6`, `And(col("RSI") < 30, col("close") > col("VWAP"))`. Full boolean logic.
+- **UI:** None — returns Pandas DataFrames
+- **Real-time:** Batch by default (15min delay); live with TradingView session cookie
+- **KalshiAlpha use:** Reference the SQL-like filter DSL design — use the same `col("yes_bid") > 50`, `And(col("volume") > 1000, col("close_pct_change") > 0.1)` syntax pattern for KalshiAlpha's programmatic scanner API.
+
+---
+
+#### xang1234/stock-screener
+- **Repo:** https://github.com/xang1234/stock-screener
+- **Stars:** ~2 | **Status:** Active | **License:** Not specified
+- **Stack:** Python (FastAPI, SQLAlchemy, Celery, Redis), React 18 + Material UI + TanStack Table + Recharts + Lightweight Charts
+- **Markets:** US equities
+- **Filters:** 80+ filters across Fundamental, Technical, Rating categories. Pre-built screens: Minervini Trend Template, CANSLIM, IPO Scanner, Volume Breakthrough
+- **UI:** Full React frontend — `/scan`, `/breadth`, `/groups`, `/themes`, `/chatbot` routes
+- **Real-time:** Celery + Redis task queue; atomic pointer-swap for result publication
+- **KalshiAlpha use:** **Most complete full-stack screener architecture reference.** FastAPI + Celery + Redis + React + TanStack Table is the exact stack to consider for KalshiAlpha's scanner backend. The atomic pointer-swap pattern for publishing scan results is directly applicable to a real-time scanner feed.
+
+---
+
+#### UnusualVolumeDetector
+- **Repo:** https://github.com/SamPom100/UnusualVolumeDetector
+- **Stars:** 978 | **Status:** Active | **License:** MIT
+- **Stack:** Python + HTML/JS
+- **Markets:** All equities
+- **Filters:** Volume exceeding N standard deviations from 5-month historical mean within last 3 days. Configurable: lookback period, alert window, std deviation threshold, thread count
+- **UI:** Python backend + HTML/JS web interface with graphing
+- **Real-time:** Batch scan runs
+- **KalshiAlpha use:** Reference the statistical volume spike detection algorithm — adapt for Kalshi contract volume anomalies. The std-deviation-from-historical-mean approach is directly applicable to detecting unusual contract activity.
+
+---
+
+#### PKScreener
+- **Repo:** https://github.com/pkjmesra/PKScreener
+- **Stars:** 316 | **Status:** Active | **License:** MIT
+- **Stack:** Python, Telegram bot, Docker
+- **Markets:** NSE India + limited NASDAQ
+- **Filters:** 40+ scan strategies: RSI, MACD, CCI, ATR, VCP, consolidation, S/R testing, volume ratio, MA alignment, candlestick patterns
+- **UI:** CLI menu + Telegram push alerts
+- **Real-time:** Both — scheduled batch and on-demand
+- **KalshiAlpha use:** Reference the **piped multi-condition scan** architecture — chain multiple filter passes rather than one giant query. Also reference the Telegram alert delivery system for KalshiAlpha's notification layer.
+
+---
+
+#### hackingthemarkets/candlestick-screener
+- **Repo:** https://github.com/hackingthemarkets/candlestick-screener
+- **Stars:** 630 | **Status:** Active | **License:** Not specified
+- **Stack:** Python, Flask, TA-Lib, HTML
+- **Markets:** Generic OHLCV (equities + crypto)
+- **Filters:** TA-Lib candlestick patterns (Doji, Hammer, Engulfing, Shooting Star, Morning Star, etc.)
+- **UI:** Flask web app with HTML dashboard
+- **Real-time:** Batch/on-demand
+- **KalshiAlpha use:** Apply TA-Lib candlestick pattern detection to Kalshi probability price series — e.g. detect a "bullish engulfing" pattern on a contract's probability chart as a scanner signal.
+
+---
+
+### Crypto Scanners (Real-Time Architecture Reference)
+
+#### BinanceScanner
+- **Repo:** https://github.com/cryptokrishtopher/binancescanner
+- **Stars:** 99 | **Status:** Active
+- **Stack:** Python, python-binance
+- **Markets:** Binance (BTC, USDT, ETH, BNB pairs)
+- **Filters:** Volume threshold (BTC-denominated), price diff %, volume diff % — all configurable
+- **UI:** CLI with colorama color output
+- **Real-time:** Yes — continuous WebSocket streaming via python-binance
+- **KalshiAlpha use:** Reference for a **real-time WebSocket scanner loop** — the continuous monitoring pattern (subscribe → receive → evaluate → alert) is the exact pattern KalshiAlpha's scanner needs over the Kalshi `ticker` WebSocket channel.
+
+---
+
+#### CryptoScanBot
+- **Repo:** https://github.com/CryptoMarius/CryptoScanBot
+- **Stars:** 31 | **Status:** Active
+- **Stack:** C# (.NET), WinForms
+- **Markets:** Binance, Bybit, KuCoin, MEXC, OKX, Kraken, Hyperliquid (spot + futures)
+- **Filters:** STOBB (oversold), SBM (strategy signals), JUMP (momentum), Fair Value Gap (FVG), dominant zone visualization
+- **UI:** WinForms desktop app
+- **Real-time:** Yes — exchange WebSocket streams
+- **KalshiAlpha use:** Reference the **Fair Value Gap (FVG) detection** algorithm — adapt for detecting price gaps in Kalshi contract probability history. Also reference WinForms scanner layout if building a C# desktop scanner.
+
+---
+
+#### Gunbot Quant
+- **Repo:** https://github.com/GuntharDeNiro/gunbot-quant
+- **Stars:** 38 | **Status:** Active | **License:** MIT
+- **Stack:** React + Vite (frontend), FastAPI + Python (backend)
+- **Markets:** 13+ crypto exchanges via Gunbot + 20+ via CCXT; stocks/ETFs via Yahoo Finance
+- **Filters:** RSI, Stochastic RSI, ADX, SMA positioning, 30-day avg volume, volume concentration %, volatility consistency, price-to-SMA ratios, liquidity thresholds
+- **UI:** React + Vite frontend with FastAPI backend — the only open source crypto scanner with a proper React frontend
+- **Real-time:** Batch-oriented with manual run trigger
+- **KalshiAlpha use:** **Best React + FastAPI scanner architecture reference for crypto.** The frontend filter panel and results table design maps directly to what KalshiAlpha needs. Study how they pass filter params from React state → FastAPI query → scan engine → results table.
+
+---
+
+### Scanner UI Components (Frontend Building Blocks)
+
+#### openstatusHQ/data-table-filters
+- **Repo:** https://github.com/openstatusHQ/data-table-filters
+- **Stars:** 1,900 | **Status:** Active | **License:** MIT
+- **Stack:** TypeScript, Next.js, TanStack Table, TanStack Query, Zustand, shadcn/ui, nuqs, cmdk, dnd-kit
+- **What it is:** The most directly reusable scanner table UI component. Advanced filter + sort patterns inspired by Datadog/Vercel dashboards.
+- **Features:**
+  - Paginated table with client-side filtering (Zustand state)
+  - Infinite-scroll with server-side operations (URL state via `nuqs`)
+  - Command-palette search (`cmdk`) — type to filter any column
+  - Drag-and-drop column customization (`dnd-kit`)
+  - BYOS adapter for swappable state management
+  - shadcn/ui components throughout
+- **KalshiAlpha use:** **Copy this component directly as the KalshiAlpha scanner table base.** Replace status data with Kalshi market data. The column filter panel, command palette search, and URL-synced filter state are exactly what a prediction market scanner needs.
+
+---
+
+#### TanStack Table
+- **Repo:** https://github.com/TanStack/table
+- **Stars:** 25,000+ | **Status:** Active | **License:** MIT
+- **Stack:** TypeScript, framework-agnostic (React, Vue, Solid, Svelte)
+- **What it is:** Headless table engine. Multi-column sort, global + column-level filtering, row virtualization (critical for 5,000+ Kalshi markets), custom sort functions, fuzzy matching.
+- **KalshiAlpha use:** **The correct underlying table engine for the scanner.** Pair with `data-table-filters` above for a complete scanner table solution. Row virtualization handles the full Kalshi market count without performance degradation.
+
+---
+
+#### AG Grid Community
+- **Repo/Site:** https://www.ag-grid.com
+- **Stars:** 14,000+ | **Status:** Active | **License:** MIT (Community)
+- **What it is:** Canvas-based data grid for real-time streaming rows — renders 100+ updates/second without full DOM re-render.
+- **KalshiAlpha use:** Alternative to TanStack Table if scanner rows need to update at very high frequency (e.g. during a major event when all contract probabilities are moving simultaneously). AG Grid is used in production financial terminals (see Open Trading Platform in Section 6). Consider if TanStack Table shows performance issues at scale.
+
+---
+
+### Scanner Design Patterns to Adopt
+
+These patterns emerge from reviewing all the above projects:
+
+| Pattern | Source(s) | How to Apply to KalshiAlpha |
+|---|---|---|
+| **SQL-like filter DSL** | TradingView-Screener | `col("volume") > 1000 AND col("yes_bid") > 0.4` for programmatic scanner API |
+| **WebSocket → evaluate → alert loop** | BinanceScanner, CryptoScanBot | Subscribe to Kalshi `ticker` channel; evaluate each message against scanner criteria; push matching rows to alert queue |
+| **Cursor pagination for bulk market load** | Kalshi API spec | Load all 5,000+ Kalshi markets on startup via cursor loop before switching to WebSocket |
+| **Atomic result pointer-swap** | xang1234/stock-screener | Pre-compute scan results in background; swap pointer when ready; prevents half-rendered scanner states |
+| **Piped multi-condition scans** | PKScreener | Chain: volume filter → momentum filter → pattern filter; faster than one compound query |
+| **Statistical volume anomaly** | UnusualVolumeDetector | Flag Kalshi markets where current volume exceeds N std deviations from 30-day mean |
+| **Text similarity cross-venue matching** | polymarket-arbitrage | Match Kalshi markets to Polymarket equivalents by title similarity for cross-venue arb scanner |
+| **Kelly criterion position sizing** | Kalshi-Claw | Compute optimal contract count for scanner alert signals using Kelly formula |
+| **URL-synced filter state** | data-table-filters | Scanner filter state lives in the URL — shareable, bookmarkable, back-button navigable |
+| **Row virtualization** | TanStack Table | Render only visible scanner rows; critical for 5,000+ market lists |
+
+---
+
 *Last updated: 2026-02-24. Update this file as new sources are identified or existing ones change status.*
