@@ -1,10 +1,11 @@
-import React from 'react';
-import Layout from './components/Layout';
+import React from 'react'
 
 function App() {
-    return (
-        <Layout />
-    );
+  return (
+    <div>
+      <h1>KalshiAlpha</h1>
+    </div>
+  )
 }
 
-export default App;
+export default App
