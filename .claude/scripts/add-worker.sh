@@ -30,7 +30,7 @@ if [ -d "$shared_state_dir" ]; then
     if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
         win_link=$(cygpath -w "$worktree_path/.claude/state")
         win_target=$(cygpath -w "$shared_state_dir")
-        cmd //c "mklink /J \"$win_link\" \"$win_target\"" > /dev/null 2>&1
+        powershell.exe -Command "New-Item -ItemType Junction -Path '$win_link' -Target '$win_target'" > /dev/null 2>&1
     else
         ln -sf "../../../.claude-shared-state" "$worktree_path/.claude/state"
     fi
@@ -42,7 +42,7 @@ rm -rf "$worktree_path/.claude/logs"
 if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
     win_link=$(cygpath -w "$worktree_path/.claude/logs")
     win_target=$(cygpath -w "$PROJECT_DIR/.claude/logs")
-    cmd //c "mklink /J \"$win_link\" \"$win_target\"" > /dev/null 2>&1
+    powershell.exe -Command "New-Item -ItemType Junction -Path '$win_link' -Target '$win_target'" > /dev/null 2>&1
 else
     ln -sf "../../../.claude/logs" "$worktree_path/.claude/logs"
 fi
