@@ -869,7 +869,98 @@ Do not implement these in the initial build:
 
 ---
 
-## 11. Scanner-Specific Repositories
+## 11. Charting Libraries
+
+Core charting options for rendering probability price history, order flow, and real-time candlestick data in the KalshiAlpha terminal and scanner.
+
+---
+
+### TradingView Lightweight Charts ← Primary Choice
+- **Repo:** https://github.com/tradingview/lightweight-charts
+- **Stars:** 13,800 | **Status:** Actively maintained (Dec 2025, v5.1.0) | **License:** Apache 2.0
+- **Stack:** TypeScript, HTML5 Canvas, npm
+- **Size:** ~50 KB — comparable to a static image
+- **Chart types:** Line, candlestick, bar, area, histogram, baseline
+- **Key features:**
+  - Designed for high-frequency streaming data — plug in a WebSocket feed and update in real time
+  - Plugin API for custom series types — build a "probability bar" chart type specific to binary contracts
+  - 14,700+ dependent projects; most widely integrated financial chart library in the JS ecosystem
+  - Mobile-friendly, responsive
+- **KalshiAlpha use:**
+  - **Implement this first.** It is already the charting standard referenced across OpenAlgo, multiple crypto platforms, and the KalshiAlpha codebase
+  - Render Kalshi contract probability price history as candlestick/line/area
+  - Build a custom series plugin for a "probability band" visualization (YES price + NO implied price on a single axis)
+  - Feed live candles from the `trade` WebSocket channel by updating the current bar's OHLCV fields on each incoming trade
+
+---
+
+### KLineChart
+- **Repo:** https://github.com/klinecharts/KLineChart
+- **Stars:** 3,600 | **Status:** Actively maintained (v10.0.0-beta1, Nov 2025) | **License:** Apache 2.0
+- **Stack:** TypeScript (76%), JavaScript (16%), HTML5 Canvas, zero dependencies
+- **Size:** ~40 KB gzipped
+- **Chart types:** Candlestick (k-line), line, bar, area; built-in technical indicators; built-in drawing/annotation tools
+- **Key features:**
+  - Full TypeScript with complete type definitions — drop-in for a TypeScript codebase
+  - Zero dependencies — no Lodash, no D3, no external libs
+  - Built-in indicator library (MA, EMA, BOLL, MACD, RSI, KDJ, etc.)
+  - Drawing tools built in (trend lines, Fibonacci, annotations) — no plugin needed
+  - Mobile touch support
+  - Rich style configuration API for full visual customization
+  - **KLineChart Pro** (`github.com/klinecharts/pro`) — a ready-made full chart UI built on top; Apache 2.0, TypeScript 92%
+- **KalshiAlpha use:**
+  - Strong alternative to TradingView Lightweight Charts if the team needs **built-in drawing tools** (trend lines, price levels) without writing a plugin
+  - KLineChart Pro gives a near-complete chart panel out of the box — use as the starting point for the terminal's chart component and customize for probability axis
+  - The built-in indicator library means no separate TA library dependency for chart overlays
+  - Drawing tools let traders annotate Kalshi probability charts directly in the terminal (key probability levels, trend lines on the price curve)
+
+---
+
+### uPlot
+- **Repo:** https://github.com/leeoniya/uPlot
+- **Stars:** 9,900 | **Status:** Actively maintained | **License:** MIT
+- **Stack:** JavaScript (73%), ~50 KB minified, zero dependencies
+- **Chart types:** Line, area, OHLC bars, time series; pluggable path renderers
+- **Performance:**
+  - Creates a 166,650-point interactive chart in 25ms from cold start
+  - Streams 3,600 points at 60fps using 10% CPU and 12.3 MB RAM
+  - Chart.js uses 40% CPU / 77 MB for the same workload; ECharts uses 70% / 85 MB
+  - Scales linearly at ~100,000 pts/ms
+- **Key features:**
+  - Multiple y-axes, scales, and grids — useful for overlaying volume on probability price
+  - Cursor sync across multiple charts — sync the terminal's probability chart with a volume chart
+  - Live data streaming built in
+  - Intentionally excludes animations, stacked series, and data aggregation to stay fast
+- **KalshiAlpha use:**
+  - **Best choice for the scanner's sparkline columns** — renders thousands of mini probability charts in rows without performance degradation
+  - Use for any high-frequency real-time chart where rendering speed is the priority (e.g. a live probability tick chart updating on every trade)
+  - Cursor sync makes it ideal for a multi-panel terminal layout where hovering one chart cross-hairs all panels simultaneously
+  - MIT license — most permissive of the three; cleanest for commercial use
+
+---
+
+### Charting Library Decision Matrix
+
+| Criterion | TradingView LW Charts | KLineChart | uPlot |
+|---|---|---|---|
+| **Stars** | 13,800 | 3,600 | 9,900 |
+| **License** | Apache 2.0 | Apache 2.0 | MIT |
+| **Bundle size** | ~50 KB | ~40 KB gzip | ~50 KB |
+| **TypeScript** | Yes | Full (native) | No (JS only) |
+| **Built-in indicators** | No | Yes | No |
+| **Built-in drawing tools** | Plugin only | Yes (native) | No |
+| **Custom series plugins** | Yes | Yes | Pluggable renderers |
+| **Streaming/live data** | Yes | Yes | Yes (60fps) |
+| **Raw performance** | High | High | Highest |
+| **Mobile support** | Yes | Yes | Yes |
+| **Ready-made UI (Pro)** | No | Yes (KLineChart Pro) | No |
+| **Best for** | Main terminal chart | Terminal chart + drawing tools | Scanner sparklines, tick charts |
+
+**Recommendation:** Use **TradingView Lightweight Charts** as the primary terminal chart (widest ecosystem, most examples). Use **uPlot** for the scanner's sparkline/mini-chart columns and any high-frequency tick displays. Keep **KLineChart** as a drop-in replacement if drawing tool functionality is needed without a custom plugin.
+
+---
+
+## 12. Scanner-Specific Repositories
 
 Focused research on open source market scanners and screeners — tools that filter, sort, and screen instruments in real time. Organized by relevance to KalshiAlpha.
 
