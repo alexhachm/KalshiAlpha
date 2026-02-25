@@ -8,6 +8,7 @@ import Accounts from './trade/Accounts'
 import PriceLadder from './trade/PriceLadder'
 import EventLog from './trade/EventLog'
 import TimeSale from './quotes/TimeSale'
+import MarketClock from './scanners/MarketClock'
 import HistoricalScanner from './scanners/HistoricalScanner'
 
 // Placeholder component used for all windows that don't have a real implementation yet
@@ -40,7 +41,7 @@ const COMPONENT_REGISTRY = {
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
   'alert-trigger': Placeholder,
-  'market-clock': Placeholder,
+  'market-clock': MarketClock,
   // Setup
   'hotkey-config': Placeholder,
 }
