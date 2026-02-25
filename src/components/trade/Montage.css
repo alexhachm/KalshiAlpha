@@ -1,0 +1,311 @@
+.montage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  gap: 4px;
+}
+
+.montage--font-small { font-size: 11px; }
+.montage--font-medium { font-size: 12px; }
+.montage--font-large { font-size: 14px; }
+
+/* Ticker selector bar */
+.mt-ticker-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mt-ticker-select {
+  flex: 1;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.mt-ticker-select:focus {
+  outline: none;
+  border-color: var(--accent-highlight);
+}
+
+.mt-settings-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.mt-settings-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Level II Book */
+.mt-book {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.mt-book-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mt-book-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mt-book-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.mt-book-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mt-book-size {
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.mt-bid-row .mt-book-size {
+  text-align: left;
+}
+
+.mt-ask-row .mt-book-size {
+  text-align: right;
+}
+
+.mt-book-price {
+  font-weight: 600;
+}
+
+.mt-bid-price {
+  color: var(--accent-win);
+}
+
+.mt-ask-price {
+  color: var(--accent-loss);
+}
+
+/* Info strip */
+.mt-info-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 6px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Order entry */
+.mt-order-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.mt-order-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mt-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  min-width: 36px;
+}
+
+.mt-input,
+.mt-select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: inherit;
+}
+
+.mt-input:focus,
+.mt-select:focus {
+  outline: none;
+  border-color: var(--accent-highlight);
+}
+
+.mt-shares-input {
+  width: 60px;
+}
+
+.mt-price-input {
+  width: 60px;
+}
+
+.mt-select {
+  cursor: pointer;
+}
+
+/* Buy/Sell buttons */
+.mt-buttons {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.mt-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.mt-btn:hover {
+  opacity: 0.85;
+}
+
+.mt-btn:active {
+  transform: scale(0.97);
+}
+
+.mt-btn-buy-yes {
+  background: var(--accent-win);
+  color: #000;
+}
+
+.mt-btn-buy-no {
+  background: var(--accent-loss);
+  color: #fff;
+}
+
+.mt-btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* Working orders */
+.mt-working-orders {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 4px;
+}
+
+.mt-wo-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding: 2px 0 4px;
+}
+
+.mt-wo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 11px;
+}
+
+.mt-wo-cancel {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: 2px;
+  padding: 1px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mt-wo-cancel:hover {
+  color: var(--accent-loss);
+  border-color: var(--accent-loss);
+}
+
+/* Loading state */
+.mt-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Confirm dialog */
+.mt-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.mt-confirm-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px;
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.mt-confirm-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.mt-confirm-body {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.mt-confirm-buttons {
+  display: flex;
+  gap: 8px;
+}
