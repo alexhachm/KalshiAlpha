@@ -13,6 +13,15 @@
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Roboto Mono', 'SF Mono', Consolas, monospace;
+
+  --menu-bar-height: 30px;
+  --window-titlebar-height: 32px;
+  --window-min-width: 200px;
+  --window-min-height: 150px;
+  --window-default-width: 400px;
+  --window-default-height: 300px;
+  --resize-handle-size: 6px;
+  --cascade-offset: 30px;
 }
 
 body {

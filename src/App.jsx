@@ -1,11 +1,8 @@
 import React from 'react'
+import Shell from './components/Shell'
 
 function App() {
-  return (
-    <div>
-      <h1>KalshiAlpha</h1>
-    </div>
-  )
+  return <Shell />
 }
 
 export default App
