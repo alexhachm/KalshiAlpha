@@ -6,6 +6,13 @@ import {
   removeFromGroup,
   getColorGroup,
 } from '../services/linkBus'
+import {
+  register,
+  unregister,
+  update as snapUpdate,
+  calculateSnap,
+  findMergeTarget,
+} from './SnapManager'
 import './Window.css'
 
 const MIN_WIDTH = 200
@@ -22,11 +29,18 @@ function Window({
   zIndex,
   onClose,
   onFocus,
+  onPopOut,
+  onMerge,
+  tabs,
+  activeTabIndex,
+  onSetActiveTab,
+  onDetachTab,
   children,
 }) {
   const windowRef = useRef(null)
   const posRef = useRef({ x: initialX, y: initialY })
   const sizeRef = useRef({ width: initialWidth, height: initialHeight })
+  const mergeHighlightRef = useRef(null)
   const [, rerender] = useState(0)
 
   // Color chip state — index into LINK_COLORS, -1 = unlinked
@@ -40,6 +54,17 @@ function Window({
   const [contextMenu, setContextMenu] = useState(null)
   const [isPinned, setIsPinned] = useState(false)
 
+  // Register with SnapManager on mount
+  useEffect(() => {
+    register(id, {
+      x: posRef.current.x,
+      y: posRef.current.y,
+      width: sizeRef.current.width,
+      height: sizeRef.current.height,
+    })
+    return () => unregister(id)
+  }, [id])
+
   // Close context menu on outside click
   useEffect(() => {
     if (!contextMenu) return
@@ -47,6 +72,14 @@ function Window({
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [contextMenu])
+
+  // Clear merge highlight on any element
+  const clearMergeHighlight = useCallback(() => {
+    if (mergeHighlightRef.current) {
+      mergeHighlightRef.current.classList.remove('window--merge-target')
+      mergeHighlightRef.current = null
+    }
+  }, [])
 
   const handleChipClick = useCallback(
     (e) => {
@@ -70,7 +103,7 @@ function Window({
 
   const handleTitleBarMouseDown = useCallback(
     (e) => {
-      if (e.target.closest('.window-controls')) return
+      if (e.target.closest('.window-controls') || e.target.closest('.window-color-chip')) return
       e.preventDefault()
       onFocus(id)
 
@@ -79,26 +112,75 @@ function Window({
       const origX = posRef.current.x
       const origY = posRef.current.y
 
-      const onMove = (e) => {
-        const newX = origX + (e.clientX - startX)
-        const newY = Math.max(0, origY + (e.clientY - startY))
-        posRef.current = { x: newX, y: newY }
+      const onMove = (moveEvt) => {
+        const rawX = origX + (moveEvt.clientX - startX)
+        const rawY = Math.max(0, origY + (moveEvt.clientY - startY))
+
+        // Snap to edges
+        const snapped = calculateSnap(
+          id,
+          rawX,
+          rawY,
+          sizeRef.current.width,
+          sizeRef.current.height
+        )
+        posRef.current = { x: snapped.x, y: snapped.y }
+
+        // Update snap registry
+        snapUpdate(id, {
+          x: snapped.x,
+          y: snapped.y,
+          width: sizeRef.current.width,
+          height: sizeRef.current.height,
+        })
+
+        // Merge detection — highlight target window
+        const targetId = findMergeTarget(
+          id,
+          snapped.x,
+          snapped.y,
+          sizeRef.current.width
+        )
+        clearMergeHighlight()
+        if (targetId != null) {
+          const targetEl = document.querySelector(
+            `[data-window-id="${targetId}"]`
+          )
+          if (targetEl) {
+            targetEl.classList.add('window--merge-target')
+            mergeHighlightRef.current = targetEl
+          }
+        }
+
         if (windowRef.current) {
-          windowRef.current.style.left = newX + 'px'
-          windowRef.current.style.top = newY + 'px'
+          windowRef.current.style.left = snapped.x + 'px'
+          windowRef.current.style.top = snapped.y + 'px'
         }
       }
 
       const onUp = () => {
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
+
+        // Check for merge on drop
+        clearMergeHighlight()
+        const targetId = findMergeTarget(
+          id,
+          posRef.current.x,
+          posRef.current.y,
+          sizeRef.current.width
+        )
+        if (targetId != null && onMerge) {
+          onMerge(id, targetId)
+        }
+
         rerender((n) => n + 1)
       }
 
       document.addEventListener('mousemove', onMove)
       document.addEventListener('mouseup', onUp)
     },
-    [id, onFocus]
+    [id, onFocus, onMerge, clearMergeHighlight]
   )
 
   const handleResizeMouseDown = useCallback(
@@ -112,9 +194,9 @@ function Window({
       const origPos = { ...posRef.current }
       const origSize = { ...sizeRef.current }
 
-      const onMove = (e) => {
-        const dx = e.clientX - startX
-        const dy = e.clientY - startY
+      const onMove = (moveEvt) => {
+        const dx = moveEvt.clientX - startX
+        const dy = moveEvt.clientY - startY
         let { x, y } = origPos
         let { width, height } = origSize
 
@@ -137,6 +219,9 @@ function Window({
 
         posRef.current = { x, y }
         sizeRef.current = { width, height }
+
+        // Update snap registry
+        snapUpdate(id, { x, y, width, height })
 
         if (windowRef.current) {
           windowRef.current.style.left = x + 'px'
@@ -161,7 +246,6 @@ function Window({
   const handleContextMenu = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
-    // Position relative to the window element
     const rect = windowRef.current?.getBoundingClientRect()
     setContextMenu({
       x: e.clientX - (rect?.left || 0),
@@ -171,17 +255,27 @@ function Window({
 
   const handlePopOut = useCallback(() => {
     setContextMenu(null)
-    // Placeholder — will be implemented with Electron/Tauri pop-out
-  }, [])
+    if (onPopOut) onPopOut(id)
+  }, [id, onPopOut])
 
   const handlePinToTop = useCallback(() => {
     setContextMenu(null)
     setIsPinned((prev) => !prev)
   }, [])
 
+  // Double-click titlebar to pop out
+  const handleTitleBarDoubleClick = useCallback(
+    (e) => {
+      if (e.target.closest('.window-controls') || e.target.closest('.window-color-chip')) return
+      if (onPopOut) onPopOut(id)
+    },
+    [id, onPopOut]
+  )
+
   return (
     <div
       ref={windowRef}
+      data-window-id={id}
       className={`window${isPinned ? ' window--pinned' : ''}`}
       style={{
         left: posRef.current.x,
@@ -195,6 +289,7 @@ function Window({
       <div
         className="window-titlebar"
         onMouseDown={handleTitleBarMouseDown}
+        onDoubleClick={handleTitleBarDoubleClick}
         onContextMenu={handleContextMenu}
       >
         <div
@@ -210,7 +305,11 @@ function Window({
               : 'Unlinked (click to link)'
           }
         />
-        {isPinned && <span className="window-pin-icon" title="Pinned to top">📌</span>}
+        {isPinned && (
+          <span className="window-pin-icon" title="Pinned to top">
+            📌
+          </span>
+        )}
         <span className="window-title">{title}</span>
         <div className="window-controls">
           <button
@@ -222,6 +321,32 @@ function Window({
           </button>
         </div>
       </div>
+
+      {/* Tab bar for merged windows */}
+      {tabs && tabs.length > 1 && (
+        <div className="window-tab-bar">
+          {tabs.map((tab, idx) => (
+            <div
+              key={tab.id}
+              className={`window-tab${idx === activeTabIndex ? ' window-tab--active' : ''}`}
+              onClick={() => onSetActiveTab && onSetActiveTab(id, idx)}
+            >
+              <span className="window-tab-label">{tab.title}</span>
+              <button
+                className="window-tab-detach"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (onDetachTab) onDetachTab(id, idx)
+                }}
+                title="Detach tab"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="window-body">{children}</div>
 
       {/* Right-click context menu */}

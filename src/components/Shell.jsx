@@ -73,6 +73,138 @@ function windowReducer(state, action) {
         nextZ: state.nextZ + 1,
       }
     }
+    case 'MERGE_WINDOWS': {
+      const { sourceId, targetId } = action.payload
+      const source = state.windows[sourceId]
+      const target = state.windows[targetId]
+      if (!source || !target) return state
+
+      // Build the tabs array for the merged window
+      const targetTabs = target.tabs || [
+        { id: target.id, type: target.type, title: target.title },
+      ]
+      const sourceTabs = source.tabs || [
+        { id: source.id, type: source.type, title: source.title },
+      ]
+      const mergedTabs = [...targetTabs, ...sourceTabs]
+
+      // Remove both originals, add merged window under the target's id
+      const { [sourceId]: _s, [targetId]: _t, ...rest } = state.windows
+      return {
+        ...state,
+        windows: {
+          ...rest,
+          [targetId]: {
+            ...target,
+            tabs: mergedTabs,
+            activeTabIndex: 0,
+            type: mergedTabs[0].type,
+            title: mergedTabs[0].title,
+            zIndex: state.nextZ,
+          },
+        },
+        nextZ: state.nextZ + 1,
+      }
+    }
+    case 'SET_ACTIVE_TAB': {
+      const win = state.windows[action.payload.windowId]
+      if (!win || !win.tabs) return state
+      const tab = win.tabs[action.payload.tabIndex]
+      if (!tab) return state
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.payload.windowId]: {
+            ...win,
+            activeTabIndex: action.payload.tabIndex,
+            type: tab.type,
+            title: tab.title,
+          },
+        },
+      }
+    }
+    case 'DETACH_TAB': {
+      const win = state.windows[action.payload.windowId]
+      if (!win || !win.tabs || win.tabs.length <= 1) return state
+      const tabIdx = action.payload.tabIndex
+      const tab = win.tabs[tabIdx]
+      if (!tab) return state
+
+      const remainingTabs = win.tabs.filter((_, i) => i !== tabIdx)
+      const newActiveIdx = Math.min(
+        win.activeTabIndex >= tabIdx ? Math.max(0, win.activeTabIndex - 1) : win.activeTabIndex,
+        remainingTabs.length - 1
+      )
+      const activeTab = remainingTabs[newActiveIdx]
+
+      // If only 1 tab remains, unwrap the tab group
+      const updatedWin =
+        remainingTabs.length === 1
+          ? {
+              ...win,
+              tabs: undefined,
+              activeTabIndex: undefined,
+              type: remainingTabs[0].type,
+              title: remainingTabs[0].title,
+            }
+          : {
+              ...win,
+              tabs: remainingTabs,
+              activeTabIndex: newActiveIdx,
+              type: activeTab.type,
+              title: activeTab.title,
+            }
+
+      const newId = state.nextId
+      const sizes = TYPE_SIZES[tab.type] || {}
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.payload.windowId]: updatedWin,
+          [newId]: {
+            id: newId,
+            type: tab.type,
+            title: tab.title,
+            initialX: win.initialX + 40,
+            initialY: win.initialY + 40,
+            initialWidth: sizes.width || DEFAULT_WIDTH,
+            initialHeight: sizes.height || DEFAULT_HEIGHT,
+            zIndex: state.nextZ,
+          },
+        },
+        nextId: state.nextId + 1,
+        nextZ: state.nextZ + 1,
+      }
+    }
+    case 'POP_OUT_WINDOW': {
+      const win = state.windows[action.payload.id]
+      if (!win || win.poppedOut) return state
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.payload.id]: { ...win, poppedOut: true },
+        },
+      }
+    }
+    case 'POP_IN_WINDOW': {
+      const win = state.windows[action.payload.id]
+      if (!win || !win.poppedOut) return state
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [action.payload.id]: {
+            ...win,
+            poppedOut: false,
+            zIndex: state.nextZ,
+          },
+        },
+        nextZ: state.nextZ + 1,
+      }
+    }
     default:
       return state
   }
@@ -100,6 +232,26 @@ function Shell() {
     dispatch({ type: 'FOCUS_WINDOW', payload: { id } })
   }
 
+  const mergeWindows = useCallback((sourceId, targetId) => {
+    dispatch({ type: 'MERGE_WINDOWS', payload: { sourceId, targetId } })
+  }, [])
+
+  const setActiveTab = useCallback((windowId, tabIndex) => {
+    dispatch({ type: 'SET_ACTIVE_TAB', payload: { windowId, tabIndex } })
+  }, [])
+
+  const detachTab = useCallback((windowId, tabIndex) => {
+    dispatch({ type: 'DETACH_TAB', payload: { windowId, tabIndex } })
+  }, [])
+
+  const popOutWindow = useCallback((id) => {
+    dispatch({ type: 'POP_OUT_WINDOW', payload: { id } })
+  }, [])
+
+  const popInWindow = useCallback((id) => {
+    dispatch({ type: 'POP_IN_WINDOW', payload: { id } })
+  }, [])
+
   const openSettings = useCallback(() => {
     setIsSettingsOpen(true)
   }, [])
@@ -112,6 +264,11 @@ function Shell() {
           windows={state.windows}
           onClose={closeWindow}
           onFocus={focusWindow}
+          onMerge={mergeWindows}
+          onSetActiveTab={setActiveTab}
+          onDetachTab={detachTab}
+          onPopOut={popOutWindow}
+          onPopIn={popInWindow}
         />
       </div>
       <SettingsPanel
