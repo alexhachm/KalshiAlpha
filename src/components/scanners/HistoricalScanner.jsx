@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { emitLinkedMarket } from '../../services/linkBus'
-import { getHistoricalScanResults } from '../../services/mockData'
+import { getHistoricalScanResults } from '../../services/dataFeed'
 import { Settings, Download, Search } from 'lucide-react'
 import './HistoricalScanner.css'
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { subscribeToTicker } from '../services/mockData'
+import { subscribeToTicker } from '../services/dataFeed'
 import {
   subscribeToLink,
   unsubscribeFromLink,

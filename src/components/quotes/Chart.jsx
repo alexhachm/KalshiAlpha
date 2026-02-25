@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { createChart, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts'
-import { generateOHLCV, subscribeToOHLCV } from '../../services/mockData'
+import { generateOHLCV, subscribeToOHLCV } from '../../services/dataFeed'
 import {
   subscribeToLink,
   unsubscribeFromLink,

@@ -550,6 +550,46 @@ function subscribeToPositionChanges(callback) {
   return kalshiWs.subscribePositions(callback);
 }
 
+/**
+ * Generate OHLCV candle data for initial chart rendering.
+ * When connected: fetches from REST API.
+ * When disconnected: uses mock data generator.
+ */
+function generateOHLCV(ticker, count = 200, timeframeMinutes = 5) {
+  if (!connected && typeof mockData.generateOHLCV === 'function') {
+    return mockData.generateOHLCV(ticker, count, timeframeMinutes);
+  }
+  // When connected, return empty array — real candles come via subscribeToOHLCV
+  return [];
+}
+
+/**
+ * Subscribe to time & sales (trade ticker) stream.
+ * When connected: listens to WS trade feed.
+ * When disconnected: uses mock data.
+ */
+function subscribeToTimeSales(ticker, callback) {
+  if (!connected && typeof mockData.subscribeToTimeSales === 'function') {
+    return mockData.subscribeToTimeSales(ticker, callback);
+  }
+
+  if (!connected) {
+    return () => {};
+  }
+
+  // Real mode: convert WS trades to time & sales format
+  return kalshiWs.subscribeTrades(ticker, (msg) => {
+    const trade = {
+      id: msg.trade_id || Date.now(),
+      timestamp: msg.ts ? new Date(msg.ts).getTime() : Date.now(),
+      price: msg.yes_price || msg.price || 0,
+      size: parseInt(msg.count_fp || msg.count || '1', 10),
+      side: msg.taker_side === 'yes' ? 'BUY' : 'SELL',
+    };
+    callback(trade);
+  });
+}
+
 export {
   // Connection
   initialize,
@@ -561,6 +601,8 @@ export {
   subscribeToMarketRace,
   subscribeToScanner,
   subscribeToOHLCV,
+  generateOHLCV,
+  subscribeToTimeSales,
   getHistoricalScanResults,
   // Portfolio (new)
   getPortfolioBalance,
