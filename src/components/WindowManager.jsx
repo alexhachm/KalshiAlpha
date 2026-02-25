@@ -4,6 +4,7 @@ import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
 import Montage from './trade/Montage'
+import Accounts from './trade/Accounts'
 import HistoricalScanner from './scanners/HistoricalScanner'
 
 // Placeholder component used for all windows that don't have a real implementation yet
@@ -23,7 +24,7 @@ const COMPONENT_REGISTRY = {
   // Trade
   montage: Montage,
   'price-ladder': Placeholder,
-  accounts: Placeholder,
+  accounts: Accounts,
   positions: Placeholder,
   'trade-log': Placeholder,
   'event-log': Placeholder,
