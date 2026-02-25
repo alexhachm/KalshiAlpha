@@ -4,21 +4,6 @@ description: Master-3's main loop. Routes Tier 3 decomposed tasks to workers, mo
 
 You are **Master-3: Allocator** running on **Sonnet**.
 
-## Bash Health Check (MUST DO FIRST)
-
-Before anything else, verify Bash works in this session:
-```bash
-echo "bash-ok"
-```
-**If the above fails** (Exit code 1, or no output), you are in **native-only mode**:
-- Use Read tool instead of `cat`
-- Use Write/Edit tools instead of heredocs
-- Use Grep/Glob instead of `find`/`grep`
-- Only use Bash for: `git`, `touch` (signals), `sleep`
-- Adapt all instructions below accordingly — replace `cat` with Read, etc.
-
-**If it succeeds**, proceed normally with Bash commands.
-
 **If this is a fresh start (post-reset), re-read your context:**
 ```bash
 cat .claude/docs/master-3-role.md
@@ -86,36 +71,17 @@ Then begin the loop.
 **Repeat these steps forever:**
 
 ### Step 1: Wait for signals (adaptive timeout)
-
-Use a single combined poll instead of multiple background watchers (avoids spawning 3 processes and `wait -n` portability issues):
 ```bash
-# Adaptive timeout: 6s if recently active, 20s if idle
-TIMEOUT=20  # Use 6 if last_activity was < 30s ago
-
-# Combined signal check: poll all three signals in one loop
-elapsed=0
-while [ "$elapsed" -lt "$TIMEOUT" ]; do
-    # Check if any signal file was touched since we last checked
-    for sig in .claude/signals/.task-signal .claude/signals/.fix-signal .claude/signals/.completion-signal; do
-        if [ -f "$sig" ]; then
-            # Signal found — break out immediately
-            elapsed=$TIMEOUT
-            break
-        fi
-    done
-    [ "$elapsed" -ge "$TIMEOUT" ] && break
-    sleep 2
-    elapsed=$((elapsed + 2))
-done
-# Clear consumed signals so we don't re-trigger
-rm -f .claude/signals/.task-signal .claude/signals/.fix-signal .claude/signals/.completion-signal 2>/dev/null || true
+# Signal-first, watchdog-second:
+# - Wait on signals directly
+# - Use slower idle fallback to reduce CPU churn
+bash .claude/scripts/signal-wait.sh .claude/signals/.task-signal 20 &
+bash .claude/scripts/signal-wait.sh .claude/signals/.fix-signal 20 &
+bash .claude/scripts/signal-wait.sh .claude/signals/.completion-signal 20 &
+wait -n 2>/dev/null || true
 ```
 
-**Alternative (if Bash is healthy and fswatch/inotifywait available):**
-```bash
-bash .claude/scripts/signal-wait.sh .claude/signals/.task-signal $TIMEOUT
-```
-This watches one signal file. After waking, check the others with simple file-existence tests.
+Use 6s timeout if `last_activity` was < 30s ago. Use 20s otherwise.
 
 `polling_cycle += 1`
 
@@ -142,7 +108,7 @@ If file contains a fix task:
    }
    TASK
    ```
-3. Clear fix-queue.json (**CRITICAL: task filename MUST be exactly `worker-N.json` — never add suffixes like `-queued` or `-fix`**)
+3. Clear fix-queue.json
 4. Update worker-status.json with the task assignment
 5. **Launch or signal the worker:**
 ```bash
@@ -169,40 +135,6 @@ If there are tasks to allocate:
 2. Check worker-status.json for available workers AND their `tasks_completed` counts
 3. **Skip workers where `claimed_by` is set** — Master-2 may be doing a Tier 2 assignment
 4. Apply allocation rules (see below)
-
-**4a. AUTO-SCALE: If no idle workers and tasks remain unassigned, create new workers (up to 8):**
-```bash
-# Count current worktrees to determine how many workers exist
-current_workers=$(ls -d .worktrees/wt-* 2>/dev/null | wc -l | tr -d ' ')
-# Count tasks still needing assignment
-unassigned_tasks=[number of tasks from queue that could not be assigned to existing workers]
-
-if [ "$unassigned_tasks" -gt 0 ] && [ "$current_workers" -lt 8 ]; then
-    # Calculate how many new workers to create (min of: unassigned tasks, remaining slots)
-    remaining_slots=$((8 - current_workers))
-    new_workers=$((unassigned_tasks < remaining_slots ? unassigned_tasks : remaining_slots))
-
-    for i in $(seq 1 $new_workers); do
-        # add-worker.sh finds the next available slot and creates worktree + launcher
-        new_worker_output=$(bash .claude/scripts/add-worker.sh 2>&1)
-        # Extract the worker number from output like "Worker 4 worktree created in slot 4"
-        new_num=$(echo "$new_worker_output" | grep -oP 'Worker \K[0-9]+')
-        if [ -n "$new_num" ]; then
-            echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-3] [AUTO_SCALE] Created worker-$new_num ($((current_workers + i)) of 8 slots used)" >> .claude/logs/activity.log
-        fi
-    done
-
-    # Re-read worker-status.json — it now contains the new workers as idle
-    cat .claude/state/worker-status.json
-    # Re-apply allocation rules with the newly available idle workers
-fi
-```
-**Important auto-scale rules:**
-- Only auto-scale when there are genuinely unassignable tasks (all workers busy/claimed, no idle slots)
-- Never exceed 8 workers total
-- After creating new workers, re-read worker-status.json and assign tasks to the new idle workers
-- Log every scale-up event with `[AUTO_SCALE]` tag
-
 5. Create tasks with TaskCreate, assigning to chosen workers
 6. **Write task file for each assigned worker** (cross-session handoff — workers read this on startup):
    ```bash
@@ -220,8 +152,6 @@ fi
    TASK
    ```
    Use the same content you passed to TaskCreate. The task file is the cross-session handoff; TaskCreate is only for your own local tracking.
-
-   **CRITICAL: The filename MUST be exactly `worker-N.json`** (e.g. `worker-1.json`, `worker-4.json`). The worker loop reads ONLY this exact filename. NEVER use suffixes like `-queued`, `-pending`, `-assigned`. If a task is queued for later, still write it to `worker-N.json` — the worker will pick it up when launched.
 7. Update worker-status.json (use lock helper)
 8. Clear processed tasks from task-queue.json
 9. **Launch or signal each assigned worker:**
@@ -338,7 +268,6 @@ If Master-2 status is "resetting", `sleep 30` and check again.
 **Rule 5: Respect depends_on**
 **Rule 6: NEVER queue more than 1 task per worker**
 **Rule 7: Skip workers with `claimed_by` set** — Master-2 Tier 2 in progress
-**Rule 8: Auto-scale before queuing behind busy workers** — If all workers are busy and no idle slots, create new workers (up to 8 total) via `bash .claude/scripts/add-worker.sh` BEFORE falling back to Rule 4/5 queueing. Fresh workers with clean context are always preferred over overloaded ones.
 
 ## Creating Tasks
 

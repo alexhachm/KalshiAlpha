@@ -1,0 +1,211 @@
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.window:focus-within {
+  border-color: var(--accent-highlight);
+}
+
+.window-titlebar {
+  display: flex;
+  align-items: center;
+  height: var(--window-titlebar-height);
+  background: var(--bg-tertiary);
+  padding: 0 8px;
+  cursor: default;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.window-color-chip {
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.window-color-chip:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+}
+
+.window-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+}
+
+.window-controls {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.window-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.window-close-btn:hover {
+  background: var(--accent-loss);
+  color: var(--text-primary);
+}
+
+.window-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+
+.window-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  z-index: 1;
+}
+
+.resize-n {
+  top: -3px;
+  left: 8px;
+  right: 8px;
+  height: var(--resize-handle-size);
+  cursor: n-resize;
+}
+
+.resize-s {
+  bottom: -3px;
+  left: 8px;
+  right: 8px;
+  height: var(--resize-handle-size);
+  cursor: s-resize;
+}
+
+.resize-e {
+  right: -3px;
+  top: 8px;
+  bottom: 8px;
+  width: var(--resize-handle-size);
+  cursor: e-resize;
+}
+
+.resize-w {
+  left: -3px;
+  top: 8px;
+  bottom: 8px;
+  width: var(--resize-handle-size);
+  cursor: w-resize;
+}
+
+.resize-ne {
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: ne-resize;
+}
+
+.resize-nw {
+  top: -3px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: nw-resize;
+}
+
+.resize-se {
+  bottom: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: se-resize;
+}
+
+.resize-sw {
+  bottom: -3px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: sw-resize;
+}
+
+/* Pinned window */
+.window--pinned {
+  border-color: var(--accent-highlight);
+}
+
+.window-pin-icon {
+  font-size: 10px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+/* Right-click context menu */
+.window-context-menu {
+  position: absolute;
+  min-width: 180px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  z-index: 100000;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.window-context-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.window-context-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.window-context-item--disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.window-context-item--disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.window-context-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
