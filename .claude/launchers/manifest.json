@@ -1,17 +1,15 @@
 {
   "version": 3,
-  "project_path": "/c/Users/Owner/Desktop/KalshiAlpha",
+  "project_path": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
   "worker_count": 3,
-  "created_at": "2026-02-25T06:36:46Z",
+  "created_at": "2026-02-25T06:40:44Z",
   "agents": [
     {
       "id": "master-1",
       "group": "masters",
       "role": "Interface (Sonnet)",
       "model": "sonnet",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-1.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-1-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
       "command_fresh": "claude --model sonnet --dangerously-skip-permissions '/master-loop'",
       "command_continue": "claude --continue --model sonnet --dangerously-skip-permissions"
     },
@@ -20,9 +18,7 @@
       "group": "masters",
       "role": "Architect (Opus)",
       "model": "opus",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-2.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-2-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
       "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/scan-codebase'",
       "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
     },
@@ -31,9 +27,7 @@
       "group": "masters",
       "role": "Allocator (Sonnet)",
       "model": "sonnet",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-3.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/master-3-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
       "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model sonnet --dangerously-skip-permissions '/scan-codebase-allocator'",
       "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model sonnet --dangerously-skip-permissions"
     },
@@ -42,9 +36,7 @@
       "group": "workers",
       "role": "Worker 1 (Opus)",
       "model": "opus",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha/.worktrees/wt-1",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-1.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-1-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-1",
       "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
       "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
     }
@@ -54,9 +46,7 @@
       "group": "workers",
       "role": "Worker 2 (Opus)",
       "model": "opus",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha/.worktrees/wt-2",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-2.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-2-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-2",
       "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
       "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
     }
@@ -66,9 +56,7 @@
       "group": "workers",
       "role": "Worker 3 (Opus)",
       "model": "opus",
-      "cwd": "/c/Users/Owner/Desktop/KalshiAlpha/.worktrees/wt-3",
-      "launcher": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-3.sh",
-      "launcher_continue": "/c/Users/Owner/Desktop/KalshiAlpha/.claude/launchers/worker-3-continue.sh",
+      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-3",
       "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
       "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
     }

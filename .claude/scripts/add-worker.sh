@@ -97,44 +97,44 @@ elif [ -f "$PROJECT_DIR/CLAUDE.md" ]; then
     cp "$PROJECT_DIR/CLAUDE.md" "$worktree_path/CLAUDE.md"
 fi
 
-# Generate launcher script for the new worker
+# Generate v4 self-contained .ps1 launcher for the new worker (Windows only)
 launcher_dir="$PROJECT_DIR/.claude/launchers"
 if [ -d "$launcher_dir" ]; then
-    cat > "$launcher_dir/worker-$next_num.sh" << LAUNCHER
-#!/usr/bin/env bash
-export PATH="\$HOME/bin:\$HOME/.local/bin:\$PATH"
-clear
-printf '\\n\\033[1;44m\\033[1;37m  ████  I AM WORKER-$next_num (Opus)  ████  \\033[0m\\n\\n'
-cd '$PROJECT_DIR/.worktrees/wt-$next_num'
-exec env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'
-LAUNCHER
-    chmod +x "$launcher_dir/worker-$next_num.sh"
-
-    cat > "$launcher_dir/worker-$next_num-continue.sh" << LAUNCHER
-#!/usr/bin/env bash
-export PATH="\$HOME/bin:\$HOME/.local/bin:\$PATH"
-clear
-printf '\\n\\033[1;44m\\033[1;37m  ████  I AM WORKER-$next_num (Opus) [CONTINUE]  ████  \\033[0m\\n\\n'
-cd '$PROJECT_DIR/.worktrees/wt-$next_num'
-exec env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions
-LAUNCHER
-    chmod +x "$launcher_dir/worker-$next_num-continue.sh"
-
-    # Generate Windows .ps1 wrappers if on Windows
     if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
-        wsl_launcher_dir=$(wsl.exe wslpath -u "$(cygpath -w "$launcher_dir")" 2>/dev/null | tr -d '\r' || echo "$launcher_dir")
-        printf '%s\r\n' \
-            "# DO NOT add non-ASCII chars. PowerShell 5.1 reads without UTF-8 BOM." \
-            "Clear-Host" \
-            "Write-Host \"  I AM WORKER-$next_num (Opus)\" -ForegroundColor Green" \
-            "wsl.exe bash -l $wsl_launcher_dir/worker-$next_num.sh" \
-            > "$launcher_dir/worker-$next_num.ps1"
-        printf '%s\r\n' \
-            "# DO NOT add non-ASCII chars. PowerShell 5.1 reads without UTF-8 BOM." \
-            "Clear-Host" \
-            "Write-Host \"  I AM WORKER-$next_num (Opus) [CONTINUE]\" -ForegroundColor Green" \
-            "wsl.exe bash -l $wsl_launcher_dir/worker-$next_num-continue.sh" \
-            > "$launcher_dir/worker-$next_num-continue.ps1"
+        local ps1_file="$launcher_dir/worker-$next_num.ps1"
+        cat > "$ps1_file" << 'PS1_TEMPLATE'
+# v4 self-contained launcher for __ID__
+# DO NOT add non-ASCII chars. PowerShell 5.1 reads without UTF-8 BOM.
+param([switch]$Continue)
+
+$ProjectDir = (Resolve-Path "$PSScriptRoot\..\..").Path
+$WslProject = (wsl.exe wslpath -u "$ProjectDir").Trim()
+
+Clear-Host
+if ($Continue) {
+    Write-Host "  I AM __ID_UPPER__ (Opus) [CONTINUE]" -ForegroundColor Green
+    wsl.exe bash -lc "export PATH=`"`$HOME/bin:`$HOME/.local/bin:`$PATH`"; cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
+} else {
+    Write-Host "  I AM __ID_UPPER__ (Opus)" -ForegroundColor Green
+    wsl.exe bash -lc "export PATH=`"`$HOME/bin:`$HOME/.local/bin:`$PATH`"; cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'"
+}
+PS1_TEMPLATE
+        local id_upper
+        id_upper=$(echo "WORKER-$next_num" | tr '[:lower:]' '[:upper:]')
+        sed -i \
+            -e "s|__ID__|worker-$next_num|g" \
+            -e "s|__ID_UPPER__|$id_upper|g" \
+            -e "s|__NUM__|$next_num|g" \
+            -e 's/$/\r/' \
+            "$ps1_file"
+    fi
+
+    # Update v4 manifest.json — add new worker entry
+    manifest_file="$launcher_dir/manifest.json"
+    if [ -f "$manifest_file" ] && command -v jq &>/dev/null; then
+        jq --arg id "worker-$next_num" --arg num "$next_num" \
+            '.agents += [{"id": $id, "group": "workers", "role": ("Worker " + $num + " (Opus)"), "model": "opus", "command": "/worker-loop", "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1", "worktree": (".worktrees/wt-" + $num)}] | .worker_count = (.agents | map(select(.group == "workers")) | length)' \
+            "$manifest_file" > /tmp/manifest_add.json && mv /tmp/manifest_add.json "$manifest_file"
     fi
 fi
 
