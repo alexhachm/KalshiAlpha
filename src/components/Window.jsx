@@ -1,5 +1,11 @@
 import React, { useRef, useState, useCallback } from 'react'
 import { X } from 'lucide-react'
+import {
+  LINK_COLORS,
+  setColorGroup,
+  removeFromGroup,
+  getColorGroup,
+} from '../services/linkBus'
 import './Window.css'
 
 const MIN_WIDTH = 200
@@ -21,6 +27,29 @@ function Window({
   const posRef = useRef({ x: initialX, y: initialY })
   const sizeRef = useRef({ width: initialWidth, height: initialHeight })
   const [, rerender] = useState(0)
+
+  // Color chip state — index into LINK_COLORS, -1 = unlinked
+  const [colorIndex, setColorIndex] = useState(() => {
+    const current = getColorGroup(id)
+    if (!current) return -1
+    return LINK_COLORS.findIndex((c) => c.id === current)
+  })
+
+  const handleChipClick = useCallback(
+    (e) => {
+      e.stopPropagation()
+      setColorIndex((prev) => {
+        const next = prev + 1
+        if (next >= LINK_COLORS.length) {
+          removeFromGroup(id)
+          return -1
+        }
+        setColorGroup(id, LINK_COLORS[next].id)
+        return next
+      })
+    },
+    [id]
+  )
 
   const handleMouseDown = () => {
     onFocus(id)
@@ -130,7 +159,19 @@ function Window({
       onMouseDown={handleMouseDown}
     >
       <div className="window-titlebar" onMouseDown={handleTitleBarMouseDown}>
-        <div className="window-color-chip-slot" />
+        <div
+          className="window-color-chip"
+          style={{
+            backgroundColor:
+              colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
+          }}
+          onClick={handleChipClick}
+          title={
+            colorIndex >= 0
+              ? `Linked: ${LINK_COLORS[colorIndex].id} (click to cycle)`
+              : 'Unlinked (click to link)'
+          }
+        />
         <span className="window-title">{title}</span>
         <div className="window-controls">
           <button

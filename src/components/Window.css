@@ -24,13 +24,20 @@
   flex-shrink: 0;
 }
 
-.window-color-chip-slot {
+.window-color-chip {
   width: 12px;
   height: 12px;
   margin-right: 8px;
   flex-shrink: 0;
   border-radius: 2px;
-  /* Placeholder for future color chip — Task 4 will fill this */
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.window-color-chip:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
 .window-title {

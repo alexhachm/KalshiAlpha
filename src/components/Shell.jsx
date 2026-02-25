@@ -1,6 +1,7 @@
-import React, { useReducer } from 'react'
+import React, { useReducer, useState, useCallback } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
+import SettingsPanel from './SettingsPanel'
 import './Shell.css'
 
 const CASCADE_OFFSET = 30
@@ -64,6 +65,7 @@ const initialState = {
 
 function Shell() {
   const [state, dispatch] = useReducer(windowReducer, initialState)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const openWindow = (type, title) => {
     dispatch({ type: 'OPEN_WINDOW', payload: { type, title } })
@@ -77,9 +79,13 @@ function Shell() {
     dispatch({ type: 'FOCUS_WINDOW', payload: { id } })
   }
 
+  const openSettings = useCallback(() => {
+    setIsSettingsOpen(true)
+  }, [])
+
   return (
     <div className="shell">
-      <MenuBar onOpenWindow={openWindow} />
+      <MenuBar onOpenWindow={openWindow} onOpenSettings={openSettings} />
       <div className="shell-workspace">
         <WindowManager
           windows={state.windows}
@@ -87,6 +93,10 @@ function Shell() {
           onFocus={focusWindow}
         />
       </div>
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   )
 }

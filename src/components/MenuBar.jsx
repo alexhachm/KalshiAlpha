@@ -46,7 +46,7 @@ const MENU_CONFIG = [
   },
 ]
 
-function MenuBar({ onOpenWindow }) {
+function MenuBar({ onOpenWindow, onOpenSettings }) {
   const [activeMenu, setActiveMenu] = useState(null)
   const menuBarRef = useRef(null)
 
@@ -64,7 +64,11 @@ function MenuBar({ onOpenWindow }) {
   const handleMenuClick = (index) => {
     const menu = MENU_CONFIG[index]
     if (menu.action) {
-      onOpenWindow(menu.action, menu.label)
+      if (menu.action === 'settings' && onOpenSettings) {
+        onOpenSettings()
+      } else {
+        onOpenWindow(menu.action, menu.label)
+      }
       setActiveMenu(null)
       return
     }
