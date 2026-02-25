@@ -170,6 +170,109 @@
   flex-shrink: 0;
 }
 
+/* Merge target highlight — shown on the window being dragged onto */
+.window--merge-target {
+  border-color: var(--accent-highlight) !important;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.4), 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Tab bar for merged/tabbed windows */
+.window-tab-bar {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.window-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-right: 1px solid var(--border-color);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.window-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.window-tab--active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--accent-highlight);
+}
+
+.window-tab-label {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.window-tab-detach {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 2px;
+  line-height: 1;
+  border-radius: 2px;
+}
+
+.window-tab-detach:hover {
+  background: var(--accent-loss);
+  color: var(--text-primary);
+}
+
+/* Popout header bar (inside popup window) */
+.popout-header {
+  display: flex;
+  align-items: center;
+  height: var(--window-titlebar-height, 32px);
+  background: var(--bg-tertiary, #2a2a2a);
+  padding: 0 8px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.popout-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-secondary, #a0a0a0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popout-btn {
+  background: none;
+  border: 1px solid var(--border-color, #333);
+  color: var(--text-secondary, #a0a0a0);
+  cursor: pointer;
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  margin-left: 8px;
+}
+
+.popout-btn:hover {
+  background: var(--bg-secondary, #1e1e1e);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.popout-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+
 /* Right-click context menu */
 .window-context-menu {
   position: absolute;
