@@ -4,6 +4,7 @@ import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
 import Montage from './trade/Montage'
+import EventLog from './trade/EventLog'
 
 // Placeholder component used for all windows that don't have a real implementation yet
 function Placeholder({ title }) {
@@ -25,7 +26,7 @@ const COMPONENT_REGISTRY = {
   accounts: Placeholder,
   positions: Placeholder,
   'trade-log': Placeholder,
-  'event-log': Placeholder,
+  'event-log': EventLog,
   // Quotes
   chart: Chart,
   'time-sale': Placeholder,
