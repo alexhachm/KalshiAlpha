@@ -114,10 +114,10 @@ $WslProject = '/mnt/' + $ProjectDir.Substring(0,1).ToLower() + $ProjectDir.Subst
 Clear-Host
 if ($Continue) {
     Write-Host "  I AM __ID_UPPER__ (Opus) [CONTINUE]" -ForegroundColor Green
-    wsl.exe bash -lc "export PATH=`"`$HOME/bin:`$HOME/.local/bin:`$PATH`"; cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
+    wsl.exe bash -lc "cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
 } else {
     Write-Host "  I AM __ID_UPPER__ (Opus)" -ForegroundColor Green
-    wsl.exe bash -lc "export PATH=`"`$HOME/bin:`$HOME/.local/bin:`$PATH`"; cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'"
+    wsl.exe bash -lc "cd '$WslProject/.worktrees/wt-__NUM__' && env CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'"
 }
 PS1_TEMPLATE
         local id_upper

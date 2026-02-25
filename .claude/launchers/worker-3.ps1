@@ -4,7 +4,8 @@ param([switch]$Continue)
 
 # Derive project root from this script location (launchers/ is inside .claude/)
 $ProjectDir = (Resolve-Path "$PSScriptRoot\..\..").Path
-$WslProject = (wsl.exe wslpath -u "$ProjectDir").Trim()
+# Convert Windows path to WSL path in pure PowerShell (avoids wsl.exe backslash-eating bug)
+$WslProject = '/mnt/' + $ProjectDir.Substring(0,1).ToLower() + $ProjectDir.Substring(2).Replace('\','/')
 
 Clear-Host
 if ($Continue) {
