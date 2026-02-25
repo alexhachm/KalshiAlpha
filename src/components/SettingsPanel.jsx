@@ -1,53 +1,87 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import {
-  X,
-  Wifi,
-  Palette,
-  BarChart3,
-  Link2,
-  Layout,
-  Bell,
-  Eye,
-  EyeOff,
-  RotateCcw,
-} from 'lucide-react'
+import { X, Wifi, Palette, BarChart3, Link2, Layout, Bell, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import {
   LINK_COLORS,
   isLinkingEnabled,
   setLinkingEnabled,
 } from '../services/linkBus'
-import * as settingsStore from '../services/settingsStore'
 import './SettingsPanel.css'
+
+const LS_KEY = 'kalshi_settings'
+
+const DEFAULTS = {
+  connection: {
+    apiKey: '',
+    paperMode: true,
+    wsUrl: '',
+    wsReconnectInterval: 5,
+    wsMaxRetries: 10,
+  },
+  appearance: {
+    theme: 'dark',
+    accentColor: '#00d2ff',
+    fontFamily: 'Inter',
+    fontSize: 13,
+    windowOpacity: 100,
+  },
+  trading: {
+    defaultOrderSize: 1,
+    confirmOrders: true,
+    soundAlerts: true,
+    autoCancelOnDisconnect: false,
+  },
+  windows: {
+    snapDistance: 10,
+    mergeBehavior: 'tab',
+  },
+  notifications: {
+    desktopNotifications: false,
+    soundAlerts: true,
+    notifyOnFill: true,
+    notifyOnCancel: false,
+    notifyOnConnection: true,
+    notifyOnError: true,
+  },
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      // Merge with defaults so new keys are always present
+      const result = {}
+      for (const section of Object.keys(DEFAULTS)) {
+        result[section] = { ...DEFAULTS[section], ...(parsed[section] || {}) }
+      }
+      return result
+    }
+  } catch { /* ignore */ }
+  return structuredClone(DEFAULTS)
+}
+
+function saveSettings(settings) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(settings)) } catch { /* ignore */ }
+}
 
 const TABS = [
   { id: 'connection', label: 'Connection', icon: Wifi },
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'trading', label: 'Trading', icon: BarChart3 },
-  { id: 'color', label: 'Color Coordination', icon: Link2 },
+  { id: 'color', label: 'Color Linking', icon: Link2 },
   { id: 'windows', label: 'Windows', icon: Layout },
   { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
 
-const FONT_OPTIONS = [
-  'Inter',
-  'Roboto Mono',
-  'SF Mono',
-  'Consolas',
-  'system-ui',
-]
-
-const THEME_OPTIONS = [
-  { value: 'dark', label: 'Dark' },
-  { value: 'light', label: 'Light' },
-]
-
+const FONT_OPTIONS = ['Inter', 'Roboto Mono', 'SF Mono', 'Consolas', 'system-ui']
+const THEME_OPTIONS = [{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]
 const MERGE_OPTIONS = [
   { value: 'tab', label: 'Tabbed' },
   { value: 'stack', label: 'Stacked' },
   { value: 'disabled', label: 'Disabled' },
 ]
 
-// --- Reusable control components ---
+// --- Reusable controls ---
 
 function Toggle({ value, onChange }) {
   return (
@@ -76,11 +110,7 @@ function NumberInput({ value, onChange, min, max, step = 1 }) {
 
 function Select({ value, onChange, options }) {
   return (
-    <select
-      className="settings-select"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    >
+    <select className="settings-select" value={value} onChange={(e) => onChange(e.target.value)}>
       {options.map((opt) => (
         <option key={typeof opt === 'string' ? opt : opt.value} value={typeof opt === 'string' ? opt : opt.value}>
           {typeof opt === 'string' ? opt : opt.label}
@@ -121,7 +151,7 @@ function PasswordInput({ value, onChange, placeholder }) {
   )
 }
 
-// --- Section components ---
+// --- Sections ---
 
 function ConnectionSection({ settings, onUpdate }) {
   const conn = settings.connection
@@ -137,21 +167,20 @@ function ConnectionSection({ settings, onUpdate }) {
       <Row label="Paper mode" description="Use paper trading (no real money)">
         <Toggle value={conn.paperMode} onChange={(v) => onUpdate('connection', 'paperMode', v)} />
       </Row>
-      <Row label="Reconnect interval" description="Seconds between WebSocket reconnect attempts">
-        <NumberInput
-          value={conn.wsReconnectInterval}
-          onChange={(v) => onUpdate('connection', 'wsReconnectInterval', v)}
-          min={1}
-          max={60}
+      <Row label="WebSocket URL" description="Custom WS endpoint (leave blank for default)">
+        <input
+          type="text"
+          className="settings-text-input"
+          value={conn.wsUrl}
+          onChange={(e) => onUpdate('connection', 'wsUrl', e.target.value)}
+          placeholder={conn.paperMode ? 'wss://demo-api.kalshi.co/trade-api/ws/v2' : 'wss://api.elections.kalshi.com/trade-api/ws/v2'}
         />
       </Row>
+      <Row label="Reconnect interval" description="Seconds between WebSocket reconnect attempts">
+        <NumberInput value={conn.wsReconnectInterval} onChange={(v) => onUpdate('connection', 'wsReconnectInterval', v)} min={1} max={60} />
+      </Row>
       <Row label="Max retries" description="Maximum WebSocket reconnection attempts">
-        <NumberInput
-          value={conn.wsMaxRetries}
-          onChange={(v) => onUpdate('connection', 'wsMaxRetries', v)}
-          min={1}
-          max={100}
-        />
+        <NumberInput value={conn.wsMaxRetries} onChange={(v) => onUpdate('connection', 'wsMaxRetries', v)} min={1} max={100} />
       </Row>
     </>
   )
@@ -165,34 +194,17 @@ function AppearanceSection({ settings, onUpdate }) {
         <Select value={app.theme} onChange={(v) => onUpdate('appearance', 'theme', v)} options={THEME_OPTIONS} />
       </Row>
       <Row label="Accent color">
-        <input
-          type="color"
-          className="settings-color-picker"
-          value={app.accentColor}
-          onChange={(e) => onUpdate('appearance', 'accentColor', e.target.value)}
-        />
+        <input type="color" className="settings-color-picker" value={app.accentColor} onChange={(e) => onUpdate('appearance', 'accentColor', e.target.value)} />
       </Row>
       <Row label="Font family">
         <Select value={app.fontFamily} onChange={(v) => onUpdate('appearance', 'fontFamily', v)} options={FONT_OPTIONS} />
       </Row>
       <Row label="Font size" description="Base font size in pixels">
-        <NumberInput
-          value={app.fontSize}
-          onChange={(v) => onUpdate('appearance', 'fontSize', v)}
-          min={10}
-          max={20}
-        />
+        <NumberInput value={app.fontSize} onChange={(v) => onUpdate('appearance', 'fontSize', v)} min={10} max={20} />
       </Row>
-      <Row label="Window opacity" description="0–100%">
+      <Row label="Window opacity" description="0-100%">
         <div className="settings-slider-row">
-          <input
-            type="range"
-            className="settings-slider"
-            min={30}
-            max={100}
-            value={app.windowOpacity}
-            onChange={(e) => onUpdate('appearance', 'windowOpacity', Number(e.target.value))}
-          />
+          <input type="range" className="settings-slider" min={30} max={100} value={app.windowOpacity} onChange={(e) => onUpdate('appearance', 'windowOpacity', Number(e.target.value))} />
           <span className="settings-slider-value">{app.windowOpacity}%</span>
         </div>
       </Row>
@@ -205,12 +217,7 @@ function TradingSection({ settings, onUpdate }) {
   return (
     <>
       <Row label="Default order size" description="Contracts per order">
-        <NumberInput
-          value={t.defaultOrderSize}
-          onChange={(v) => onUpdate('trading', 'defaultOrderSize', v)}
-          min={1}
-          max={10000}
-        />
+        <NumberInput value={t.defaultOrderSize} onChange={(v) => onUpdate('trading', 'defaultOrderSize', v)} min={1} max={10000} />
       </Row>
       <Row label="Confirm orders" description="Show confirmation dialog before sending">
         <Toggle value={t.confirmOrders} onChange={(v) => onUpdate('trading', 'confirmOrders', v)} />
@@ -225,17 +232,12 @@ function TradingSection({ settings, onUpdate }) {
   )
 }
 
-function ColorCoordinationSection({ settings, onUpdate }) {
-  const [linkingOn, setLinkingOn] = useState(isLinkingEnabled)
-
-  useEffect(() => {
-    setLinkingOn(isLinkingEnabled())
-  }, [settings])
+function ColorSection() {
+  const [linkingOn, setLinkingOn] = useState(() => isLinkingEnabled())
 
   const handleToggle = (val) => {
     setLinkingOn(val)
     setLinkingEnabled(val)
-    onUpdate('colorCoordination', 'linkingEnabled', val)
   }
 
   return (
@@ -246,12 +248,7 @@ function ColorCoordinationSection({ settings, onUpdate }) {
       <Row label="Link group colors" description="Available color groups for window linking">
         <div className="settings-color-swatches">
           {LINK_COLORS.map((c) => (
-            <div
-              key={c.id}
-              className="settings-swatch"
-              style={{ backgroundColor: c.hex }}
-              title={c.id}
-            />
+            <div key={c.id} className="settings-swatch" style={{ backgroundColor: c.hex }} title={c.id} />
           ))}
         </div>
       </Row>
@@ -264,20 +261,10 @@ function WindowsSection({ settings, onUpdate }) {
   return (
     <>
       <Row label="Snap distance" description="Pixels to trigger window snapping">
-        <NumberInput
-          value={w.snapDistance}
-          onChange={(v) => onUpdate('windows', 'snapDistance', v)}
-          min={0}
-          max={50}
-        />
+        <NumberInput value={w.snapDistance} onChange={(v) => onUpdate('windows', 'snapDistance', v)} min={0} max={50} />
       </Row>
       <Row label="Merge behavior" description="How windows combine when dragged together">
         <Select value={w.mergeBehavior} onChange={(v) => onUpdate('windows', 'mergeBehavior', v)} options={MERGE_OPTIONS} />
-      </Row>
-      <Row label="Saved layouts">
-        <span className="settings-muted">
-          {w.savedLayouts.length === 0 ? 'No saved layouts' : `${w.savedLayouts.length} layout(s)`}
-        </span>
       </Row>
     </>
   )
@@ -314,7 +301,7 @@ const SECTIONS = {
   connection: ConnectionSection,
   appearance: AppearanceSection,
   trading: TradingSection,
-  color: ColorCoordinationSection,
+  color: ColorSection,
   windows: WindowsSection,
   notifications: NotificationsSection,
 }
@@ -323,11 +310,10 @@ const SECTIONS = {
 
 function SettingsPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('connection')
-  const [settings, setSettings] = useState(() => settingsStore.get())
+  const [settings, setSettings] = useState(() => loadSettings())
 
   useEffect(() => {
-    if (!isOpen) return
-    setSettings({ ...settingsStore.get() })
+    if (isOpen) setSettings(loadSettings())
   }, [isOpen])
 
   useEffect(() => {
@@ -340,13 +326,17 @@ function SettingsPanel({ isOpen, onClose }) {
   }, [isOpen, onClose])
 
   const handleUpdate = useCallback((section, key, value) => {
-    settingsStore.update(section, key, value)
-    setSettings({ ...settingsStore.get() })
+    setSettings((prev) => {
+      const next = { ...prev, [section]: { ...prev[section], [key]: value } }
+      saveSettings(next)
+      return next
+    })
   }, [])
 
   const handleReset = useCallback(() => {
-    settingsStore.reset()
-    setSettings({ ...settingsStore.get() })
+    const fresh = structuredClone(DEFAULTS)
+    saveSettings(fresh)
+    setSettings(fresh)
   }, [])
 
   if (!isOpen) return null

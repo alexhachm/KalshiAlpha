@@ -1,5 +1,6 @@
 import React from 'react'
 import Window from './Window'
+import PopoutWindow from './PopoutWindow'
 import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
@@ -39,11 +40,42 @@ const COMPONENT_REGISTRY = {
   'hotkey-config': Placeholder,
 }
 
-function WindowManager({ windows, onClose, onFocus }) {
+function WindowManager({
+  windows,
+  onClose,
+  onFocus,
+  onMerge,
+  onSetActiveTab,
+  onDetachTab,
+  onPopOut,
+  onPopIn,
+}) {
   return (
     <>
       {Object.values(windows).map((win) => {
         const Component = COMPONENT_REGISTRY[win.type] || Placeholder
+        const componentProps = {
+          title: win.title,
+          windowId: win.id,
+          type: win.type,
+        }
+        // Pass ticker context if the window was opened with one
+        if (win.ticker) componentProps.ticker = win.ticker
+
+        if (win.poppedOut) {
+          return (
+            <PopoutWindow
+              key={win.id}
+              title={win.title}
+              width={win.initialWidth}
+              height={win.initialHeight}
+              onClose={() => onPopIn(win.id)}
+            >
+              <Component {...componentProps} />
+            </PopoutWindow>
+          )
+        }
+
         return (
           <Window
             key={win.id}
@@ -57,8 +89,14 @@ function WindowManager({ windows, onClose, onFocus }) {
             zIndex={win.zIndex}
             onClose={onClose}
             onFocus={onFocus}
+            onMerge={onMerge}
+            onPopOut={onPopOut}
+            tabs={win.tabs}
+            activeTabIndex={win.activeTabIndex}
+            onSetActiveTab={onSetActiveTab}
+            onDetachTab={onDetachTab}
           >
-            <Component title={win.title} windowId={win.id} type={win.type} />
+            <Component {...componentProps} />
           </Window>
         )
       })}
