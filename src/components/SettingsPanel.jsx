@@ -19,7 +19,7 @@ const DEFAULTS = {
   },
   appearance: {
     theme: 'dark',
-    accentColor: '#00d2ff',
+    accentColor: '#4fc3f7',
     fontFamily: 'Inter',
     fontSize: 13,
     windowOpacity: 100,

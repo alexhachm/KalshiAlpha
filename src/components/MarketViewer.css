@@ -3,9 +3,9 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: var(--text-primary);
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .mv-ticker-bar {
@@ -16,43 +16,44 @@
 
 .mv-ticker-select {
   flex: 1;
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) 6px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
+  transition: border-color var(--transition-fast);
 }
 
 .mv-ticker-select:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 .mv-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: var(--spacing-xs) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
 .mv-ticker-name {
   font-weight: 700;
-  font-size: 14px;
-  color: var(--accent-highlight);
+  font-size: var(--font-size-lg);
+  color: var(--accent-info);
 }
 
 .mv-last-trade {
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
 .mv-prices {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .mv-price-box {
@@ -60,14 +61,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px;
-  border-radius: 3px;
-  border: 1px solid var(--border-color);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
   background: var(--bg-tertiary);
 }
 
 .mv-price-label {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
@@ -77,14 +78,15 @@
 .mv-price-value {
   font-size: 20px;
   font-weight: 700;
+  font-family: var(--font-mono);
 }
 
 .mv-yes-price {
-  color: var(--accent-win);
+  color: var(--accent-buy);
 }
 
 .mv-no-price {
-  color: var(--accent-loss);
+  color: var(--accent-sell);
 }
 
 .mv-depth-section {
@@ -95,41 +97,46 @@
 }
 
 .mv-depth-title {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
-  padding: 4px 0;
+  padding: var(--spacing-xs) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
 .mv-depth-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }
 
 .mv-depth-table th {
   text-align: left;
   color: var(--text-muted);
   font-weight: 400;
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  padding: 3px 4px;
+  padding: var(--spacing-xs) var(--spacing-xs);
   border-bottom: 1px solid var(--border-color);
 }
 
 .mv-depth-table td {
-  padding: 2px 4px;
+  padding: 2px var(--spacing-xs);
   color: var(--text-secondary);
+  font-family: var(--font-mono);
 }
 
-.mv-bid-price {
-  color: var(--accent-win);
+.mv-depth-table tbody tr:nth-child(even) {
+  background: var(--bg-row-alt);
 }
 
 .mv-depth-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-hover);
+}
+
+.mv-bid-price {
+  color: var(--accent-buy);
 }
 
 .mv-loading {
@@ -138,7 +145,7 @@
   justify-content: center;
   flex: 1;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-md);
 }
 
 .mv-search-wrapper {
