@@ -132,12 +132,12 @@
 
 /* Market name color coding */
 .pos-market-long {
-  color: var(--accent-win, #00ff88);
+  color: var(--accent-win);
   font-weight: 600;
 }
 
 .pos-market-short {
-  color: var(--accent-loss, #ff4444);
+  color: var(--accent-loss);
   font-weight: 600;
 }
 
@@ -153,13 +153,13 @@
 }
 
 .pos-type-long {
-  background: rgba(0, 255, 136, 0.15);
-  color: var(--accent-win, #00ff88);
+  background: rgba(0, 255, 0, 0.15);
+  color: var(--accent-win);
 }
 
 .pos-type-short {
-  background: rgba(255, 68, 68, 0.15);
-  color: var(--accent-loss, #ff4444);
+  background: rgba(255, 82, 82, 0.15);
+  color: var(--accent-loss);
 }
 
 /* Empty state */

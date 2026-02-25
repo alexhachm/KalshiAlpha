@@ -130,7 +130,7 @@
 }
 
 .el-level--warn {
-  color: #ffc800;
+  color: var(--accent-warn);
 }
 
 .el-level--error {
@@ -154,5 +154,5 @@
 }
 
 .el-entry--warn .el-message {
-  color: #ffc800;
+  color: var(--accent-warn);
 }
