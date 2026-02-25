@@ -171,12 +171,15 @@ function TradeLog({ windowId }) {
 
   // Portfolio hook for real data
   const { connected } = useKalshiConnection()
-  const { positions: apiPositions, fills: apiFills } = usePortfolio(
+  const { balance, positions: apiPositions, fills: apiFills } = usePortfolio(
     settings.refreshInterval * 1000
   )
 
-  // Use API data when connected, mock when not
-  const allRows = connected && apiFills.length > 0
+  // Portfolio loaded when connected and first fetch has returned
+  const portfolioLoaded = connected && balance !== null
+
+  // Use API data when connected and loaded, mock when not connected
+  const allRows = portfolioLoaded
     ? mapApiFillsToTradeLog(apiFills, apiPositions)
     : mockRows
 
@@ -321,6 +324,11 @@ function TradeLog({ windowId }) {
           </button>
         ))}
       </div>
+
+      {/* Loading indicator when API is connecting */}
+      {connected && !portfolioLoaded && (
+        <div className="tl-loading">Loading trade history...</div>
+      )}
 
       {/* Table */}
       <div className="tl-table-wrap">

@@ -12,10 +12,11 @@
     "status": "idle",
     "domain": null,
     "current_task": null,
-    "tasks_completed": 0,
+    "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": null
+    "last_heartbeat": "2026-02-25T19:47:22Z",
+    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
   },
   "worker-3": {
     "status": "idle",

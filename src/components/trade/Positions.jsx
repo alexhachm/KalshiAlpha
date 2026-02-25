@@ -109,12 +109,15 @@ function Positions({ windowId }) {
 
   // Portfolio hook for real data
   const { connected } = useKalshiConnection()
-  const { positions: apiPositions, refresh: refreshPortfolio } = usePortfolio(
+  const { balance, positions: apiPositions, refresh: refreshPortfolio } = usePortfolio(
     settings.refreshInterval * 1000
   )
 
-  // Use API positions when connected, mock when not
-  const positions = connected && apiPositions.length > 0
+  // Portfolio loaded when connected and first fetch has returned
+  const portfolioLoaded = connected && balance !== null
+
+  // Use API positions when connected and loaded, mock when not connected
+  const positions = portfolioLoaded
     ? mapApiPositions(apiPositions)
     : mockPositions
 
@@ -226,6 +229,11 @@ function Positions({ windowId }) {
           </button>
         </div>
       </div>
+
+      {/* Loading indicator when API is connecting */}
+      {connected && !portfolioLoaded && (
+        <div className="pos-loading">Loading portfolio data...</div>
+      )}
 
       {/* Table */}
       <div className="pos-table-wrap">

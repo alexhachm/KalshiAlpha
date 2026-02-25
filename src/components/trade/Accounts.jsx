@@ -174,6 +174,11 @@ function Accounts({ windowId }) {
         </button>
       </div>
 
+      {/* Loading indicator when API is connecting */}
+      {connected && !balance && (
+        <div style={{ textAlign: 'center', padding: '8px', color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }}>Loading account data...</div>
+      )}
+
       {/* Table */}
       <div className="acct-table-wrap">
         <table className="acct-table">

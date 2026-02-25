@@ -232,6 +232,14 @@ function Montage({ windowId }) {
         </button>
       </div>
 
+      {/* Error display */}
+      {(tickerError || orderError) && (
+        <div className="mt-error">
+          {tickerError && <span>Data: {tickerError}</span>}
+          {orderError && <span>Order: {orderError}</span>}
+        </div>
+      )}
+
       {data ? (
         <>
           {/* Level II Book */}

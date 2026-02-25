@@ -272,6 +272,14 @@ function PriceLadder({ windowId }) {
         </button>
       </div>
 
+      {/* Error display */}
+      {(tickerError || orderError) && (
+        <div className="pl-error">
+          {tickerError && <span>Data: {tickerError}</span>}
+          {orderError && <span>Order: {orderError}</span>}
+        </div>
+      )}
+
       {data ? (
         <>
           {/* Column headers */}
