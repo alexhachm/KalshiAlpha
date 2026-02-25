@@ -243,6 +243,36 @@ export function useOrderEntry() {
 }
 
 /**
+ * Run a historical scan query.
+ * Returns results, scanning state, and a scan trigger function.
+ *
+ * @returns {{ results: Array, scanning: boolean, error: string|null, scan: Function }}
+ */
+export function useHistoricalScan() {
+  const [results, setResults] = useState([]);
+  const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState(null);
+
+  const scan = useCallback(async (params) => {
+    setScanning(true);
+    setError(null);
+    try {
+      const data = await dataFeed.getHistoricalScanResults(params);
+      setResults(data);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      setResults([]);
+      return [];
+    } finally {
+      setScanning(false);
+    }
+  }, []);
+
+  return { results, scanning, error, scan };
+}
+
+/**
  * Search markets.
  * @param {string} query - Search term
  * @returns {{ results: Array, loading: boolean, search: Function }}
