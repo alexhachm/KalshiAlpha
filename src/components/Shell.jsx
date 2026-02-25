@@ -1,4 +1,4 @@
-import React, { useReducer, useState, useCallback } from 'react'
+import React, { useReducer, useState, useCallback, useEffect } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
@@ -36,21 +36,21 @@ function windowReducer(state, action) {
       const id = state.nextId
       const count = Object.keys(state.windows).length
       const sizes = TYPE_SIZES[action.payload.type] || {}
+      const win = {
+        id,
+        type: action.payload.type,
+        title: action.payload.title,
+        initialX: INITIAL_X + (count % 10) * CASCADE_OFFSET,
+        initialY: INITIAL_Y + (count % 10) * CASCADE_OFFSET,
+        initialWidth: sizes.width || DEFAULT_WIDTH,
+        initialHeight: sizes.height || DEFAULT_HEIGHT,
+        zIndex: state.nextZ,
+      }
+      // Attach ticker/context if provided (e.g. from Positions double-click)
+      if (action.payload.ticker) win.ticker = action.payload.ticker
       return {
         ...state,
-        windows: {
-          ...state.windows,
-          [id]: {
-            id,
-            type: action.payload.type,
-            title: action.payload.title,
-            initialX: INITIAL_X + (count % 10) * CASCADE_OFFSET,
-            initialY: INITIAL_Y + (count % 10) * CASCADE_OFFSET,
-            initialWidth: sizes.width || DEFAULT_WIDTH,
-            initialHeight: sizes.height || DEFAULT_HEIGHT,
-            zIndex: state.nextZ,
-          },
-        },
+        windows: { ...state.windows, [id]: win },
         nextId: state.nextId + 1,
         nextZ: state.nextZ + 1,
       }
@@ -88,9 +88,20 @@ function Shell() {
   const [state, dispatch] = useReducer(windowReducer, initialState)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const openWindow = (type, title) => {
-    dispatch({ type: 'OPEN_WINDOW', payload: { type, title } })
-  }
+  const openWindow = useCallback((type, title, ticker) => {
+    dispatch({ type: 'OPEN_WINDOW', payload: { type, title, ticker } })
+  }, [])
+
+  // Listen for 'open-window' custom events from child components
+  // e.g. Positions can dispatch: window.dispatchEvent(new CustomEvent('open-window', { detail: { type: 'montage', title: 'Montage', ticker: 'TICKER' } }))
+  useEffect(() => {
+    const handler = (e) => {
+      const { type, title, ticker } = e.detail || {}
+      if (type) openWindow(type, title || type, ticker)
+    }
+    window.addEventListener('open-window', handler)
+    return () => window.removeEventListener('open-window', handler)
+  }, [openWindow])
 
   const closeWindow = (id) => {
     dispatch({ type: 'CLOSE_WINDOW', payload: { id } })
