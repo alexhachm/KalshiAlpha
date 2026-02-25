@@ -5,6 +5,7 @@ import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
 import Montage from './trade/Montage'
 import HistoricalScanner from './scanners/HistoricalScanner'
+import MarketClock from './scanners/MarketClock'
 
 // Placeholder component used for all windows that don't have a real implementation yet
 function Placeholder({ title }) {
@@ -36,7 +37,7 @@ const COMPONENT_REGISTRY = {
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
   'alert-trigger': Placeholder,
-  'market-clock': Placeholder,
+  'market-clock': MarketClock,
   // Setup
   'hotkey-config': Placeholder,
 }
