@@ -102,9 +102,9 @@
 }
 
 .tl-filter-active {
-  background: var(--accent-highlight, #4488ff);
-  color: #fff;
-  border-color: var(--accent-highlight, #4488ff);
+  background: var(--accent-highlight);
+  color: var(--bg-primary);
+  border-color: var(--accent-highlight);
 }
 
 /* Table */
@@ -179,8 +179,8 @@
 }
 
 /* Market name color */
-.tl-market-long  { color: var(--accent-win, #00ff88); font-weight: 600; }
-.tl-market-short { color: var(--accent-loss, #ff4444); font-weight: 600; }
+.tl-market-long  { color: var(--accent-win); font-weight: 600; }
+.tl-market-short { color: var(--accent-loss); font-weight: 600; }
 
 /* Badges */
 .tl-badge {
@@ -193,10 +193,10 @@
   text-transform: uppercase;
 }
 
-.tl-badge-long   { background: rgba(0, 255, 136, 0.15); color: var(--accent-win, #00ff88); }
-.tl-badge-short  { background: rgba(255, 68, 68, 0.15);  color: var(--accent-loss, #ff4444); }
-.tl-badge-open   { background: rgba(68, 136, 255, 0.15); color: #6699ff; }
-.tl-badge-closed { background: rgba(100, 100, 100, 0.15); color: var(--text-muted); }
+.tl-badge-long   { background: rgba(0, 255, 0, 0.15); color: var(--accent-win); }
+.tl-badge-short  { background: rgba(255, 82, 82, 0.15); color: var(--accent-loss); }
+.tl-badge-open   { background: rgba(0, 210, 255, 0.15); color: var(--accent-highlight); }
+.tl-badge-closed { background: rgba(144, 144, 144, 0.15); color: var(--text-muted); }
 
 /* Empty state */
 .tl-empty {

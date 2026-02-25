@@ -4,11 +4,12 @@
   --bg-tertiary: #2a2a2a;
   --text-primary: #e0e0e0;
   --text-secondary: #a0a0a0;
-  --text-muted: #666666;
-  
+  --text-muted: #909090;
+
   --accent-win: #00ff00; /* Matrix Green */
-  --accent-loss: #ff4444;
+  --accent-loss: #ff5252;
   --accent-highlight: #00d2ff;
+  --accent-warn: #ffc800;
   --border-color: #333333;
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -90,7 +91,7 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: var(--border-color);
 }
 
 .mono {
