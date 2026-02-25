@@ -1,0 +1,197 @@
+.chart-component {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  min-height: 30px;
+}
+
+.chart-ticker-select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.chart-timeframes {
+  display: flex;
+  gap: 2px;
+}
+
+.chart-tf-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chart-tf-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.chart-tf-btn--active {
+  color: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+  background: rgba(0, 210, 255, 0.1);
+}
+
+.chart-type-btns {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.chart-type-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chart-type-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.chart-type-btn--active {
+  color: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+  background: rgba(0, 210, 255, 0.1);
+}
+
+.chart-settings-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.chart-settings-btn:hover {
+  color: var(--text-primary);
+}
+
+/* OHLC data bar */
+.chart-ohlc-bar {
+  display: flex;
+  gap: 10px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.chart-ohlc-val {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Chart canvas fills remaining space */
+.chart-canvas-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Settings panel overlay */
+.chart-settings-panel {
+  position: absolute;
+  top: 36px;
+  right: 8px;
+  width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.chart-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.chart-settings-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.chart-settings-close:hover {
+  color: var(--text-primary);
+}
+
+.chart-settings-body {
+  padding: 8px 10px;
+}
+
+.chart-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.chart-setting-row select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+}
+
+.chart-setting-row input[type="color"] {
+  width: 24px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+}
+
+.chart-setting-row input[type="checkbox"] {
+  accent-color: var(--accent-highlight);
+  cursor: pointer;
+}
