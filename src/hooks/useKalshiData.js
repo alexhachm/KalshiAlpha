@@ -124,6 +124,41 @@ export function useOHLCV(ticker, timeframe = '1h') {
 }
 
 /**
+ * Subscribe to real-time time & sales for a market.
+ * Accumulates trades in an array (newest first).
+ *
+ * @param {string|null} ticker - Market ticker, or null to skip
+ * @param {number} maxTrades - Maximum trades to keep (default 200)
+ * @returns {{ trades: Array, clearTrades: Function, error: string|null }}
+ */
+export function useTimeSales(ticker, maxTrades = 200) {
+  const [trades, setTrades] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!ticker) {
+      setTrades([]);
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const unsub = dataFeed.subscribeToTimeSales(ticker, (trade) => {
+        setTrades((prev) => [trade, ...prev].slice(0, maxTrades));
+      });
+      return unsub;
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [ticker, maxTrades]);
+
+  const clearTrades = useCallback(() => setTrades([]), []);
+
+  return { trades, clearTrades, error };
+}
+
+/**
  * Get connection status and control.
  * @returns {{ connected: boolean, initialize: Function, disconnect: Function }}
  */

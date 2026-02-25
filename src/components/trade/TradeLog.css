@@ -1,0 +1,207 @@
+.tradelog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.tradelog--font-small  { font-size: 11px; }
+.tradelog--font-medium { font-size: 12px; }
+.tradelog--font-large  { font-size: 14px; }
+
+/* Header bar */
+.tl-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.tl-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.tl-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tl-count {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.tl-csv-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 2px 7px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  transition: color 0.15s;
+}
+
+.tl-csv-btn:hover {
+  color: var(--text-primary);
+}
+
+.tl-settings-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.tl-settings-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Filter bar */
+.tl-filter-bar {
+  display: flex;
+  gap: 2px;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.tl-filter-btn {
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.tl-filter-btn:hover {
+  color: var(--text-secondary);
+}
+
+.tl-filter-active {
+  background: var(--accent-highlight, #4488ff);
+  color: #fff;
+  border-color: var(--accent-highlight, #4488ff);
+}
+
+/* Table */
+.tl-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tl-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.tl-th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tl-th:hover {
+  color: var(--text-secondary);
+}
+
+.tl-sort-arrow {
+  font-size: 8px;
+  color: var(--accent-highlight);
+}
+
+.tl-td {
+  padding: 5px 8px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(51, 51, 51, 0.4);
+}
+
+.tl-align-left   { text-align: left; }
+.tl-align-center { text-align: center; }
+.tl-align-right  { text-align: right; }
+
+/* Row states */
+.tl-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.tl-row:hover .tl-td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tl-row-selected .tl-td {
+  background: rgba(68, 136, 255, 0.1);
+}
+
+.tl-row-flash .tl-td {
+  animation: tl-flash 0.6s ease-out;
+}
+
+@keyframes tl-flash {
+  0%   { background: rgba(255, 204, 0, 0.25); }
+  100% { background: transparent; }
+}
+
+/* Market name color */
+.tl-market-long  { color: var(--accent-win, #00ff88); font-weight: 600; }
+.tl-market-short { color: var(--accent-loss, #ff4444); font-weight: 600; }
+
+/* Badges */
+.tl-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tl-badge-long   { background: rgba(0, 255, 136, 0.15); color: var(--accent-win, #00ff88); }
+.tl-badge-short  { background: rgba(255, 68, 68, 0.15);  color: var(--accent-loss, #ff4444); }
+.tl-badge-open   { background: rgba(68, 136, 255, 0.15); color: #6699ff; }
+.tl-badge-closed { background: rgba(100, 100, 100, 0.15); color: var(--text-muted); }
+
+/* Empty state */
+.tl-empty {
+  text-align: center;
+  padding: 24px 8px;
+  color: var(--text-muted);
+  font-style: italic;
+}

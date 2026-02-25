@@ -234,6 +234,72 @@ export const getHistoricalScanResults = ({ startDate, endDate, pattern, maxResul
   return results.sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
+// Mock portfolio subscription
+// Generates simulated positions, orders, fills, and balance data
+export const subscribeToPortfolio = (callback) => {
+  const mockPositions = TICKERS.slice(0, 4).map((t, i) => ({
+    ticker: t,
+    market_ticker: t,
+    position: i % 2 === 0 ? 'yes' : 'no',
+    total_traded: Math.floor(Math.random() * 200) + 10,
+    resting_orders_count: Math.floor(Math.random() * 3),
+    market_exposure: Math.floor(Math.random() * 5000) + 500,
+    fees_paid: Math.floor(Math.random() * 100),
+  }));
+
+  const mockOrders = TICKERS.slice(0, 2).map((t, i) => ({
+    order_id: `mock-order-${i}-${Date.now()}`,
+    ticker: t,
+    side: i % 2 === 0 ? 'yes' : 'no',
+    action: 'buy',
+    type: 'limit',
+    yes_price: randomPrice(),
+    remaining_count: Math.floor(Math.random() * 50) + 1,
+    status: 'resting',
+    created_time: new Date().toISOString(),
+  }));
+
+  const mockFills = TICKERS.slice(0, 3).map((t, i) => ({
+    trade_id: `mock-fill-${i}-${Date.now()}`,
+    ticker: t,
+    side: i % 2 === 0 ? 'yes' : 'no',
+    action: 'buy',
+    yes_price: randomPrice(),
+    count: Math.floor(Math.random() * 100) + 1,
+    created_time: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+  }));
+
+  const mockBalance = {
+    balance: Math.floor(Math.random() * 50000) + 10000,
+    portfolioValue: Math.floor(Math.random() * 30000) + 5000,
+  };
+
+  // Deliver initial data asynchronously
+  setTimeout(() => {
+    callback({
+      balance: mockBalance,
+      positions: mockPositions,
+      orders: mockOrders,
+      fills: mockFills,
+    });
+  }, 0);
+
+  // Periodically update with small changes
+  const interval = setInterval(() => {
+    // Slightly vary the balance
+    mockBalance.balance += Math.floor((Math.random() - 0.5) * 200);
+    mockBalance.portfolioValue += Math.floor((Math.random() - 0.5) * 100);
+    callback({
+      balance: { ...mockBalance },
+      positions: [...mockPositions],
+      orders: [...mockOrders],
+      fills: [...mockFills],
+    });
+  }, 5000);
+
+  return () => clearInterval(interval);
+};
+
 export const subscribeToTimeSales = (ticker, callback) => {
   let running = true;
   let lastPrice = randomPrice();
