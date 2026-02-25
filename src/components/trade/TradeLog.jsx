@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
 import TradeLogSettings from './TradeLogSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './TradeLog.css'
@@ -131,14 +132,53 @@ function applyDateFilter(rows, dateRange) {
   return rows.filter((r) => new Date(r.date) >= cutoff)
 }
 
+function mapApiFillsToTradeLog(fills, positions) {
+  const posMap = {}
+  ;(positions || []).forEach((p) => {
+    posMap[p.market_ticker] = p
+  })
+
+  return fills.map((f, i) => {
+    const pos = posMap[f.ticker || f.market_ticker]
+    const isLong = f.side === 'yes'
+    const isOpen = pos && Math.abs(pos.position || 0) > 0
+    const avgCost = f.yes_price ? +(f.yes_price / 100).toFixed(2) : 0
+    const count = parseInt(f.count || f.count_fp || '0', 10)
+
+    return {
+      id: f.fill_id || f.order_id || `fill-${i}`,
+      market: f.ticker || f.market_ticker || 'UNKNOWN',
+      account: 'KA-100482',
+      shares: count,
+      avgCost,
+      realized: isOpen ? 0 : +((f.realized_pnl || 0) / 100).toFixed(2),
+      unrealized: isOpen ? +((f.unrealized_pnl || 0) / 100).toFixed(2) : 0,
+      type: isLong ? 'Long' : 'Short',
+      status: isOpen ? 'Open' : 'Closed',
+      date: f.created_time ? f.created_time.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    }
+  })
+}
+
 function TradeLog({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [allRows, setAllRows] = useState(generateMockTradelog)
+  const [mockRows, setMockRows] = useState(generateMockTradelog)
   const [activeFilter, setActiveFilter] = useState(settings.filter)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const intervalRef = useRef(null)
+
+  // Portfolio hook for real data
+  const { connected } = useKalshiConnection()
+  const { positions: apiPositions, fills: apiFills } = usePortfolio(
+    settings.refreshInterval * 1000
+  )
+
+  // Use API data when connected, mock when not
+  const allRows = connected && apiFills.length > 0
+    ? mapApiFillsToTradeLog(apiFills, apiPositions)
+    : mockRows
 
   // Sync activeFilter with settings
   useEffect(() => {
@@ -150,9 +190,10 @@ function TradeLog({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh data
+  // Refresh mock data (only when not connected)
   const refreshData = useCallback(() => {
-    setAllRows((prev) => {
+    if (connected) return
+    setMockRows((prev) => {
       const next = generateMockTradelog()
 
       if (settings.flashOnChange) {
@@ -172,12 +213,13 @@ function TradeLog({ windowId }) {
 
       return next
     })
-  }, [settings.flashOnChange])
+  }, [settings.flashOnChange, connected])
 
   useEffect(() => {
+    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData])
+  }, [settings.refreshInterval, refreshData, connected])
 
   // Color link
   useEffect(() => {

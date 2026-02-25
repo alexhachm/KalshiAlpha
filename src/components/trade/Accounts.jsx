@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
 import AccountsSettings from './AccountsSettings'
 
 const LS_KEY_PREFIX = 'accounts-settings-'
@@ -73,25 +74,48 @@ function formatValue(value, precision) {
 function Accounts({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [accounts, setAccounts] = useState(generateMockAccounts)
+  const [mockAccounts, setMockAccounts] = useState(generateMockAccounts)
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const intervalRef = useRef(null)
+
+  // Portfolio hook for real data
+  const { connected } = useKalshiConnection()
+  const { balance, positions: apiPositions, fills: apiFills } = usePortfolio(
+    settings.refreshInterval * 1000
+  )
+
+  // Build real account data from portfolio
+  const apiAccounts = connected && balance
+    ? [{
+        account: 'KA-100482',
+        type: 'Paper',
+        realizedPnl: apiFills.reduce((s, f) => s + (f.realized_pnl || 0), 0) / 100,
+        unrealizedPnl: apiPositions.reduce((s, p) => s + (p.unrealized_pnl || 0), 0) / 100,
+        initEquity: balance.balance || 0,
+        tickets: apiFills.length,
+        shares: apiPositions.reduce((s, p) => s + Math.abs(p.position || 0), 0),
+      }]
+    : null
+
+  const accounts = apiAccounts || mockAccounts
 
   // Persist settings
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh data on interval
+  // Refresh mock data on interval (only when not connected)
   const refreshData = useCallback(() => {
-    setAccounts(generateMockAccounts())
-  }, [])
+    if (connected) return
+    setMockAccounts(generateMockAccounts())
+  }, [connected])
 
   useEffect(() => {
+    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData])
+  }, [settings.refreshInterval, refreshData, connected])
 
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings)
