@@ -5,6 +5,7 @@ import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
 import Montage from './trade/Montage'
 import Accounts from './trade/Accounts'
+import PriceLadder from './trade/PriceLadder'
 import EventLog from './trade/EventLog'
 import TimeSale from './quotes/TimeSale'
 import HistoricalScanner from './scanners/HistoricalScanner'
@@ -25,7 +26,7 @@ const COMPONENT_REGISTRY = {
   login: Placeholder,
   // Trade
   montage: Montage,
-  'price-ladder': Placeholder,
+  'price-ladder': PriceLadder,
   accounts: Accounts,
   positions: Placeholder,
   'trade-log': Placeholder,
