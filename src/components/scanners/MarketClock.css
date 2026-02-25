@@ -17,45 +17,72 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  padding: 4px 8px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   min-height: 0;
 }
 
 .mc-time {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--accent-win);
+  color: var(--text-heading);
   letter-spacing: 2px;
   line-height: 1.1;
   white-space: nowrap;
 }
 
+.mc-time-ms {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
 .mc-date {
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
   letter-spacing: 1px;
 }
 
 .mc-tz {
-  font-size: 9px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
 
-/* Settings gear button — top-right corner */
+/* Market status indicator */
+.mc-status {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mc-status--open {
+  color: var(--accent-buy);
+}
+
+.mc-status--closed {
+  color: var(--accent-sell);
+}
+
+.mc-status--pre,
+.mc-status--post {
+  color: var(--accent-warning);
+}
+
+/* Settings gear button - top-right corner */
 .mc-settings-btn {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
   padding: 2px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
 }
 
 .market-clock:hover .mc-settings-btn {
@@ -80,18 +107,18 @@
   right: 0;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
-  padding: 6px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
   z-index: 10;
 }
 
 .mc-settings-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
 }
 
 .mc-settings-row label {
@@ -103,19 +130,20 @@
 }
 
 .mc-settings-row select {
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 1px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   flex: 1;
+  transition: border-color var(--transition-fast);
 }
 
 .mc-settings-row select:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 .mc-settings-row input[type="checkbox"] {
@@ -130,7 +158,7 @@
 
 .mc-font-size-val {
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   min-width: 28px;
   text-align: right;
 }

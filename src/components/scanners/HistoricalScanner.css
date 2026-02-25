@@ -3,28 +3,28 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--text-primary);
 }
 
 /* Criteria bar */
 .hs-criteria {
-  padding: 6px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
   background: var(--bg-secondary);
 }
 
 .hs-criteria-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .hs-label {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -32,20 +32,21 @@
 }
 
 .hs-date-input {
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   flex: 1;
   min-width: 0;
+  transition: border-color var(--transition-fast);
 }
 
 .hs-date-input:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 /* Chrome date input icon color */
@@ -55,42 +56,44 @@
 }
 
 .hs-pattern-select {
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   flex: 1;
   min-width: 0;
   cursor: pointer;
+  transition: border-color var(--transition-fast);
 }
 
 .hs-pattern-select:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 .hs-scan-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
   background: var(--accent-highlight);
   color: var(--bg-primary);
   border: 1px solid var(--accent-highlight);
-  border-radius: 3px;
-  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  padding: 3px var(--spacing-md);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: filter var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 }
 
 .hs-scan-btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.15);
 }
 
 .hs-scan-btn:disabled {
@@ -109,19 +112,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
 }
 
 .hs-count {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
 .hs-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .hs-toolbar-btn {
@@ -130,17 +133,19 @@
   justify-content: center;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   padding: 3px 5px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   line-height: 1;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .hs-toolbar-btn:hover {
-  background: var(--border-color);
+  background: var(--bg-hover);
   color: var(--text-primary);
+  border-color: var(--border-color);
 }
 
 .hs-toolbar-btn:disabled {
@@ -156,42 +161,43 @@
 
 /* Settings panel */
 .hs-settings {
-  padding: 6px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .hs-settings-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .hs-settings-row label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .hs-settings-row input[type="number"] {
   width: 60px;
-  background: var(--bg-primary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   text-align: right;
+  transition: border-color var(--transition-fast);
 }
 
 .hs-settings-row input[type="number"]:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 .hs-settings-row input[type="checkbox"] {
@@ -221,15 +227,16 @@
 .hs-th {
   text-align: left;
   color: var(--text-muted);
-  font-weight: 400;
-  font-size: 10px;
+  font-weight: 600;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  transition: color var(--transition-fast);
 }
 
 .hs-th:hover {
@@ -246,15 +253,20 @@
 
 .hs-row {
   cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.hs-row:nth-child(even) {
+  background: var(--bg-row-alt);
 }
 
 .hs-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-hover);
 }
 
 .hs-row td {
-  padding: 3px 6px;
-  border-bottom: 1px solid rgba(51, 51, 51, 0.5);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,52 +274,53 @@
 
 .hs-cell-date {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   width: 90px;
 }
 
 .hs-cell-ticker {
   color: var(--accent-highlight);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }
 
 .hs-cell-pattern {
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }
 
 .hs-cell-signal {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .hs-signal-bull {
-  color: var(--accent-win);
+  color: var(--accent-buy);
 }
 
 .hs-signal-bear {
-  color: var(--accent-loss);
+  color: var(--accent-sell);
 }
 
 .hs-signal-neutral {
-  color: var(--text-muted);
+  color: var(--accent-neutral);
 }
 
 .hs-cell-roi {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   width: 65px;
   text-align: right;
 }
 
 .hs-roi-positive {
-  color: var(--accent-win);
+  color: var(--accent-buy);
 }
 
 .hs-roi-negative {
-  color: var(--accent-loss);
+  color: var(--accent-sell);
 }
 
 .hs-cell-confidence {
@@ -326,8 +339,9 @@
   width: 10px;
   height: 7px;
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: 1px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .hs-confidence-bar--active {
@@ -335,9 +349,25 @@
   border-color: var(--accent-highlight);
 }
 
+/* Color-code confidence by level: low=warning, mid=info, high=highlight */
+.hs-confidence-bar--active:nth-child(-n+2) {
+  background: var(--accent-warning);
+  border-color: var(--accent-warning);
+}
+
+.hs-confidence-bar--active:nth-child(n+3):nth-child(-n+3) {
+  background: var(--accent-info);
+  border-color: var(--accent-info);
+}
+
+.hs-confidence-bar--active:nth-child(n+4) {
+  background: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+}
+
 .hs-empty {
   text-align: center;
-  padding: 20px;
+  padding: var(--spacing-xl);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }

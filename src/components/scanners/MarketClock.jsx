@@ -86,7 +86,12 @@ function MarketClock({ windowId }) {
     <div className="market-clock">
       <div className="mc-display">
         <div className="mc-time" style={{ fontSize: `${settings.fontSize}px` }}>
-          {timeStr}
+          {settings.showMilliseconds ? (
+            <>
+              {timeStr.split('.')[0]}
+              <span className="mc-time-ms">.{timeStr.split('.').slice(1).join('.')}</span>
+            </>
+          ) : timeStr}
         </div>
         {dateStr && <div className="mc-date">{dateStr}</div>}
         <div className="mc-tz">{tzLabel}</div>
