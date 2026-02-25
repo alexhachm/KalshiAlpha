@@ -2,9 +2,9 @@
 # Launch a worker terminal on demand (called by Master-3/Master-2)
 # Usage: launch-worker.sh <worker-number>
 # Returns immediately (non-blocking). The worker terminal runs /worker-loop.
-set -e
+set -euo pipefail
 
-WORKER_NUM="$1"
+WORKER_NUM="${1:-}"
 if [ -z "$WORKER_NUM" ]; then
     echo "Usage: launch-worker.sh <worker-number>" >&2
     exit 1
@@ -13,7 +13,9 @@ fi
 # Resolve project directory (script lives at .claude/scripts/)
 PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 WORKTREE="$PROJECT_DIR/.worktrees/wt-$WORKER_NUM"
-LAUNCHER="$PROJECT_DIR/.claude/launchers/worker-${WORKER_NUM}.sh"
+LAUNCHER_SH="$PROJECT_DIR/.claude/launchers/worker-${WORKER_NUM}.sh"
+LAUNCHER_PS1="$PROJECT_DIR/.claude/launchers/worker-${WORKER_NUM}.ps1"
+LAUNCHER_BAT="$PROJECT_DIR/.claude/launchers/worker-${WORKER_NUM}.bat"
 
 # Verify worktree exists
 if [ ! -d "$WORKTREE" ]; then
@@ -21,38 +23,74 @@ if [ ! -d "$WORKTREE" ]; then
     exit 1
 fi
 
-# Verify launcher exists
-if [ ! -f "$LAUNCHER" ]; then
-    echo "ERROR: Launcher not found: $LAUNCHER" >&2
+if [ ! -f "$LAUNCHER_SH" ] && [ ! -f "$LAUNCHER_PS1" ] && [ ! -f "$LAUNCHER_BAT" ]; then
+    echo "ERROR: Worker launcher not found (.sh/.ps1/.bat) for worker-$WORKER_NUM" >&2
     exit 1
 fi
 
-# Platform-specific terminal launch (non-blocking)
-if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
-    # Windows: prefer Windows Terminal, fall back to start bash
-    if command -v wt.exe &>/dev/null; then
-        wt.exe new-tab --title "Worker-$WORKER_NUM" bash "$LAUNCHER" &
+# WSL runtime (primary path)
+if grep -qi microsoft /proc/version 2>/dev/null || [ -n "${WSL_DISTRO_NAME:-}" ]; then
+    if command -v wt.exe >/dev/null 2>&1; then
+        # Prefer .sh launcher (direct bash, no PowerShell middleman)
+        if [ -f "$LAUNCHER_SH" ]; then
+            wt.exe -w workers new-tab --title "Worker-$WORKER_NUM" wsl.exe bash "$LAUNCHER_SH" >/dev/null 2>&1 &
+        elif [ -f "$LAUNCHER_PS1" ]; then
+            WIN_LAUNCHER_PS1="$(wslpath -w "$LAUNCHER_PS1")"
+            WIN_WORKTREE="$(wslpath -w "$WORKTREE")"
+            wt.exe -w workers new-tab -d "$WIN_WORKTREE" --title "Worker-$WORKER_NUM" powershell.exe -ExecutionPolicy Bypass -File "$WIN_LAUNCHER_PS1" >/dev/null 2>&1 &
+        else
+            WIN_LAUNCHER_BAT="$(wslpath -w "$LAUNCHER_BAT")"
+            WIN_WORKTREE="$(wslpath -w "$WORKTREE")"
+            wt.exe -w workers new-tab -d "$WIN_WORKTREE" --title "Worker-$WORKER_NUM" cmd.exe /c "$WIN_LAUNCHER_BAT" >/dev/null 2>&1 &
+        fi
     else
-        start bash "$LAUNCHER" &
+        # Fallback: no Windows Terminal available
+        if [ -f "$LAUNCHER_PS1" ]; then
+            WIN_LAUNCHER_PS1="$(wslpath -w "$LAUNCHER_PS1")"
+            cmd.exe /c start "" powershell.exe -ExecutionPolicy Bypass -File "$WIN_LAUNCHER_PS1" >/dev/null 2>&1 &
+        elif [ -f "$LAUNCHER_BAT" ]; then
+            WIN_LAUNCHER_BAT="$(wslpath -w "$LAUNCHER_BAT")"
+            cmd.exe /c start "" "$WIN_LAUNCHER_BAT" >/dev/null 2>&1 &
+        fi
     fi
-elif [[ "$OSTYPE" == darwin* ]]; then
-    # macOS: open new Terminal window
-    osascript -e "tell application \"Terminal\"
-        activate
-        do script \"$LAUNCHER\"
-    end tell" &
-else
-    # Linux: try common terminal emulators
-    if command -v gnome-terminal &>/dev/null; then
-        gnome-terminal --title="Worker-$WORKER_NUM" -- bash "$LAUNCHER" &
-    elif command -v konsole &>/dev/null; then
-        konsole --new-tab -e bash "$LAUNCHER" &
-    elif command -v xterm &>/dev/null; then
-        xterm -title "Worker-$WORKER_NUM" -e bash "$LAUNCHER" &
-    else
-        echo "WARN: No supported terminal emulator found. Run manually: $LAUNCHER" >&2
-        exit 1
-    fi
+
+    echo "[LAUNCH_WORKER] worker-$WORKER_NUM terminal opened"
+    exit 0
 fi
 
-echo "[LAUNCH_WORKER] worker-$WORKER_NUM terminal opened"
+# Native Windows shell fallback (Git Bash / Cygwin)
+if [[ "$OSTYPE" == msys* || "$OSTYPE" == cygwin* ]]; then
+    WIN_WORKTREE="$(cygpath -w "$WORKTREE" 2>/dev/null || printf '%s' "$WORKTREE")"
+    WIN_LAUNCHER_PS1="$(cygpath -w "$LAUNCHER_PS1" 2>/dev/null || true)"
+    WIN_LAUNCHER_BAT="$(cygpath -w "$LAUNCHER_BAT" 2>/dev/null || true)"
+
+    if command -v wt.exe >/dev/null 2>&1; then
+        if [ -n "$WIN_LAUNCHER_PS1" ] && [ -f "$LAUNCHER_PS1" ]; then
+            wt.exe new-tab -d "$WIN_WORKTREE" --title "Worker-$WORKER_NUM" powershell.exe -ExecutionPolicy Bypass -File "$WIN_LAUNCHER_PS1" >/dev/null 2>&1 &
+        else
+            wt.exe new-tab -d "$WIN_WORKTREE" --title "Worker-$WORKER_NUM" cmd.exe /c "$WIN_LAUNCHER_BAT" >/dev/null 2>&1 &
+        fi
+    else
+        if [ -n "$WIN_LAUNCHER_PS1" ] && [ -f "$LAUNCHER_PS1" ]; then
+            cmd.exe /c start "" powershell.exe -ExecutionPolicy Bypass -File "$WIN_LAUNCHER_PS1" >/dev/null 2>&1 &
+        else
+            cmd.exe /c start "" "$WIN_LAUNCHER_BAT" >/dev/null 2>&1 &
+        fi
+    fi
+
+    echo "[LAUNCH_WORKER] worker-$WORKER_NUM terminal opened"
+    exit 0
+fi
+
+# macOS
+if [[ "$OSTYPE" == darwin* ]]; then
+    osascript -e "tell application \"Terminal\"
+        activate
+        do script \"$LAUNCHER_SH\"
+    end tell" &
+    echo "[LAUNCH_WORKER] worker-$WORKER_NUM terminal opened"
+    exit 0
+fi
+
+echo "ERROR: Unsupported platform. Run manually: $LAUNCHER_SH" >&2
+exit 1
