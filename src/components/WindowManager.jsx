@@ -7,6 +7,7 @@ import Montage from './trade/Montage'
 import Accounts from './trade/Accounts'
 import Positions from './trade/Positions'
 import PriceLadder from './trade/PriceLadder'
+import TradeLog from './trade/TradeLog'
 import EventLog from './trade/EventLog'
 import TimeSale from './quotes/TimeSale'
 import MarketClock from './scanners/MarketClock'
@@ -31,7 +32,7 @@ const COMPONENT_REGISTRY = {
   'price-ladder': PriceLadder,
   accounts: Accounts,
   positions: Positions,
-  'trade-log': Placeholder,
+  'trade-log': TradeLog,
   'event-log': EventLog,
   // Quotes
   chart: Chart,
