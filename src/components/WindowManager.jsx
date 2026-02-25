@@ -1,5 +1,19 @@
 import React from 'react'
 import Window from './Window'
+import MarketViewer from './MarketViewer'
+
+function renderWindowContent(win) {
+  switch (win.type) {
+    case 'market-viewer':
+      return <MarketViewer windowId={win.id} />
+    default:
+      return (
+        <div className="window-placeholder">
+          <span>{win.title}</span>
+        </div>
+      )
+  }
+}
 
 function WindowManager({ windows, onClose, onFocus }) {
   return (
@@ -17,9 +31,7 @@ function WindowManager({ windows, onClose, onFocus }) {
           onClose={onClose}
           onFocus={onFocus}
         >
-          <div className="window-placeholder">
-            <span>{win.title}</span>
-          </div>
+          {renderWindowContent(win)}
         </Window>
       ))}
     </>

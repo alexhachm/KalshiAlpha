@@ -9,11 +9,16 @@ const DEFAULT_HEIGHT = 300
 const INITIAL_X = 50
 const INITIAL_Y = 10
 
+const WINDOW_SIZES = {
+  'market-viewer': { width: 350, height: 400 },
+}
+
 function windowReducer(state, action) {
   switch (action.type) {
     case 'OPEN_WINDOW': {
       const id = state.nextId
       const count = Object.keys(state.windows).length
+      const sizes = WINDOW_SIZES[action.payload.type] || {}
       return {
         ...state,
         windows: {
@@ -24,8 +29,8 @@ function windowReducer(state, action) {
             title: action.payload.title,
             initialX: INITIAL_X + (count % 10) * CASCADE_OFFSET,
             initialY: INITIAL_Y + (count % 10) * CASCADE_OFFSET,
-            initialWidth: DEFAULT_WIDTH,
-            initialHeight: DEFAULT_HEIGHT,
+            initialWidth: sizes.width || DEFAULT_WIDTH,
+            initialHeight: sizes.height || DEFAULT_HEIGHT,
             zIndex: state.nextZ,
           },
         },
