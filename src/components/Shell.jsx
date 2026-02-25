@@ -35,6 +35,7 @@ function windowReducer(state, action) {
     case 'OPEN_WINDOW': {
       const id = state.nextId
       const count = Object.keys(state.windows).length
+<<<<<<< HEAD
       const sizes = TYPE_SIZES[action.payload.type] || {}
       return {
         ...state,
