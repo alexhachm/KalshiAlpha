@@ -1,6 +1,9 @@
 import React from 'react'
 import Window from './Window'
 import MarketViewer from './MarketViewer'
+import LiveScanner from './scanners/LiveScanner'
+import Chart from './quotes/Chart'
+import Montage from './trade/Montage'
 
 // Placeholder component used for all windows that don't have a real implementation yet
 function Placeholder({ title }) {
@@ -17,19 +20,19 @@ const COMPONENT_REGISTRY = {
   // Login
   login: Placeholder,
   // Trade
-  montage: Placeholder,
+  montage: Montage,
   'price-ladder': Placeholder,
   accounts: Placeholder,
   positions: Placeholder,
   'trade-log': Placeholder,
   'event-log': Placeholder,
   // Quotes
-  chart: Placeholder,
+  chart: Chart,
   'time-sale': Placeholder,
   'market-viewer': MarketViewer,
   'news-chat': Placeholder,
   // Scanners
-  'live-scanner': Placeholder,
+  'live-scanner': LiveScanner,
   'historical-scanner': Placeholder,
   'alert-trigger': Placeholder,
   'market-clock': Placeholder,

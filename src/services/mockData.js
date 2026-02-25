@@ -91,6 +91,58 @@ export const subscribeToMarketRace = (callback) => {
     return () => clearInterval(interval);
 };
 
+// Generate historical OHLCV candle data for charting
+export const generateOHLCV = (ticker, count = 200, timeframeMinutes = 5) => {
+    const candles = [];
+    const now = Math.floor(Date.now() / 1000);
+    const interval = timeframeMinutes * 60;
+    let price = randomPrice();
+
+    for (let i = count - 1; i >= 0; i--) {
+        const time = now - i * interval;
+        const open = price;
+        const change = (Math.random() - 0.48) * 4; // Slight upward bias
+        const high = Math.min(99, Math.max(1, open + Math.abs(change) + Math.random() * 2));
+        const low = Math.max(1, Math.min(99, open - Math.abs(change) - Math.random() * 2));
+        const close = Math.min(99, Math.max(1, open + change));
+        const volume = Math.floor(Math.random() * 2000) + 100;
+
+        candles.push({
+            time,
+            open: Math.round(open * 100) / 100,
+            high: Math.round(high * 100) / 100,
+            low: Math.round(low * 100) / 100,
+            close: Math.round(close * 100) / 100,
+            volume,
+        });
+        price = close;
+    }
+    return candles;
+};
+
+// Subscribe to streaming OHLCV updates for a chart
+export const subscribeToOHLCV = (ticker, timeframeMinutes, callback) => {
+    const interval = setInterval(() => {
+        const price = randomPrice();
+        const change = (Math.random() - 0.5) * 3;
+        const open = price;
+        const close = Math.min(99, Math.max(1, price + change));
+        const high = Math.max(open, close) + Math.random() * 2;
+        const low = Math.min(open, close) - Math.random() * 2;
+
+        callback({
+            time: Math.floor(Date.now() / 1000),
+            open: Math.round(open * 100) / 100,
+            high: Math.round(Math.min(99, high) * 100) / 100,
+            low: Math.round(Math.max(1, low) * 100) / 100,
+            close: Math.round(close * 100) / 100,
+            volume: Math.floor(Math.random() * 500) + 50,
+        });
+    }, UPDATE_INTERVAL_MS * 5); // Update candle every second
+
+    return () => clearInterval(interval);
+};
+
 // Simulates "Holly" Scanner Alerts
 export const subscribeToScanner = (callback) => {
     const interval = setInterval(() => {
