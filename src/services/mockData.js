@@ -112,3 +112,46 @@ export const subscribeToScanner = (callback) => {
 
     return () => clearInterval(interval);
 };
+
+// --- Historical Scanner ---
+
+const HISTORICAL_PATTERNS = [
+  { name: 'Volume Breakout', key: 'volume-breakout', signals: ['bull', 'bull', 'neutral'] },
+  { name: 'Price Reversal', key: 'price-reversal', signals: ['bear', 'bull', 'bear'] },
+  { name: 'Momentum Shift', key: 'momentum-shift', signals: ['bull', 'bear', 'neutral'] },
+  { name: 'Mean Reversion', key: 'mean-reversion', signals: ['neutral', 'bull', 'bear'] },
+  { name: 'Gap Fill', key: 'gap-fill', signals: ['bull', 'bear', 'neutral'] },
+];
+
+export const getHistoricalScanResults = ({ startDate, endDate, pattern, maxResults = 100 }) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const rangeDays = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+  const count = Math.min(maxResults, Math.max(5, Math.floor(rangeDays * 1.5)));
+
+  const results = [];
+  const availablePatterns = pattern === 'all'
+    ? HISTORICAL_PATTERNS
+    : HISTORICAL_PATTERNS.filter((p) => p.key === pattern);
+
+  for (let i = 0; i < count; i++) {
+    const dayOffset = Math.floor(Math.random() * rangeDays);
+    const date = new Date(start);
+    date.setDate(date.getDate() + dayOffset);
+
+    const pat = availablePatterns[Math.floor(Math.random() * availablePatterns.length)];
+    const signal = pat.signals[Math.floor(Math.random() * pat.signals.length)];
+
+    results.push({
+      id: `hs-${i}-${Date.now()}`,
+      date: date.toISOString().split('T')[0],
+      ticker: TICKERS[Math.floor(Math.random() * TICKERS.length)],
+      pattern: pat.name,
+      signal,
+      roi: parseFloat(((Math.random() - 0.3) * 20).toFixed(2)),
+      confidence: Math.floor(Math.random() * 5) + 1,
+    });
+  }
+
+  return results.sort((a, b) => new Date(b.date) - new Date(a.date));
+};

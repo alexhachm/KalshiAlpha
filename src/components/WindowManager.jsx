@@ -2,6 +2,7 @@ import React from 'react'
 import Window from './Window'
 import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
+import HistoricalScanner from './scanners/HistoricalScanner'
 
 // Placeholder component used for all windows that don't have a real implementation yet
 function Placeholder({ title }) {
@@ -31,7 +32,7 @@ const COMPONENT_REGISTRY = {
   'news-chat': Placeholder,
   // Scanners
   'live-scanner': LiveScanner,
-  'historical-scanner': Placeholder,
+  'historical-scanner': HistoricalScanner,
   'alert-trigger': Placeholder,
   'market-clock': Placeholder,
   // Setup
