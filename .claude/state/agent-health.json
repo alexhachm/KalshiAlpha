@@ -1,5 +1,0 @@
-{
-  "master-2": { "status": "starting", "last_reset": null, "tier1_count": 0, "decomposition_count": 0 },
-  "master-3": { "status": "starting", "last_reset": null, "context_budget": 0, "started_at": null },
-  "workers": {}
-}
