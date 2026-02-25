@@ -105,11 +105,17 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-2] [TIER_CLASSIFY] id=[request_id
 
 1. Identify the exact file(s) and change
 2. Make the change
-3. Run build check inline:
+3. Run build check inline (use detected build command from codebase-map.json):
    ```bash
-   npm run build 2>&1 || echo "BUILD_CHECK_RESULT: FAIL"
+   BUILD_CMD=$(jq -r '[.launch_commands[]? | select(.category == "build")][0].command // empty' .claude/state/codebase-map.json 2>/dev/null)
+   if [ -z "$BUILD_CMD" ]; then
+       if [ -f package.json ]; then BUILD_CMD="npm run build";
+       elif [ -f Cargo.toml ]; then BUILD_CMD="cargo build";
+       elif [ -f go.mod ]; then BUILD_CMD="go build ./...";
+       else BUILD_CMD="echo 'No build system detected'"; fi
+   fi
+   eval "$BUILD_CMD" 2>&1 || echo "BUILD_CHECK_RESULT: FAIL"
    ```
-   (Adapt build command to project — check package.json scripts)
 4. If build fails: fix or escalate to Tier 2
 5. If build passes: commit and push
    ```bash

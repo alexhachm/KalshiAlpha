@@ -156,24 +156,47 @@ cat .claude/state/change-summaries.md
 `context_budget += (files_read × lines / 10) + (edits × 20)`
 
 10. **Self-verify (MANDATORY before subagent validation):**
-   Before spawning validation subagents, launch the app yourself and check for errors:
+   Before spawning validation subagents, run the project's build/dev check.
+
+   **First, detect the correct commands from the codebase map:**
    ```bash
-   # Run the build first
-   npm run build 2>&1 | tail -5
-
-   # Launch the app, capture output
-   npm start 2>&1 | tee /tmp/self-verify.log &
-   VERIFY_PID=$!
-   sleep 8
-
-   # Check for errors
-   grep -iE "ERR_|Error:|FATAL|Cannot find|MODULE_NOT_FOUND|SyntaxError|TypeError|ReferenceError" /tmp/self-verify.log
-
-   # Kill the app
-   kill $VERIFY_PID 2>/dev/null; wait $VERIFY_PID 2>/dev/null
+   # Read launch commands from codebase-map.json (written by Master-2's scan)
+   cat .claude/state/codebase-map.json 2>/dev/null | jq -r '.launch_commands[]? | select(.category == "build") | .command' 2>/dev/null | head -1
    ```
 
-   **If errors found:** Fix them before proceeding. Do NOT ship broken code to validation.
+   **Then run the build command (adapt to your project):**
+   ```bash
+   # Use the detected build command, or fall back to common patterns:
+   # - Node.js: npm run build
+   # - Python: python -m py_compile <main_file>
+   # - Go: go build ./...
+   # - Rust: cargo build
+   # If codebase-map.json has launch_commands, use those instead
+   BUILD_CMD=$(jq -r '[.launch_commands[]? | select(.category == "build")][0].command // empty' .claude/state/codebase-map.json 2>/dev/null)
+   if [ -z "$BUILD_CMD" ]; then
+       # Auto-detect from project files
+       if [ -f package.json ]; then BUILD_CMD="npm run build";
+       elif [ -f Cargo.toml ]; then BUILD_CMD="cargo build";
+       elif [ -f go.mod ]; then BUILD_CMD="go build ./...";
+       elif [ -f pyproject.toml ] || [ -f setup.py ]; then BUILD_CMD="python -m compileall . -q";
+       else BUILD_CMD="echo 'No build system detected — skipping build check'"; fi
+   fi
+   eval "$BUILD_CMD" 2>&1 | tail -10
+   ```
+
+   **If build fails:** Fix the errors before proceeding. Do NOT ship broken code to validation.
+   **If build passes:** Optionally run a quick smoke test if a dev/start command exists:
+   ```bash
+   DEV_CMD=$(jq -r '[.launch_commands[]? | select(.category == "dev")][0].command // empty' .claude/state/codebase-map.json 2>/dev/null)
+   if [ -n "$DEV_CMD" ]; then
+       eval "$DEV_CMD" 2>&1 | tee /tmp/self-verify.log &
+       VERIFY_PID=$!
+       sleep 8
+       grep -iE "ERR_|Error:|FATAL|Cannot find|MODULE_NOT_FOUND|SyntaxError|TypeError|ReferenceError|panic|FAILED" /tmp/self-verify.log || true
+       kill $VERIFY_PID 2>/dev/null; wait $VERIFY_PID 2>/dev/null
+   fi
+   ```
+   **If errors found:** Fix them before proceeding.
    **If clean:** Continue to subagent validation.
    `context_budget += 30`
 

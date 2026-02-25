@@ -178,39 +178,3 @@ All state lives in JSON files + knowledge files — no agent loses progress by r
 | Tier 1 | Inline build check | Master-2 runs build command. No subagents. |
 | Tier 2 | build-validator only | Haiku subagent. No verify-app. |
 | Tier 3 | Full validation | Both build-validator + verify-app subagents. |
-
-## Development Guidelines
-
-These rules apply to **all agents** building features in KalshiAlpha.
-
-### 1. Document Everything in Markdown
-
-Use `.md` files extensively when building features. Before implementing, create specs. During implementation, record decisions. After completion, leave references.
-
-- **Feature specs:** `docs/specs/{feature-name}.md` — requirements, data flow, component API
-- **Decision records:** `docs/decisions/{YYYY-MM-DD}-{topic}.md` — why we chose X over Y
-- **Reference notes:** `docs/references/{topic}.md` — links to repos, APIs, articles used
-- If the feature is complex enough to need a spec, write the spec first, get it reviewed, then implement.
-
-### 2. Reuse Open Source Logic — Do Not Reinvent
-
-Before writing any non-trivial logic, check if an existing open source implementation already solves the problem. Consult `TRADING_TERMINAL_REFERENCES.md` first — it indexes repos for every subsystem (charting, scanners, order management, DOM, etc.).
-
-- **Pull patterns, algorithms, and architecture** from reference repos
-- **Use established libraries** over hand-rolled solutions (e.g., TradingView Lightweight Charts for charting, not a custom canvas renderer)
-- **Credit sources** in code comments when borrowing architecture or logic patterns
-- Only write custom code when: (a) no library exists, (b) the library is too heavy for the use case, or (c) Kalshi-specific logic has no analog
-
-### 3. Every Feature Must Be Customizable
-
-The trading terminal must be highly customizable. Every new UI feature **must** include user-facing settings.
-
-**Two places settings can live:**
-- **Component settings panel** — triggered by right-clicking the component's header/title bar. For per-component preferences (e.g., scanner alert threshold, chart timeframe, color scheme for that panel).
-- **General settings** — accessible from the app-wide settings menu. For cross-cutting preferences (e.g., global theme, notification preferences, default ticker list).
-
-**Rules:**
-- If the feature is a visual panel/widget → add a right-click header context menu with relevant options
-- If the feature affects app-wide behavior → add entries to general settings
-- Hardcoded magic numbers (thresholds, intervals, sizes) should be settings, not constants
-- Settings must persist across sessions (stored via the app's settings/preferences system)
