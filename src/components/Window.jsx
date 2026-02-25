@@ -1,5 +1,11 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { X } from 'lucide-react'
+import {
+  LINK_COLORS,
+  setColorGroup,
+  removeFromGroup,
+  getColorGroup,
+} from '../services/linkBus'
 import './Window.css'
 
 const MIN_WIDTH = 200
@@ -8,6 +14,7 @@ const MIN_HEIGHT = 150
 function Window({
   id,
   title,
+  type,
   initialX,
   initialY,
   initialWidth,
@@ -21,6 +28,41 @@ function Window({
   const posRef = useRef({ x: initialX, y: initialY })
   const sizeRef = useRef({ width: initialWidth, height: initialHeight })
   const [, rerender] = useState(0)
+
+  // Color chip state — index into LINK_COLORS, -1 = unlinked
+  const [colorIndex, setColorIndex] = useState(() => {
+    const current = getColorGroup(id)
+    if (!current) return -1
+    return LINK_COLORS.findIndex((c) => c.id === current)
+  })
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState(null)
+  const [isPinned, setIsPinned] = useState(false)
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return
+    const handleClick = () => setContextMenu(null)
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [contextMenu])
+
+  const handleChipClick = useCallback(
+    (e) => {
+      e.stopPropagation()
+      setColorIndex((prev) => {
+        const next = prev + 1
+        if (next >= LINK_COLORS.length) {
+          removeFromGroup(id)
+          return -1
+        }
+        setColorGroup(id, LINK_COLORS[next].id)
+        return next
+      })
+    },
+    [id]
+  )
 
   const handleMouseDown = () => {
     onFocus(id)
@@ -116,21 +158,59 @@ function Window({
     [id, onFocus]
   )
 
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Position relative to the window element
+    const rect = windowRef.current?.getBoundingClientRect()
+    setContextMenu({
+      x: e.clientX - (rect?.left || 0),
+      y: e.clientY - (rect?.top || 0),
+    })
+  }, [])
+
+  const handlePopOut = useCallback(() => {
+    setContextMenu(null)
+    // Placeholder — will be implemented with Electron/Tauri pop-out
+  }, [])
+
+  const handlePinToTop = useCallback(() => {
+    setContextMenu(null)
+    setIsPinned((prev) => !prev)
+  }, [])
+
   return (
     <div
       ref={windowRef}
-      className="window"
+      className={`window${isPinned ? ' window--pinned' : ''}`}
       style={{
         left: posRef.current.x,
         top: posRef.current.y,
         width: sizeRef.current.width,
         height: sizeRef.current.height,
-        zIndex,
+        zIndex: isPinned ? 99999 : zIndex,
       }}
       onMouseDown={handleMouseDown}
     >
-      <div className="window-titlebar" onMouseDown={handleTitleBarMouseDown}>
-        <div className="window-color-chip-slot" />
+      <div
+        className="window-titlebar"
+        onMouseDown={handleTitleBarMouseDown}
+        onContextMenu={handleContextMenu}
+      >
+        <div
+          className="window-color-chip"
+          style={{
+            backgroundColor:
+              colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
+          }}
+          onClick={handleChipClick}
+          title={
+            colorIndex >= 0
+              ? `Linked: ${LINK_COLORS[colorIndex].id} (click to cycle)`
+              : 'Unlinked (click to link)'
+          }
+        />
+        {isPinned && <span className="window-pin-icon" title="Pinned to top">📌</span>}
         <span className="window-title">{title}</span>
         <div className="window-controls">
           <button
@@ -143,6 +223,29 @@ function Window({
         </div>
       </div>
       <div className="window-body">{children}</div>
+
+      {/* Right-click context menu */}
+      {contextMenu && (
+        <div
+          className="window-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <div className="window-context-item" onClick={handlePopOut}>
+            Pop Out
+          </div>
+          <div className="window-context-item" onClick={handlePinToTop}>
+            {isPinned ? '✓ ' : ''}Pin to Top
+          </div>
+          <div className="window-context-separator" />
+          <div
+            className="window-context-item window-context-item--disabled"
+            title="Component settings — coming soon"
+          >
+            {title} Settings…
+          </div>
+        </div>
+      )}
       {/* Resize handles: edges */}
       <div
         className="resize-handle resize-n"

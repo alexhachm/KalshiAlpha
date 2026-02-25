@@ -24,13 +24,20 @@
   flex-shrink: 0;
 }
 
-.window-color-chip-slot {
+.window-color-chip {
   width: 12px;
   height: 12px;
   margin-right: 8px;
   flex-shrink: 0;
   border-radius: 2px;
-  /* Placeholder for future color chip — Task 4 will fill this */
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.window-color-chip:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
 .window-title {
@@ -150,4 +157,55 @@
   width: 10px;
   height: 10px;
   cursor: sw-resize;
+}
+
+/* Pinned window */
+.window--pinned {
+  border-color: var(--accent-highlight);
+}
+
+.window-pin-icon {
+  font-size: 10px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+/* Right-click context menu */
+.window-context-menu {
+  position: absolute;
+  min-width: 180px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  z-index: 100000;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.window-context-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.window-context-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.window-context-item--disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.window-context-item--disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.window-context-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
 }
