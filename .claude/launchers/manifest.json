@@ -1,64 +1,61 @@
 {
-  "version": 3,
-  "project_path": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
+  "version": 4,
   "worker_count": 3,
-  "created_at": "2026-02-25T06:40:44Z",
+  "created_at": "2026-02-25T07:03:43Z",
   "agents": [
     {
       "id": "master-1",
       "group": "masters",
       "role": "Interface (Sonnet)",
       "model": "sonnet",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
-      "command_fresh": "claude --model sonnet --dangerously-skip-permissions '/master-loop'",
-      "command_continue": "claude --continue --model sonnet --dangerously-skip-permissions"
+      "command": "/master-loop",
+      "env": null,
+      "worktree": null
     },
     {
       "id": "master-2",
       "group": "masters",
       "role": "Architect (Opus)",
       "model": "opus",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
-      "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/scan-codebase'",
-      "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
+      "command": "/scan-codebase",
+      "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1",
+      "worktree": null
     },
     {
       "id": "master-3",
       "group": "masters",
       "role": "Allocator (Sonnet)",
       "model": "sonnet",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha",
-      "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model sonnet --dangerously-skip-permissions '/scan-codebase-allocator'",
-      "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model sonnet --dangerously-skip-permissions"
+      "command": "/scan-codebase-allocator",
+      "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1",
+      "worktree": null
     },
     {
       "id": "worker-1",
       "group": "workers",
       "role": "Worker 1 (Opus)",
       "model": "opus",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-1",
-      "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
-      "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
-    }
-,
+      "command": "/worker-loop",
+      "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1",
+      "worktree": ".worktrees/wt-1"
+    },
     {
       "id": "worker-2",
       "group": "workers",
       "role": "Worker 2 (Opus)",
       "model": "opus",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-2",
-      "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
-      "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
-    }
-,
+      "command": "/worker-loop",
+      "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1",
+      "worktree": ".worktrees/wt-2"
+    },
     {
       "id": "worker-3",
       "group": "workers",
       "role": "Worker 3 (Opus)",
       "model": "opus",
-      "cwd": "C:\\Users\\Owner\\Desktop\\KalshiAlpha\\.worktrees\\wt-3",
-      "command_fresh": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --model opus --dangerously-skip-permissions '/worker-loop'",
-      "command_continue": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --continue --model opus --dangerously-skip-permissions"
+      "command": "/worker-loop",
+      "env": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1",
+      "worktree": ".worktrees/wt-3"
     }
   ]
 }
