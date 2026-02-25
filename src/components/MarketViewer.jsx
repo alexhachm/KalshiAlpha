@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { subscribeToTicker } from '../services/mockData'
+import { useTickerData, useMarketSearch } from '../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -15,34 +15,42 @@ const TICKERS = [
 
 function MarketViewer({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [data, setData] = useState(null)
-  const prevPricesRef = useRef({ yes: null, no: null })
   const [yesFlash, setYesFlash] = useState(null)
   const [noFlash, setNoFlash] = useState(null)
   const flashTimerRef = useRef({})
+  const prevPricesRef = useRef({ yes: null, no: null })
 
-  // Subscribe to mock data for the current ticker
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const { results: searchResults, loading: searchLoading, search } = useMarketSearch()
+
+  // Subscribe to ticker data via hook
+  const { data } = useTickerData(ticker)
+
+  // Flash detection on price changes
   useEffect(() => {
-    const unsub = subscribeToTicker(ticker, (newData) => {
-      setData((prev) => {
-        if (prev) {
-          const prevYes = prev.yes.price
-          const prevNo = prev.no.price
-          if (newData.yes.price !== prevYes) {
-            setYesFlash(newData.yes.price > prevYes ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.yes)
-            flashTimerRef.current.yes = setTimeout(() => setYesFlash(null), 500)
-          }
-          if (newData.no.price !== prevNo) {
-            setNoFlash(newData.no.price > prevNo ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.no)
-            flashTimerRef.current.no = setTimeout(() => setNoFlash(null), 500)
-          }
-        }
-        return newData
-      })
-    })
-    return unsub
+    if (!data) return
+
+    const prevYes = prevPricesRef.current.yes
+    const prevNo = prevPricesRef.current.no
+
+    if (prevYes !== null && data.yes.price !== prevYes) {
+      setYesFlash(data.yes.price > prevYes ? 'up' : 'down')
+      clearTimeout(flashTimerRef.current.yes)
+      flashTimerRef.current.yes = setTimeout(() => setYesFlash(null), 500)
+    }
+    if (prevNo !== null && data.no.price !== prevNo) {
+      setNoFlash(data.no.price > prevNo ? 'up' : 'down')
+      clearTimeout(flashTimerRef.current.no)
+      flashTimerRef.current.no = setTimeout(() => setNoFlash(null), 500)
+    }
+
+    prevPricesRef.current = { yes: data.yes.price, no: data.no.price }
+  }, [data])
+
+  // Reset prev prices when ticker changes
+  useEffect(() => {
+    prevPricesRef.current = { yes: null, no: null }
   }, [ticker])
 
   // Cleanup flash timers on unmount
@@ -75,8 +83,24 @@ function MarketViewer({ windowId }) {
   const handleTickerChange = (e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
-    setData(null)
     emitLinkedMarket(windowId, newTicker)
+  }
+
+  // Search handler with debounce
+  const searchTimerRef = useRef(null)
+  const handleSearchChange = (e) => {
+    const q = e.target.value
+    setSearchQuery(q)
+    clearTimeout(searchTimerRef.current)
+    if (q.trim().length >= 2) {
+      searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
+    }
+  }
+
+  const handleSearchSelect = (t) => {
+    setTicker(t)
+    setSearchQuery('')
+    emitLinkedMarket(windowId, t)
   }
 
   return (
@@ -91,6 +115,33 @@ function MarketViewer({ windowId }) {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <div className="mv-search-wrapper">
+          <input
+            className="mv-search-input"
+            type="text"
+            placeholder="Search markets..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+          {searchQuery.trim().length >= 2 && (
+            <div className="mv-search-results">
+              {searchLoading && <div className="mv-search-item mv-search-loading">Searching...</div>}
+              {!searchLoading && searchResults.length === 0 && (
+                <div className="mv-search-item mv-search-empty">No results</div>
+              )}
+              {searchResults.map((m) => (
+                <div
+                  key={m.ticker}
+                  className="mv-search-item"
+                  onClick={() => handleSearchSelect(m.ticker)}
+                >
+                  <span className="mv-search-ticker">{m.ticker}</span>
+                  {m.title && <span className="mv-search-title">{m.title}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {data ? (
