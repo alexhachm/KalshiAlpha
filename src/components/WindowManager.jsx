@@ -3,6 +3,7 @@ import Window from './Window'
 import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
+import Montage from './trade/Montage'
 
 // Placeholder component used for all windows that don't have a real implementation yet
 function Placeholder({ title }) {
@@ -19,7 +20,7 @@ const COMPONENT_REGISTRY = {
   // Login
   login: Placeholder,
   // Trade
-  montage: Placeholder,
+  montage: Montage,
   'price-ladder': Placeholder,
   accounts: Placeholder,
   positions: Placeholder,
