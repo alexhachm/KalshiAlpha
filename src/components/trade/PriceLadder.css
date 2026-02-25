@@ -150,17 +150,18 @@
   text-align: right;
   padding-right: var(--spacing-xs, 4px);
   cursor: pointer;
+  background: color-mix(in srgb, var(--accent-buy, #26a69a) 4%, transparent);
 }
 
 .pl-cell-bid:hover {
-  background: color-mix(in srgb, var(--accent-buy, #26a69a) 8%, transparent);
+  background: color-mix(in srgb, var(--accent-buy, #26a69a) 10%, transparent);
 }
 
 .pl-cell-price {
   width: 42px;
   text-align: center;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-heading, var(--text-secondary));
 }
 
 .pl-price-bid {
@@ -176,10 +177,11 @@
   text-align: left;
   padding-left: var(--spacing-xs, 4px);
   cursor: pointer;
+  background: color-mix(in srgb, var(--accent-sell, #ef5350) 4%, transparent);
 }
 
 .pl-cell-ask:hover {
-  background: color-mix(in srgb, var(--accent-sell, #ef5350) 8%, transparent);
+  background: color-mix(in srgb, var(--accent-sell, #ef5350) 10%, transparent);
 }
 
 .pl-cell-orders {

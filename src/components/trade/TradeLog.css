@@ -217,6 +217,10 @@
   font-size: var(--font-size-xs, 10.5px);
 }
 
+/* P&L colors — use trading-standard accent-buy/sell within trade log */
+.tradelog .text-win { color: var(--accent-buy, #26a69a); }
+.tradelog .text-loss { color: var(--accent-sell, #ef5350); }
+
 /* Empty state */
 .tl-empty {
   text-align: center;

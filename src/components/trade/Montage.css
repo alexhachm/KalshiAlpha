@@ -22,12 +22,12 @@
 .mt-ticker-select {
   flex: 1;
   background: var(--bg-input, var(--bg-tertiary));
-  color: var(--text-primary);
+  color: var(--text-heading, var(--text-primary));
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 3px);
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   font-family: var(--font-mono);
-  font-size: var(--font-size-lg, 14.5px);
+  font-size: var(--font-size-xl, 16px);
   font-weight: 600;
   cursor: pointer;
 }
@@ -314,6 +314,10 @@
   display: flex;
   gap: var(--spacing-sm, 8px);
 }
+
+/* P&L colors — use trading-standard accent-buy/sell within montage */
+.montage .text-win { color: var(--accent-buy, #26a69a); }
+.montage .text-loss { color: var(--accent-sell, #ef5350); }
 
 /* Error state */
 .mt-error {
