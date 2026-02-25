@@ -22,6 +22,49 @@
   --window-default-height: 300px;
   --resize-handle-size: 6px;
   --cascade-offset: 30px;
+
+  /* Component-specific defaults */
+  --montage-width: 350px;
+  --montage-height: 400px;
+  --price-ladder-width: 280px;
+  --price-ladder-height: 500px;
+  --chart-width: 600px;
+  --chart-height: 400px;
+  --market-viewer-width: 350px;
+  --market-viewer-height: 400px;
+  --scanner-width: 500px;
+  --scanner-height: 350px;
+  --time-sale-width: 300px;
+  --time-sale-height: 400px;
+  --market-clock-width: 200px;
+  --market-clock-height: 100px;
+  --event-log-width: 500px;
+  --event-log-height: 250px;
+  --accounts-width: 500px;
+  --accounts-height: 300px;
+  --positions-width: 500px;
+  --positions-height: 300px;
+  --trade-log-width: 550px;
+  --trade-log-height: 350px;
+  --news-chat-width: 400px;
+  --news-chat-height: 350px;
+  --login-width: 360px;
+  --login-height: 280px;
+  --hotkey-config-width: 450px;
+  --hotkey-config-height: 400px;
+  --alert-trigger-width: 450px;
+  --alert-trigger-height: 350px;
+  --historical-scanner-width: 500px;
+  --historical-scanner-height: 350px;
+  --live-scanner-width: 500px;
+  --live-scanner-height: 350px;
+  --settings-width: 500px;
+  --settings-height: 450px;
+
+  /* Context menu */
+  --context-menu-bg: var(--bg-secondary);
+  --context-menu-border: var(--border-color);
+  --context-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 body {
