@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { subscribeToTicker } from '../services/mockData'
+import { useTickerData, useAvailableMarkets } from '../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -8,42 +8,35 @@ import {
 } from '../services/linkBus'
 import './MarketViewer.css'
 
-const TICKERS = [
-  'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
-  'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
-]
-
 function MarketViewer({ windowId }) {
-  const [ticker, setTicker] = useState(TICKERS[0])
-  const [data, setData] = useState(null)
-  const prevPricesRef = useRef({ yes: null, no: null })
+  const { markets, activeTicker, setActiveMarket } = useAvailableMarkets()
+  const [ticker, setTicker] = useState(activeTicker)
+  const { data } = useTickerData(ticker)
   const [yesFlash, setYesFlash] = useState(null)
   const [noFlash, setNoFlash] = useState(null)
   const flashTimerRef = useRef({})
+  const prevDataRef = useRef(null)
 
-  // Subscribe to mock data for the current ticker
+  // Flash detection on price changes
   useEffect(() => {
-    const unsub = subscribeToTicker(ticker, (newData) => {
-      setData((prev) => {
-        if (prev) {
-          const prevYes = prev.yes.price
-          const prevNo = prev.no.price
-          if (newData.yes.price !== prevYes) {
-            setYesFlash(newData.yes.price > prevYes ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.yes)
-            flashTimerRef.current.yes = setTimeout(() => setYesFlash(null), 500)
-          }
-          if (newData.no.price !== prevNo) {
-            setNoFlash(newData.no.price > prevNo ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.no)
-            flashTimerRef.current.no = setTimeout(() => setNoFlash(null), 500)
-          }
-        }
-        return newData
-      })
-    })
-    return unsub
-  }, [ticker])
+    if (!data || !prevDataRef.current) {
+      prevDataRef.current = data
+      return
+    }
+    const prevYes = prevDataRef.current.yes?.price
+    const prevNo = prevDataRef.current.no?.price
+    if (data.yes.price !== prevYes) {
+      setYesFlash(data.yes.price > prevYes ? 'up' : 'down')
+      clearTimeout(flashTimerRef.current.yes)
+      flashTimerRef.current.yes = setTimeout(() => setYesFlash(null), 500)
+    }
+    if (data.no.price !== prevNo) {
+      setNoFlash(data.no.price > prevNo ? 'up' : 'down')
+      clearTimeout(flashTimerRef.current.no)
+      flashTimerRef.current.no = setTimeout(() => setNoFlash(null), 500)
+    }
+    prevDataRef.current = data
+  }, [data])
 
   // Cleanup flash timers on unmount
   useEffect(() => {
@@ -58,40 +51,56 @@ function MarketViewer({ windowId }) {
     ({ ticker: linkedTicker }) => {
       if (linkedTicker && linkedTicker !== ticker) {
         setTicker(linkedTicker)
+        setActiveMarket(linkedTicker)
       }
     },
-    [ticker]
+    [ticker, setActiveMarket]
   )
 
   useEffect(() => {
     const colorId = getColorGroup(windowId)
     if (!colorId) return
-
     subscribeToLink(colorId, handleLinkEvent, windowId)
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
   }, [windowId, handleLinkEvent])
 
-  // When user changes ticker, emit to linked windows
-  const handleTickerChange = (e) => {
-    const newTicker = e.target.value
+  // When user selects a market
+  const handleMarketSelect = (newTicker) => {
     setTicker(newTicker)
-    setData(null)
+    setActiveMarket(newTicker)
     emitLinkedMarket(windowId, newTicker)
   }
 
+  // Find current market metadata
+  const currentMarket = markets.find((m) => m.ticker === ticker)
+
   return (
     <div className="market-viewer">
-      <div className="mv-ticker-bar">
-        <select
-          className="mv-ticker-select"
-          value={ticker}
-          onChange={handleTickerChange}
-        >
-          {TICKERS.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+      <div className="mv-market-list">
+        {markets.map((m) => (
+          <div
+            key={m.ticker}
+            className={`mv-market-card ${m.ticker === ticker ? 'mv-market-card-active' : ''}`}
+            onClick={() => handleMarketSelect(m.ticker)}
+          >
+            <div className="mv-card-ticker">{m.ticker}</div>
+            <div className="mv-card-title">{m.title}</div>
+            <div className="mv-card-meta">
+              <span className="mv-card-category">{m.category}</span>
+              <span className="mv-card-expiry">Exp: {new Date(m.expiry).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {currentMarket && (
+        <div className="mv-market-detail">
+          <div className="mv-detail-title">{currentMarket.title}</div>
+          {currentMarket.subtitle && (
+            <div className="mv-detail-subtitle">{currentMarket.subtitle}</div>
+          )}
+        </div>
+      )}
 
       {data ? (
         <>

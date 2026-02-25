@@ -278,6 +278,22 @@ export function useOrderEntry() {
 }
 
 /**
+ * Get available mock markets and control active market selection.
+ * @returns {{ markets: Array, activeTicker: string, setActiveMarket: Function }}
+ */
+export function useAvailableMarkets() {
+  const [markets] = useState(() => dataFeed.getAvailableMockMarkets());
+  const [activeTicker, setActiveTicker] = useState(() => dataFeed.getActiveMockMarket());
+
+  const setActiveMarket = useCallback((ticker) => {
+    dataFeed.setActiveMockMarket(ticker);
+    setActiveTicker(ticker);
+  }, []);
+
+  return { markets, activeTicker, setActiveMarket };
+}
+
+/**
  * Search markets.
  * @param {string} query - Search term
  * @returns {{ results: Array, loading: boolean, search: Function }}

@@ -509,10 +509,34 @@ async function cancelExistingOrder(orderId) {
   return kalshiApi.cancelOrder(orderId);
 }
 
+// --- Mock market selection ---
+
+function setActiveMockMarket(ticker) {
+  mockData.setActiveMockMarket(ticker);
+}
+
+function getAvailableMockMarkets() {
+  return mockData.getAvailableMockMarkets();
+}
+
+function getActiveMockMarket() {
+  return mockData.getActiveMockMarket();
+}
+
 // --- Market search ---
 
 async function searchMarkets(query = '', params = {}) {
-  if (!connected) return [];
+  if (!connected) {
+    // In mock mode, search mock markets
+    const mockMarkets = mockData.getAvailableMockMarkets();
+    if (!query) return mockMarkets;
+    const q = query.toLowerCase();
+    return mockMarkets.filter((m) =>
+      m.ticker.toLowerCase().includes(q) ||
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.category && m.category.toLowerCase().includes(q))
+    );
+  }
   try {
     const res = await kalshiApi.getMarkets({
       ...params,
@@ -667,6 +691,10 @@ export {
   cancelOrder,
   placeOrder,
   cancelExistingOrder,
+  // Mock market selection
+  setActiveMockMarket,
+  getAvailableMockMarkets,
+  getActiveMockMarket,
   // Market search
   searchMarkets,
   // User event streams
