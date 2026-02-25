@@ -207,3 +207,36 @@ export const getHistoricalScanResults = ({ startDate, endDate, pattern, maxResul
 
   return results.sort((a, b) => new Date(b.date) - new Date(a.date));
 };
+
+export const subscribeToTimeSales = (ticker, callback) => {
+  let running = true;
+  let lastPrice = randomPrice();
+
+  const scheduleNext = () => {
+    if (!running) return;
+    const delay = Math.floor(Math.random() * 400) + 100;
+    setTimeout(() => {
+      if (!running) return;
+      const change = (Math.random() - 0.5) * 4;
+      lastPrice = Math.min(99, Math.max(1, Math.round(lastPrice + change)));
+      const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+      const sizeRoll = Math.random();
+      let size;
+      if (sizeRoll < 0.6) size = Math.floor(Math.random() * 50) + 1;
+      else if (sizeRoll < 0.9) size = Math.floor(Math.random() * 200) + 50;
+      else size = Math.floor(Math.random() * 1000) + 200;
+      callback({
+        id: Date.now() + Math.random(),
+        timestamp: Date.now(),
+        price: lastPrice,
+        size,
+        side,
+        ticker,
+      });
+      scheduleNext();
+    }, delay);
+  };
+
+  scheduleNext();
+  return () => { running = false; };
+};

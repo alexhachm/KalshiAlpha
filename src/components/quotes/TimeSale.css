@@ -1,0 +1,211 @@
+.ts-component {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.ts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  min-height: 30px;
+}
+
+.ts-ticker-select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ts-trade-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.ts-toolbar-right {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.ts-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.ts-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.ts-btn--active {
+  color: var(--accent-highlight);
+}
+
+/* Column header */
+.ts-header {
+  display: flex;
+  padding: 3px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Trade list */
+.ts-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: var(--font-mono);
+}
+
+/* Trade row */
+.ts-row {
+  display: flex;
+  padding: 1px 8px;
+  border-bottom: 1px solid rgba(51, 51, 51, 0.3);
+  transition: background 0.1s;
+}
+
+.ts-row:hover {
+  background: var(--bg-tertiary);
+}
+
+.ts-row--buy {
+  color: var(--accent-win);
+}
+
+.ts-row--sell {
+  color: var(--accent-loss);
+}
+
+.ts-row--large {
+  font-weight: 600;
+}
+
+.ts-row--large .ts-col-size {
+  text-shadow: 0 0 4px currentColor;
+}
+
+/* Column widths */
+.ts-col-time {
+  flex: 0 0 95px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-col-price {
+  flex: 0 0 50px;
+  text-align: right;
+}
+
+.ts-col-size {
+  flex: 0 0 55px;
+  text-align: right;
+}
+
+.ts-col-side {
+  flex: 1;
+  text-align: right;
+  padding-right: 4px;
+}
+
+/* Empty state */
+.ts-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Settings panel overlay */
+.ts-settings-panel {
+  position: absolute;
+  top: 36px;
+  right: 8px;
+  width: 200px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+}
+
+.ts-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.ts-settings-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.ts-settings-close:hover {
+  color: var(--text-primary);
+}
+
+.ts-settings-body {
+  padding: 8px 10px;
+}
+
+.ts-setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ts-setting-row input[type="number"] {
+  width: 55px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+.ts-setting-row input[type="checkbox"] {
+  accent-color: var(--accent-highlight);
+  cursor: pointer;
+}

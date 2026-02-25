@@ -5,6 +5,8 @@ import LiveScanner from './scanners/LiveScanner'
 import Chart from './quotes/Chart'
 import Montage from './trade/Montage'
 import Accounts from './trade/Accounts'
+import EventLog from './trade/EventLog'
+import TimeSale from './quotes/TimeSale'
 import HistoricalScanner from './scanners/HistoricalScanner'
 
 // Placeholder component used for all windows that don't have a real implementation yet
@@ -27,10 +29,10 @@ const COMPONENT_REGISTRY = {
   accounts: Accounts,
   positions: Placeholder,
   'trade-log': Placeholder,
-  'event-log': Placeholder,
+  'event-log': EventLog,
   // Quotes
   chart: Chart,
-  'time-sale': Placeholder,
+  'time-sale': TimeSale,
   'market-viewer': MarketViewer,
   'news-chat': Placeholder,
   // Scanners

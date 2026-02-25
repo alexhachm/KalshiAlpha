@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import AccountsSettings from './AccountsSettings'
-import './Accounts.css'
 
 const LS_KEY_PREFIX = 'accounts-settings-'
 
