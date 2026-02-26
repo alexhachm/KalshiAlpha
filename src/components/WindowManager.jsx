@@ -15,6 +15,7 @@ import TimeSale from './quotes/TimeSale'
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
 import MarketClock from './scanners/MarketClock'
+import HotkeyManager from './HotkeyManager'
 
 // Placeholder component for windows without a real implementation yet
 function Placeholder({ title }) {
@@ -47,7 +48,7 @@ const COMPONENT_REGISTRY = {
   'alert-trigger': Placeholder,
   'market-clock': MarketClock,
   // Setup
-  'hotkey-config': Placeholder,
+  'hotkey-config': HotkeyManager,
 }
 
 function WindowManager({ windows, onClose, onFocus }) {
