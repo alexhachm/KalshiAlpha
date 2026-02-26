@@ -509,10 +509,34 @@ async function cancelExistingOrder(orderId) {
   return kalshiApi.cancelOrder(orderId);
 }
 
+// --- Mock market selection ---
+
+function setActiveMockMarket(ticker) {
+  mockData.setActiveMockMarket(ticker);
+}
+
+function getAvailableMockMarkets() {
+  return mockData.getAvailableMockMarkets();
+}
+
+function getActiveMockMarket() {
+  return mockData.getActiveMockMarket();
+}
+
 // --- Market search ---
 
 async function searchMarkets(query = '', params = {}) {
-  if (!connected) return [];
+  if (!connected) {
+    // In mock mode, search mock markets
+    const mockMarkets = mockData.getAvailableMockMarkets();
+    if (!query) return mockMarkets;
+    const q = query.toLowerCase();
+    return mockMarkets.filter((m) =>
+      m.ticker.toLowerCase().includes(q) ||
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.category && m.category.toLowerCase().includes(q))
+    );
+  }
   try {
     const res = await kalshiApi.getMarkets({
       ...params,
@@ -531,6 +555,99 @@ async function searchMarkets(query = '', params = {}) {
     console.error('[DataFeed] Market search error:', err);
     return [];
   }
+}
+
+// --- Time & Sales subscription ---
+
+/**
+ * Subscribe to real-time time & sales (trade tape) for a market.
+ * When connected: uses WS trade channel.
+ * When disconnected: uses mock data.
+ *
+ * @param {string} ticker
+ * @param {Function} callback - receives { id, timestamp, price, size, side, ticker }
+ * @returns {Function} unsubscribe
+ */
+function subscribeToTimeSales(ticker, callback) {
+  if (!connected) {
+    return mockData.subscribeToTimeSales(ticker, callback);
+  }
+
+  return kalshiWs.subscribeTrades(ticker, (msg) => {
+    callback({
+      id: msg.trade_id || Date.now() + Math.random(),
+      timestamp: msg.ts ? new Date(msg.ts).getTime() : Date.now(),
+      price: msg.yes_price || msg.price || 0,
+      size: parseFloat(msg.count_fp || msg.count || '1'),
+      side: msg.taker_side === 'yes' ? 'BUY' : 'SELL',
+      ticker: msg.market_ticker || ticker,
+    });
+  });
+}
+
+// --- Portfolio subscription (unified) ---
+
+/**
+ * Subscribe to portfolio data (positions, orders, fills, balance).
+ * Combines REST polling with WS real-time updates.
+ * When disconnected: uses mock portfolio data.
+ *
+ * @param {Function} callback - receives { balance, positions, orders, fills }
+ * @returns {Function} unsubscribe
+ */
+function subscribeToPortfolio(callback) {
+  if (!connected) {
+    if (typeof mockData.subscribeToPortfolio === 'function') {
+      return mockData.subscribeToPortfolio(callback);
+    }
+    // No mock portfolio — deliver empty data once
+    setTimeout(() => callback({ balance: null, positions: [], orders: [], fills: [] }), 0);
+    return () => {};
+  }
+
+  let running = true;
+
+  async function fetchAll() {
+    if (!running) return;
+    const [bal, pos, ord, fil] = await Promise.all([
+      getPortfolioBalance(),
+      getOpenPositions(),
+      getOpenOrders(),
+      getFillHistory(),
+    ]);
+    if (running) {
+      callback({ balance: bal, positions: pos, orders: ord, fills: fil });
+    }
+  }
+
+  // Initial fetch
+  fetchAll();
+
+  // Poll every 5 seconds
+  const pollTimer = setInterval(fetchAll, 5000);
+
+  // Also listen for real-time WS updates to trigger immediate refresh
+  const unsubFills = kalshiWs.subscribeUserFills(() => fetchAll());
+  const unsubOrders = kalshiWs.subscribeUserOrders(() => fetchAll());
+  const unsubPositions = kalshiWs.subscribePositions(() => fetchAll());
+
+  return () => {
+    running = false;
+    clearInterval(pollTimer);
+    unsubFills();
+    unsubOrders();
+    unsubPositions();
+  };
+}
+
+// --- Order execution (aliased names) ---
+
+async function submitOrder(order) {
+  return placeOrder(order);
+}
+
+async function cancelOrder(orderId) {
+  return cancelExistingOrder(orderId);
 }
 
 // --- Subscribe to user events (orders, fills, positions) ---
@@ -561,21 +678,29 @@ export {
   subscribeToMarketRace,
   subscribeToScanner,
   subscribeToOHLCV,
+  subscribeToTimeSales,
   getHistoricalScanResults,
-  // Portfolio (new)
+  // Portfolio (unified subscription + individual getters)
+  subscribeToPortfolio,
   getPortfolioBalance,
   getOpenPositions,
   getFillHistory,
   getOpenOrders,
-  // Trading (new)
+  // Trading
+  submitOrder,
+  cancelOrder,
   placeOrder,
   cancelExistingOrder,
-  // Market search (new)
+  // Mock market selection
+  setActiveMockMarket,
+  getAvailableMockMarkets,
+  getActiveMockMarket,
+  // Market search
   searchMarkets,
-  // User event streams (new)
+  // User event streams
   subscribeToUserOrders,
   subscribeToUserFills,
   subscribeToPositionChanges,
-  // Orderbook (new)
+  // Orderbook
   buildSyntheticDom,
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
 import PositionsSettings from './PositionsSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './Positions.css'
@@ -83,23 +84,52 @@ function saveSettings(windowId, settings) {
   } catch { /* ignore */ }
 }
 
+function mapApiPositions(apiPositions) {
+  return apiPositions.map((p) => ({
+    market: p.market_ticker,
+    account: 'KA-100482',
+    shares: Math.abs(p.position || 0),
+    avgCost: p.market_exposure && p.position
+      ? +(Math.abs(p.market_exposure / p.position) / 100).toFixed(2)
+      : 0,
+    realized: p.realized_pnl ? +(p.realized_pnl / 100).toFixed(2) : 0,
+    unrealized: p.total_traded ? +((p.total_traded - Math.abs(p.market_exposure || 0)) / 100).toFixed(2) : 0,
+    type: (p.position || 0) >= 0 ? 'Long' : 'Short',
+  }))
+}
+
 function Positions({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [positions, setPositions] = useState(generateMockPositions)
+  const [mockPositions, setMockPositions] = useState(generateMockPositions)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const prevUnrealizedRef = useRef({})
   const intervalRef = useRef(null)
+
+  // Portfolio hook for real data
+  const { connected } = useKalshiConnection()
+  const { balance, positions: apiPositions, refresh: refreshPortfolio } = usePortfolio(
+    settings.refreshInterval * 1000
+  )
+
+  // Portfolio loaded when connected and first fetch has returned
+  const portfolioLoaded = connected && balance !== null
+
+  // Use API positions when connected and loaded, mock when not connected
+  const positions = portfolioLoaded
+    ? mapApiPositions(apiPositions)
+    : mockPositions
 
   // Persist settings
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh data on interval
+  // Refresh mock data on interval (only when not connected)
   const refreshData = useCallback(() => {
-    setPositions((prev) => {
+    if (connected) return
+    setMockPositions((prev) => {
       const newPositions = generateMockPositions()
 
       // Check for P&L changes if flash is enabled
@@ -122,12 +152,13 @@ function Positions({ windowId }) {
 
       return newPositions
     })
-  }, [settings.flashOnChange])
+  }, [settings.flashOnChange, connected])
 
   useEffect(() => {
+    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData])
+  }, [settings.refreshInterval, refreshData, connected])
 
   // Color link subscription
   useEffect(() => {
@@ -198,6 +229,11 @@ function Positions({ windowId }) {
           </button>
         </div>
       </div>
+
+      {/* Loading indicator when API is connecting */}
+      {connected && !portfolioLoaded && (
+        <div className="pos-loading">Loading portfolio data...</div>
+      )}
 
       {/* Table */}
       <div className="pos-table-wrap">

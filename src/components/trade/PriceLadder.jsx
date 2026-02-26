@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { subscribeToTicker } from '../../services/mockData'
+import { useTickerData, useOrderEntry } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -70,16 +70,20 @@ function buildLadder(data) {
 
 function PriceLadder({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [data, setData] = useState(null)
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
   const [orderSize, setOrderSize] = useState(settings.defaultSize)
   const [workingOrders, setWorkingOrders] = useState([])
   const [flashPrices, setFlashPrices] = useState({})
 
+  // Data hooks
+  const { data, error: tickerError } = useTickerData(ticker)
+  const { submitOrder, cancelOrder: cancelApiOrder, error: orderError } = useOrderEntry()
+
   const ladderRef = useRef(null)
   const lastPriceRef = useRef(null)
   const hasCenteredRef = useRef(false)
+  const prevDataRef = useRef(null)
   const flashTimersRef = useRef({})
   const orderIdRef = useRef(1)
 
@@ -88,34 +92,38 @@ function PriceLadder({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Subscribe to mock data
+  // Flash detection on data changes
   useEffect(() => {
-    hasCenteredRef.current = false
-    const unsub = subscribeToTicker(ticker, (newData) => {
-      setData((prev) => {
-        // Flash detection on last trade price change
-        if (prev && newData.lastTrade.price !== prev.lastTrade.price) {
-          const dir = newData.lastTrade.price > prev.lastTrade.price ? 'up' : 'down'
-          const p = newData.lastTrade.price
-          setFlashPrices((fp) => ({ ...fp, [p]: dir }))
-          clearTimeout(flashTimersRef.current[p])
-          flashTimersRef.current[p] = setTimeout(() => {
-            setFlashPrices((fp) => {
-              const next = { ...fp }
-              delete next[p]
-              return next
-            })
-          }, settings.flashDuration)
-        }
-        lastPriceRef.current = newData.lastTrade.price
-        return newData
-      })
-    })
-    return () => {
-      unsub()
-      Object.values(flashTimersRef.current).forEach(clearTimeout)
+    if (!data) {
+      prevDataRef.current = null
+      return
     }
-  }, [ticker, settings.flashDuration])
+    const prev = prevDataRef.current
+    if (prev && data.lastTrade.price !== prev.lastTrade.price) {
+      const dir = data.lastTrade.price > prev.lastTrade.price ? 'up' : 'down'
+      const p = data.lastTrade.price
+      setFlashPrices((fp) => ({ ...fp, [p]: dir }))
+      clearTimeout(flashTimersRef.current[p])
+      flashTimersRef.current[p] = setTimeout(() => {
+        setFlashPrices((fp) => {
+          const next = { ...fp }
+          delete next[p]
+          return next
+        })
+      }, settings.flashDuration)
+    }
+    if (data.lastTrade) {
+      lastPriceRef.current = data.lastTrade.price
+    }
+    prevDataRef.current = data
+  }, [data, settings.flashDuration])
+
+  // Reset flash tracking and centering on ticker change
+  useEffect(() => {
+    prevDataRef.current = null
+    hasCenteredRef.current = false
+    Object.values(flashTimersRef.current).forEach(clearTimeout)
+  }, [ticker])
 
   // Center on last trade price
   useEffect(() => {
@@ -135,7 +143,6 @@ function PriceLadder({ windowId }) {
     ({ ticker: linkedTicker }) => {
       if (linkedTicker && linkedTicker !== ticker) {
         setTicker(linkedTicker)
-        setData(null)
       }
     },
     [ticker]
@@ -152,13 +159,11 @@ function PriceLadder({ windowId }) {
   const handleTickerChange = (e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
-    setData(null)
-    hasCenteredRef.current = false
     emitLinkedMarket(windowId, newTicker)
   }
 
   // Click-to-trade: place limit order at clicked price
-  const handleLevelClick = (price, side) => {
+  const handleLevelClick = async (price, side) => {
     if (settings.clickAction !== 'limit') return
     const order = {
       id: orderIdRef.current++,
@@ -169,11 +174,27 @@ function PriceLadder({ windowId }) {
       status: 'working',
       time: new Date().toLocaleTimeString(),
     }
-    setWorkingOrders((prev) => [...prev, order])
+    try {
+      await submitOrder({
+        ticker,
+        action: 'buy',
+        side,
+        type: 'limit',
+        yes_price: price,
+        count: orderSize,
+      })
+    } catch {
+      // API not connected — fall back to local mock
+      setWorkingOrders((prev) => [...prev, order])
+    }
   }
 
-  const cancelOrder = (orderId) => {
-    setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
+  const cancelOrder = async (orderId) => {
+    try {
+      await cancelApiOrder(orderId)
+    } catch {
+      setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
+    }
   }
 
   const handleSettingsChange = (newSettings) => {
@@ -250,6 +271,14 @@ function PriceLadder({ windowId }) {
           &#9881;
         </button>
       </div>
+
+      {/* Error display */}
+      {(tickerError || orderError) && (
+        <div className="pl-error">
+          {tickerError && <span>Data: {tickerError}</span>}
+          {orderError && <span>Order: {orderError}</span>}
+        </div>
+      )}
 
       {data ? (
         <>

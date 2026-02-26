@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { subscribeToScanner } from '../../services/mockData'
+import { subscribeToScanner } from '../../services/dataFeed'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { Settings, Trash2 } from 'lucide-react'
 import './LiveScanner.css'
