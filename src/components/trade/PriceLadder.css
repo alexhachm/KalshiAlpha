@@ -196,6 +196,12 @@
   color: var(--text-muted);
 }
 
+.pl-cell-volume {
+  width: 48px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
 .pl-cell-orders {
   width: 56px;
   display: flex;

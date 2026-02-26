@@ -261,6 +261,7 @@ function PriceLadder({ windowId }) {
   //        3. Display cumulative bars alongside individual level sizes
   //        4. Add depth imbalance indicator (cumBid / cumAsk ratio)
 
+
   const fontClass = `pl--font-${grid.fontSize}`
 
   return (

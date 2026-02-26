@@ -24,3 +24,9 @@
 **What changed:** Added useMemo optimizations to scanner sort/filter. Fixed stale closure bugs in AlertTrigger (settingsRef) and MarketViewer (tickerRef). Added keyboard navigation to MenuBar (arrow keys, Escape, Enter) and Shell (Ctrl+Tab window cycling). Upgraded MarketClock to DST-aware market sessions. Added CSV escaping, date range validation, per-alert flash timers, settings versioning, ARIA attributes. STUB comments added for row virtualization, exchange calendar, layout persistence, notification permissions, alert deduplication, settings import/export, hotkey docs.
 **PR:** https://github.com/alexhachm/KalshiAlpha/pull/89
 ---
+
+## 2026-02-26T22:10:00Z worker-5 | domain: trade | task: "Integrate grid customization into trade components"
+**Files changed:** src/hooks/useGridCustomization.js, src/components/GridSettingsPanel.jsx, src/components/GridSettingsPanel.css, src/components/trade/TradeLog.jsx, src/components/trade/TradeLogSettings.jsx, src/components/trade/Positions.jsx, src/components/trade/PositionsSettings.jsx, src/components/trade/Accounts.jsx, src/components/trade/AccountsSettings.jsx, src/components/trade/EventLog.jsx, src/components/trade/EventLogSettings.jsx, TradeLog.css, Positions.css, EventLog.css
+**What changed:** All 4 trade domain components now use useGridCustomization hook for column drag-reorder, visibility, width, appearance, and conditional formatting. Settings files embed shared GridSettingsPanel replacing manual column toggles. Hook persists to localStorage per tool/window ID. Drag-over CSS class added.
+**PR:** https://github.com/alexhachm/KalshiAlpha/pull/30
+---
