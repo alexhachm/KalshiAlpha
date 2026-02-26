@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+// Module-level registry of all open popout windows.
+// A single beforeunload listener on the parent window closes them all on exit.
+const openPopouts = new Set()
+
+window.addEventListener('beforeunload', () => {
+  openPopouts.forEach((w) => {
+    if (w && !w.closed) w.close()
+  })
+})
+
 /**
  * PopoutWindow — renders children into a detached browser window via portal.
  * Copies parent page styles so components look identical.
@@ -28,6 +38,7 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
     }
 
     popoutRef.current = w
+    openPopouts.add(w)
     w.document.title = title || 'KalshiAlpha'
 
     // Copy all stylesheets from the parent document
@@ -80,6 +91,7 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
 
     return () => {
       closedByEffect.current = true
+      openPopouts.delete(popoutRef.current)
       if (popoutRef.current && !popoutRef.current.closed) {
         popoutRef.current.close()
       }
