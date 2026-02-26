@@ -2,6 +2,7 @@ import React, { useReducer, useState, useCallback, useEffect } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
+import { useHotkeyDispatch } from '../hooks/useHotkeyDispatch'
 import './Shell.css'
 
 const CASCADE_OFFSET = 30
@@ -266,6 +267,21 @@ function Shell() {
   const openSettings = useCallback(() => {
     setIsSettingsOpen(true)
   }, [])
+
+  const getFocusedWindow = useCallback(() => {
+    // The window with the highest zIndex is considered focused
+    let focused = null
+    let maxZ = -1
+    for (const win of Object.values(state.windows)) {
+      if (win.zIndex > maxZ) {
+        maxZ = win.zIndex
+        focused = win
+      }
+    }
+    return focused
+  }, [state.windows])
+
+  useHotkeyDispatch({ focusWindow, getFocusedWindow, windows: state.windows })
 
   return (
     <div className="shell">
