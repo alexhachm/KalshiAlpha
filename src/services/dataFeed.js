@@ -343,10 +343,6 @@ function generateOHLCV(ticker, count = 200, timeframeMinutes = 5) {
  * When connected: fetches candles from REST, updates from WS trades.
  * When disconnected: uses mock data if available.
  */
-function generateOHLCV(ticker, count = 200, timeframeMinutes = 5) {
-  return mockData.generateOHLCV(ticker, count, timeframeMinutes);
-}
-
 function subscribeToOHLCV(ticker, timeframe, callback) {
   // Check if mockData has this function
   if (!connected && typeof mockData.subscribeToOHLCV === 'function') {
@@ -691,7 +687,6 @@ export {
   subscribeToTicker,
   subscribeToMarketRace,
   subscribeToScanner,
-  generateOHLCV,
   subscribeToOHLCV,
   subscribeToTimeSales,
   getHistoricalScanResults,
