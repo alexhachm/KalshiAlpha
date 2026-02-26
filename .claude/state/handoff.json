@@ -1,1 +1,9 @@
-{}
+{
+  "request_id": "merge-all-open-prs",
+  "status": "decomposed",
+  "tier": 3,
+  "decomposed_at": "2026-02-26T03:10:00Z",
+  "task_count": 6,
+  "merge_order": ["#17 services", "#18 shell", "#13 eventlog", "#15 css", "#19 hooks-migration", "verify"],
+  "notes": "PRs #11 and #14 already merged. PR #16 closed. 5 conflicting PRs decomposed as sequential chain. Each depends on previous completing. PR #19 is most complex (88 files) — cherry-pick strategy recommended if rebase fails."
+}

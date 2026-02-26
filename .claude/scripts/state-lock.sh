@@ -3,6 +3,8 @@
 # Acquires an exclusive lock before running <command>, releases after.
 # Writes go to a temp file first, then atomically move into place.
 set -e
+# Ensure common tool paths are available (jq may live in ~/.local/bin)
+export PATH="$HOME/.local/bin:$PATH"
 STATE_FILE="$1"
 shift
 LOCK_DIR="${STATE_FILE}.lockdir"
