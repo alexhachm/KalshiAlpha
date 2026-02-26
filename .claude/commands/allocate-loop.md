@@ -262,8 +262,16 @@ Cross-reference with the task-queue.json to see how many tasks were in the reque
    - Tasks tagged `VALIDATION: tier3` → spawn build-validator + verify-app
 5. If issues, create fix tasks
 6. If clean, push to main
-7. Update handoff.json status to `"integrated"`
-8. Touch `.claude/signals/.handoff-signal` (so Master-2 can track)
+7. Write integration status to `integration-log.json` (**NEVER write to handoff.json** — it is Master-1's request queue and writing to it destroys pending requests):
+   ```bash
+   bash .claude/scripts/state-lock.sh .claude/state/integration-log.json '
+     if [ ! -f .claude/state/integration-log.json ] || ! jq -e "type == \"array\"" .claude/state/integration-log.json >/dev/null 2>&1; then
+       echo "[]" > .claude/state/integration-log.json
+     fi
+     jq ". += [{\"request_id\": \"[id]\", \"status\": \"integrated\", \"integrated_at\": \"[ISO timestamp]\"}]" .claude/state/integration-log.json > /tmp/il.json && mv /tmp/il.json .claude/state/integration-log.json
+   '
+   ```
+8. Touch `.claude/signals/.completion-signal` (for status tracking)
 9. `context_budget += 100`
 10. `last_activity = now()`
 

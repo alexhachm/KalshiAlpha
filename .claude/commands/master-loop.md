@@ -65,7 +65,8 @@ User describes work: "Fix the popout bugs" / "Add authentication" / etc.
 4. Confirm to user
 
 ```bash
-bash .claude/scripts/state-lock.sh .claude/state/handoff.json 'cat > .claude/state/handoff.json << HANDOFF
+# Write new request to temp file (avoids heredoc escaping issues inside state-lock)
+cat > /tmp/new-handoff-request.json << 'HANDOFF'
 {
   "request_id": "[short-name]",
   "timestamp": "[ISO timestamp]",
@@ -76,7 +77,14 @@ bash .claude/scripts/state-lock.sh .claude/state/handoff.json 'cat > .claude/sta
   "complexity_hint": "[trivial|simple|moderate|complex]",
   "status": "pending_decomposition"
 }
-HANDOFF'
+HANDOFF
+# Append to handoff queue (handoff.json is an array — multiple requests coexist safely)
+bash .claude/scripts/state-lock.sh .claude/state/handoff.json '
+  if ! jq -e "type == \"array\"" .claude/state/handoff.json >/dev/null 2>&1; then
+    echo "[]" > .claude/state/handoff.json
+  fi
+  jq --slurpfile req /tmp/new-handoff-request.json ". + \$req" .claude/state/handoff.json > /tmp/ho.json && mv /tmp/ho.json .claude/state/handoff.json
+'
 ```
 
 **Signal Master-2 immediately:**
@@ -165,8 +173,9 @@ User says: "status" / "what's happening" / "show workers"
 
 **Action:** Read and display:
 1. `.claude/state/worker-status.json` - worker states
-2. `.claude/state/handoff.json` - pending requests
+2. `.claude/state/handoff.json` - request queue (array of all requests with their statuses)
 3. `.claude/state/task-queue.json` - decomposed tasks
+3b. `.claude/state/integration-log.json` - completed integrations
 4. `.claude/state/agent-health.json` - agent health
 5. `TaskList()` - all tasks
 6. `.claude/logs/activity.log` - recent activity (last 15 lines)
