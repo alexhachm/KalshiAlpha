@@ -63,16 +63,9 @@ function TimeSale({ windowId }) {
   const [trades, setTrades] = useState([])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [paused, setPaused] = useState(false)
   const listRef = useRef(null)
-  const pausedRef = useRef(false)
   const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 11
-
-  // Keep ref in sync for use inside subscription callback
-  useEffect(() => {
-    pausedRef.current = paused
-  }, [paused])
 
   // Persist settings
   useEffect(() => {
@@ -87,7 +80,6 @@ function TimeSale({ windowId }) {
   useEffect(() => {
     setTrades([])
     const unsub = subscribeToTimeSales(ticker, (trade) => {
-      if (pausedRef.current) return
       setTrades((prev) => {
         const next = [...prev, trade]
         // Trim to maxRows (read from latest settings via closure)
@@ -148,13 +140,6 @@ function TimeSale({ windowId }) {
         <span className="ts-trade-count">{trades.length} trades</span>
 
         <div className="ts-toolbar-right">
-          <button
-            className={`ts-btn ${paused ? 'ts-btn--active' : ''}`}
-            onClick={() => setPaused((p) => !p)}
-            title={paused ? 'Resume' : 'Pause'}
-          >
-            {paused ? '\u25B6' : '\u275A\u275A'}
-          </button>
           <button
             className="ts-btn"
             onClick={() => setTrades([])}
