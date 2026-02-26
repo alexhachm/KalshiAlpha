@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--text-primary);
 }
 
@@ -12,36 +12,41 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .ls-toolbar-left,
 .ls-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm);
 }
 
 .ls-filter-select {
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
+  transition: border-color var(--transition-fast);
 }
 
 .ls-filter-select:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
+}
+
+.ls-filter-select:hover {
+  border-color: var(--border-focus);
 }
 
 .ls-count {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -51,17 +56,19 @@
   justify-content: center;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   padding: 3px 5px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   line-height: 1;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .ls-toolbar-btn:hover {
-  background: var(--border-color);
+  background: var(--bg-hover);
   color: var(--text-primary);
+  border-color: var(--border-color);
 }
 
 .ls-toolbar-btn--active {
@@ -72,52 +79,59 @@
 
 /* Settings panel */
 .ls-settings {
-  padding: 6px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .ls-settings-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .ls-settings-row label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .ls-settings-row input[type="number"] {
   width: 60px;
-  background: var(--bg-primary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   text-align: right;
+  transition: border-color var(--transition-fast);
 }
 
 .ls-settings-row input[type="number"]:focus {
   outline: none;
-  border-color: var(--accent-highlight);
+  border-color: var(--border-focus);
 }
 
 .ls-settings-row select {
-  background: var(--bg-primary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
+  transition: border-color var(--transition-fast);
+}
+
+.ls-settings-row select:focus {
+  outline: none;
+  border-color: var(--border-focus);
 }
 
 .ls-settings-row input[type="checkbox"] {
@@ -147,15 +161,16 @@
 .ls-th {
   text-align: left;
   color: var(--text-muted);
-  font-weight: 400;
-  font-size: 10px;
+  font-weight: 600;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  transition: color var(--transition-fast);
 }
 
 .ls-th:hover {
@@ -172,15 +187,20 @@
 
 .ls-row {
   cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.ls-row:nth-child(even) {
+  background: var(--bg-row-alt);
 }
 
 .ls-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-hover);
 }
 
 .ls-row td {
-  padding: 3px 6px;
-  border-bottom: 1px solid rgba(51, 51, 51, 0.5);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -188,37 +208,37 @@
 
 .ls-cell-time {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   width: 80px;
 }
 
 .ls-cell-ticker {
   color: var(--accent-highlight);
   font-weight: 600;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }
 
 .ls-cell-strategy {
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-sm);
 }
 
 .ls-cell-type {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .ls-type-bull {
-  color: var(--accent-win);
+  color: var(--accent-buy);
 }
 
 .ls-type-bear {
-  color: var(--accent-loss);
+  color: var(--accent-sell);
 }
 
 .ls-type-neutral {
-  color: var(--text-muted);
+  color: var(--accent-neutral);
 }
 
 .ls-cell-conviction {
@@ -237,18 +257,30 @@
   width: 12px;
   height: 8px;
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-subtle);
   border-radius: 1px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .ls-conviction-bar--active {
+  border-color: var(--accent-buy);
+}
+
+.ls-conviction-bar--active:nth-child(1) {
+  background: var(--accent-buy);
+}
+
+.ls-conviction-bar--active:nth-child(2) {
+  background: var(--accent-buy);
+}
+
+.ls-conviction-bar--active:nth-child(3) {
   background: var(--accent-highlight);
-  border-color: var(--accent-highlight);
 }
 
 .ls-empty {
   text-align: center;
-  padding: 20px;
+  padding: var(--spacing-xl);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }

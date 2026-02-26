@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
+import { useHistoricalScan } from '../../hooks/useKalshiData'
 import { emitLinkedMarket } from '../../services/linkBus'
-import { getHistoricalScanResults } from '../../services/mockData'
 import { Settings, Download, Search } from 'lucide-react'
 import './HistoricalScanner.css'
 
@@ -90,6 +90,7 @@ function exportToCSV(results) {
 }
 
 function HistoricalScanner({ windowId }) {
+  const { results, scanning, scan } = useHistoricalScan()
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem(`historical-scanner-settings-${windowId}`)
@@ -99,8 +100,6 @@ function HistoricalScanner({ windowId }) {
     }
   })
   const [showSettings, setShowSettings] = useState(false)
-  const [results, setResults] = useState([])
-  const [scanning, setScanning] = useState(false)
   const [hasScanned, setHasScanned] = useState(false)
   const [selectedPattern, setSelectedPattern] = useState('all')
 
@@ -117,21 +116,15 @@ function HistoricalScanner({ windowId }) {
     })
   }, [windowId])
 
-  const handleScan = useCallback(() => {
-    setScanning(true)
+  const handleScan = useCallback(async () => {
     setHasScanned(true)
-    // Simulate async scan with mock data
-    setTimeout(() => {
-      const data = getHistoricalScanResults({
-        startDate,
-        endDate,
-        pattern: selectedPattern,
-        maxResults: settings.maxResults,
-      })
-      setResults(data)
-      setScanning(false)
-    }, 600)
-  }, [startDate, endDate, selectedPattern, settings.maxResults])
+    await scan({
+      startDate,
+      endDate,
+      pattern: selectedPattern,
+      maxResults: settings.maxResults,
+    })
+  }, [scan, startDate, endDate, selectedPattern, settings.maxResults])
 
   const handleRowClick = useCallback(
     (ticker) => {
