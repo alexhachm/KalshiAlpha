@@ -1,5 +1,6 @@
 import React from 'react'
 import Window from './Window'
+import PopoutWindow from './PopoutWindow'
 import MarketViewer from './MarketViewer'
 // Trade
 import Montage from './trade/Montage'
@@ -51,7 +52,16 @@ const COMPONENT_REGISTRY = {
   'hotkey-config': HotkeyManager,
 }
 
-function WindowManager({ windows, onClose, onFocus }) {
+function WindowManager({
+  windows,
+  onClose,
+  onFocus,
+  onMerge,
+  onSetActiveTab,
+  onDetachTab,
+  onPopOut,
+  onPopIn,
+}) {
   return (
     <>
       {Object.values(windows).map((win) => {
@@ -63,6 +73,21 @@ function WindowManager({ windows, onClose, onFocus }) {
         }
         // Pass ticker context if the window was opened with one
         if (win.ticker) componentProps.ticker = win.ticker
+
+        // Popped-out windows render in a separate browser window via portal
+        if (win.poppedOut) {
+          return (
+            <PopoutWindow
+              key={win.id}
+              title={win.title}
+              width={win.initialWidth}
+              height={win.initialHeight}
+              onClose={() => onPopIn(win.id)}
+            >
+              <Component {...componentProps} />
+            </PopoutWindow>
+          )
+        }
 
         return (
           <Window
@@ -77,6 +102,12 @@ function WindowManager({ windows, onClose, onFocus }) {
             zIndex={win.zIndex}
             onClose={onClose}
             onFocus={onFocus}
+            onPopOut={onPopOut}
+            onMerge={onMerge}
+            tabs={win.tabs}
+            activeTabIndex={win.activeTabIndex}
+            onSetActiveTab={onSetActiveTab}
+            onDetachTab={onDetachTab}
           >
             <Component {...componentProps} />
           </Window>
