@@ -239,6 +239,14 @@
   transition: color var(--transition-fast);
 }
 
+.hs-th[draggable] {
+  cursor: grab;
+}
+
+.hs-th.drag-over {
+  border-left: 2px solid var(--accent-info);
+}
+
 .hs-th:hover {
   color: var(--text-secondary);
 }

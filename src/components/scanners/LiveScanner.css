@@ -173,6 +173,14 @@
   transition: color var(--transition-fast);
 }
 
+.ls-th[draggable] {
+  cursor: grab;
+}
+
+.ls-th.drag-over {
+  border-left: 2px solid var(--accent-info);
+}
+
 .ls-th:hover {
   color: var(--text-secondary);
 }

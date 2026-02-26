@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { subscribeToScanner } from '../../services/mockData'
 import { emitLinkedMarket } from '../../services/linkBus'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
+import GridSettingsPanel from '../GridSettingsPanel'
 import { Settings, Trash2 } from 'lucide-react'
 import './LiveScanner.css'
 
@@ -13,13 +15,15 @@ const DEFAULT_SETTINGS = {
   showConvictionBars: true,
 }
 
-const SORT_COLUMNS = [
+const LS_COLUMNS = [
   { key: 'time', label: 'Time' },
   { key: 'ticker', label: 'Ticker' },
   { key: 'strategy', label: 'Strategy' },
   { key: 'type', label: 'Type' },
-  { key: 'conviction', label: 'Conviction' },
+  { key: 'conviction', label: 'Conviction', numeric: true },
 ]
+
+const FONT_SIZE_MAP = { small: 11, medium: 12, large: 14 }
 
 function sortAlerts(alerts, column, asc) {
   return [...alerts].sort((a, b) => {
@@ -62,6 +66,8 @@ function LiveScanner({ windowId }) {
   const [paused, setPaused] = useState(false)
   const alertsRef = useRef([])
   const tableBodyRef = useRef(null)
+  const grid = useGridCustomization(`liveScanner-${windowId}`, LS_COLUMNS)
+  const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 12
 
   // Persist settings
   useEffect(() => {
@@ -186,55 +192,79 @@ function LiveScanner({ windowId }) {
               onChange={(e) => updateSetting('showConvictionBars', e.target.checked)}
             />
           </div>
+          <GridSettingsPanel {...grid} />
         </div>
       )}
 
       {/* Alerts table */}
-      <div className="ls-table-wrap" ref={tableBodyRef}>
+      <div className="ls-table-wrap" ref={tableBodyRef} style={{ fontSize: fontSizePx }}>
         <table className="ls-table">
           <thead>
             <tr>
-              {SORT_COLUMNS.map((col) => (
-                <th
-                  key={col.key}
-                  className={`ls-th${settings.sortColumn === col.key ? ' ls-th--sorted' : ''}`}
-                  onClick={() => handleSortClick(col.key)}
-                >
-                  {col.label}
-                  {settings.sortColumn === col.key && (
-                    <span className="ls-sort-arrow">
-                      {settings.sortAsc ? ' ▲' : ' ▼'}
-                    </span>
-                  )}
-                </th>
-              ))}
+              {grid.visibleColumns.map((col) => {
+                const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+                const isDragOver = grid.dragState.dragging && grid.dragState.overIndex === fullIdx
+                return (
+                  <th
+                    key={col.key}
+                    className={`ls-th${settings.sortColumn === col.key ? ' ls-th--sorted' : ''}${isDragOver ? ' drag-over' : ''}`}
+                    onClick={() => handleSortClick(col.key)}
+                    draggable
+                    onDragStart={() => grid.onDragStart(fullIdx)}
+                    onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                    onDragEnd={grid.onDragEnd}
+                    style={col.width ? { width: col.width } : undefined}
+                  >
+                    {col.label}
+                    {settings.sortColumn === col.key && (
+                      <span className="ls-sort-arrow">
+                        {settings.sortAsc ? ' ▲' : ' ▼'}
+                      </span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
-            {sorted.map((alert) => (
-              <tr
-                key={alert.id}
-                className="ls-row"
-                onClick={() => handleRowClick(alert.ticker)}
-              >
-                <td className="ls-cell-time">{alert.time}</td>
-                <td className="ls-cell-ticker">{alert.ticker}</td>
-                <td className="ls-cell-strategy">{alert.strategy}</td>
-                <td className={`ls-cell-type ls-type-${alert.type}`}>
-                  {alert.type.toUpperCase()}
-                </td>
-                <td className="ls-cell-conviction">
-                  {settings.showConvictionBars ? (
-                    <ConvictionBars level={alert.conviction} />
-                  ) : (
-                    alert.conviction
-                  )}
-                </td>
-              </tr>
-            ))}
+            {sorted.map((alert) => {
+              const rowStyle = grid.getRowStyle(alert) || {}
+              return (
+                <tr
+                  key={alert.id}
+                  className="ls-row"
+                  onClick={() => handleRowClick(alert.ticker)}
+                  style={{ ...rowStyle, height: grid.rowHeight }}
+                >
+                  {grid.visibleColumns.map((col) => {
+                    let content, className = `ls-cell-${col.key}`
+                    switch (col.key) {
+                      case 'time': content = alert.time; break
+                      case 'ticker': content = alert.ticker; break
+                      case 'strategy': content = alert.strategy; break
+                      case 'type':
+                        content = alert.type.toUpperCase()
+                        className += ` ls-type-${alert.type}`
+                        break
+                      case 'conviction':
+                        content = settings.showConvictionBars
+                          ? <ConvictionBars level={alert.conviction} />
+                          : alert.conviction
+                        break
+                      default: content = null
+                    }
+                    return (
+                      <td key={col.key} className={className} style={col.width ? { width: col.width } : undefined}>
+                        {content}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={5} className="ls-empty">
+                <td colSpan={grid.visibleColumns.length} className="ls-empty">
                   {paused ? 'Scanner paused' : 'Waiting for alerts...'}
                 </td>
               </tr>

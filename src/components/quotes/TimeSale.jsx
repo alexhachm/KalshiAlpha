@@ -6,6 +6,8 @@ import {
   emitLinkedMarket,
   getColorGroup,
 } from '../../services/linkBus'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
+import GridSettingsPanel from '../GridSettingsPanel'
 import './TimeSale.css'
 
 const TICKERS = [
@@ -13,9 +15,17 @@ const TICKERS = [
   'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
 ]
 
+const TS_COLUMNS = [
+  { key: 'time', label: 'Time', align: 'left' },
+  { key: 'price', label: 'Price', align: 'right', numeric: true },
+  { key: 'size', label: 'Size', align: 'right', numeric: true },
+  { key: 'side', label: 'Side', align: 'right' },
+]
+
+const FONT_SIZE_MAP = { small: 10, medium: 11, large: 13 }
+
 const DEFAULT_SETTINGS = {
   maxRows: 200,
-  fontSize: 11,
   sizeFilter: 0,
   soundOnLarge: false,
   largeSizeThreshold: 500,
@@ -56,6 +66,8 @@ function TimeSale({ windowId }) {
   const [paused, setPaused] = useState(false)
   const listRef = useRef(null)
   const pausedRef = useRef(false)
+  const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
+  const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 11
 
   // Keep ref in sync for use inside subscription callback
   useEffect(() => {
@@ -161,28 +173,53 @@ function TimeSale({ windowId }) {
       </div>
 
       {/* Column headers */}
-      <div className="ts-header" style={{ fontSize: settings.fontSize }}>
-        <span className="ts-col-time">Time</span>
-        <span className="ts-col-price">Price</span>
-        <span className="ts-col-size">Size</span>
-        <span className="ts-col-side">Side</span>
+      <div className="ts-header" style={{ fontSize: fontSizePx }}>
+        {grid.visibleColumns.map((col) => {
+          const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+          const isDragOver = grid.dragState.dragging && grid.dragState.overIndex === fullIdx
+          return (
+            <span
+              key={col.key}
+              className={`ts-col-${col.key}${isDragOver ? ' drag-over' : ''}`}
+              draggable
+              onDragStart={() => grid.onDragStart(fullIdx)}
+              onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+              onDragEnd={grid.onDragEnd}
+              style={col.width ? { flex: `0 0 ${col.width}px` } : undefined}
+            >
+              {col.label}
+            </span>
+          )
+        })}
       </div>
 
       {/* Trade list */}
-      <div className="ts-list" ref={listRef} style={{ fontSize: settings.fontSize }}>
-        {displayTrades.map((trade) => (
-          <div
-            key={trade.id}
-            className={`ts-row ${trade.side === 'BUY' ? 'ts-row--buy' : 'ts-row--sell'}${
-              trade.size >= (settings.largeSizeThreshold || 500) ? ' ts-row--large' : ''
-            }`}
-          >
-            <span className="ts-col-time">{formatTime(trade.timestamp)}</span>
-            <span className="ts-col-price">{trade.price}¢</span>
-            <span className="ts-col-size">{trade.size}</span>
-            <span className="ts-col-side">{trade.side}</span>
-          </div>
-        ))}
+      <div className="ts-list" ref={listRef} style={{ fontSize: fontSizePx }}>
+        {displayTrades.map((trade) => {
+          const rowStyle = grid.getRowStyle(trade) || {}
+          return (
+            <div
+              key={trade.id}
+              className={`ts-row ${trade.side === 'BUY' ? 'ts-row--buy' : 'ts-row--sell'}${
+                trade.size >= (settings.largeSizeThreshold || 500) ? ' ts-row--large' : ''
+              }`}
+              style={{ ...rowStyle, height: grid.rowHeight }}
+            >
+              {grid.visibleColumns.map((col) => (
+                <span
+                  key={col.key}
+                  className={`ts-col-${col.key}`}
+                  style={col.width ? { flex: `0 0 ${col.width}px` } : undefined}
+                >
+                  {col.key === 'time' ? formatTime(trade.timestamp) :
+                   col.key === 'price' ? `${trade.price}¢` :
+                   col.key === 'size' ? trade.size :
+                   col.key === 'side' ? trade.side : null}
+                </span>
+              ))}
+            </div>
+          )
+        })}
         {displayTrades.length === 0 && (
           <div className="ts-empty">Waiting for trades...</div>
         )}
@@ -205,16 +242,6 @@ function TimeSale({ windowId }) {
                 step={50}
                 value={settings.maxRows}
                 onChange={(e) => updateSetting('maxRows', parseInt(e.target.value, 10) || 200)}
-              />
-            </label>
-            <label className="ts-setting-row">
-              <span>Font Size</span>
-              <input
-                type="number"
-                min={9}
-                max={16}
-                value={settings.fontSize}
-                onChange={(e) => updateSetting('fontSize', parseInt(e.target.value, 10) || 11)}
               />
             </label>
             <label className="ts-setting-row">
@@ -247,6 +274,7 @@ function TimeSale({ windowId }) {
                 onChange={(e) => updateSetting('autoScroll', e.target.checked)}
               />
             </label>
+            <GridSettingsPanel {...grid} />
           </div>
         </div>
       )}
