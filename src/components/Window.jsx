@@ -53,6 +53,11 @@ function Window({
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null)
   const [isPinned, setIsPinned] = useState(false)
+  const [hideTitlebar, setHideTitlebar] = useState(() => {
+    try {
+      return localStorage.getItem(`window-hide-titlebar-${id}`) === 'true'
+    } catch { return false }
+  })
 
   // Register with SnapManager on mount
   useEffect(() => {
@@ -263,6 +268,15 @@ function Window({
     setIsPinned((prev) => !prev)
   }, [])
 
+  const handleToggleTitlebar = useCallback(() => {
+    setContextMenu(null)
+    setHideTitlebar((prev) => {
+      const next = !prev
+      try { localStorage.setItem(`window-hide-titlebar-${id}`, String(next)) } catch {}
+      return next
+    })
+  }, [id])
+
   // Double-click titlebar to pop out
   const handleTitleBarDoubleClick = useCallback(
     (e) => {
@@ -276,7 +290,7 @@ function Window({
     <div
       ref={windowRef}
       data-window-id={id}
-      className={`window${isPinned ? ' window--pinned' : ''}`}
+      className={`window${isPinned ? ' window--pinned' : ''}${hideTitlebar ? ' window--no-titlebar' : ''}`}
       style={{
         left: posRef.current.x,
         top: posRef.current.y,
@@ -361,6 +375,9 @@ function Window({
           </div>
           <div className="window-context-item" onClick={handlePinToTop}>
             {isPinned ? '✓ ' : ''}Pin to Top
+          </div>
+          <div className="window-context-item" onClick={handleToggleTitlebar}>
+            {hideTitlebar ? '✓ ' : ''}Hide Title Bar
           </div>
           <div className="window-context-separator" />
           <div
