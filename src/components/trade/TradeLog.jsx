@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import TradeLogSettings from './TradeLogSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './TradeLog.css'
@@ -7,23 +7,11 @@ import './TradeLog.css'
 const LS_KEY_PREFIX = 'trade-log-settings-'
 
 const DEFAULT_SETTINGS = {
-  columns: {
-    market: true,
-    account: true,
-    shares: true,
-    avgCost: true,
-    realized: true,
-    unrealized: true,
-    type: true,
-    status: true,
-    date: true,
-  },
   sortBy: 'date',
   sortDirection: 'desc',
-  filter: 'all',          // 'all' | 'open' | 'closed'
-  dateRange: 'all',       // 'all' | 'today' | '7d' | '30d' | 'custom'
+  filter: 'all',
+  dateRange: 'all',
   refreshInterval: 5,
-  fontSize: 'medium',
   flashOnChange: false,
 }
 
@@ -101,10 +89,9 @@ function saveSettings(windowId, settings) {
 }
 
 function exportCsv(rows, columns) {
-  const visibleCols = columns.filter((c) => c.visible)
-  const headers = visibleCols.map((c) => c.label).join(',')
+  const headers = columns.map((c) => c.label).join(',')
   const lines = rows.map((row) =>
-    visibleCols.map((c) => {
+    columns.map((c) => {
       const v = row[c.key]
       if (typeof v === 'string' && v.includes(',')) return `"${v}"`
       return v ?? ''
@@ -132,56 +119,15 @@ function applyDateFilter(rows, dateRange) {
   return rows.filter((r) => new Date(r.date) >= cutoff)
 }
 
-function mapApiFillsToTradeLog(fills, positions) {
-  const posMap = {}
-  ;(positions || []).forEach((p) => {
-    posMap[p.market_ticker] = p
-  })
-
-  return fills.map((f, i) => {
-    const pos = posMap[f.ticker || f.market_ticker]
-    const isLong = f.side === 'yes'
-    const isOpen = pos && Math.abs(pos.position || 0) > 0
-    const avgCost = f.yes_price ? +(f.yes_price / 100).toFixed(2) : 0
-    const count = parseInt(f.count || f.count_fp || '0', 10)
-
-    return {
-      id: f.fill_id || f.order_id || `fill-${i}`,
-      market: f.ticker || f.market_ticker || 'UNKNOWN',
-      account: 'KA-100482',
-      shares: count,
-      avgCost,
-      realized: isOpen ? 0 : +((f.realized_pnl || 0) / 100).toFixed(2),
-      unrealized: isOpen ? +((f.unrealized_pnl || 0) / 100).toFixed(2) : 0,
-      type: isLong ? 'Long' : 'Short',
-      status: isOpen ? 'Open' : 'Closed',
-      date: f.created_time ? f.created_time.slice(0, 10) : new Date().toISOString().slice(0, 10),
-    }
-  })
-}
-
 function TradeLog({ windowId }) {
+  const grid = useGridCustomization('trade-log-' + windowId, COLUMNS)
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [mockRows, setMockRows] = useState(generateMockTradelog)
+  const [allRows, setAllRows] = useState(generateMockTradelog)
   const [activeFilter, setActiveFilter] = useState(settings.filter)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const intervalRef = useRef(null)
-
-  // Portfolio hook for real data
-  const { connected } = useKalshiConnection()
-  const { balance, positions: apiPositions, fills: apiFills } = usePortfolio(
-    settings.refreshInterval * 1000
-  )
-
-  // Portfolio loaded when connected and first fetch has returned
-  const portfolioLoaded = connected && balance !== null
-
-  // Use API data when connected and loaded, mock when not connected
-  const allRows = portfolioLoaded
-    ? mapApiFillsToTradeLog(apiFills, apiPositions)
-    : mockRows
 
   // Sync activeFilter with settings
   useEffect(() => {
@@ -193,10 +139,9 @@ function TradeLog({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh mock data (only when not connected)
+  // Refresh data
   const refreshData = useCallback(() => {
-    if (connected) return
-    setMockRows((prev) => {
+    setAllRows((prev) => {
       const next = generateMockTradelog()
 
       if (settings.flashOnChange) {
@@ -216,13 +161,12 @@ function TradeLog({ windowId }) {
 
       return next
     })
-  }, [settings.flashOnChange, connected])
+  }, [settings.flashOnChange])
 
   useEffect(() => {
-    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData, connected])
+  }, [settings.refreshInterval, refreshData])
 
   // Color link
   useEffect(() => {
@@ -278,17 +222,15 @@ function TradeLog({ windowId }) {
     }))
   }
 
-  const visibleColumns = COLUMNS.filter((c) => settings.columns[c.key])
-
   const handleExport = () => {
-    exportCsv(sorted, visibleColumns.map((c) => ({ ...c, visible: true })))
+    exportCsv(sorted, grid.visibleColumns)
   }
 
   const openCount = allRows.filter((r) => r.status === 'Open').length
   const closedCount = allRows.filter((r) => r.status === 'Closed').length
 
   return (
-    <div className={`tradelog tradelog--font-${settings.fontSize}`}>
+    <div className={`tradelog tradelog--font-${grid.fontSize}`}>
       {/* Header bar */}
       <div className="tl-header-bar">
         <span className="tl-title">Trade Log</span>
@@ -325,21 +267,21 @@ function TradeLog({ windowId }) {
         ))}
       </div>
 
-      {/* Loading indicator when API is connecting */}
-      {connected && !portfolioLoaded && (
-        <div className="tl-loading">Loading trade history...</div>
-      )}
-
       {/* Table */}
-      <div className="tl-table-wrap">
+      <div className="tl-table-wrap" style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}>
         <table className="tl-table">
           <thead>
             <tr>
-              {visibleColumns.map((col) => (
+              {grid.visibleColumns.map((col, idx) => (
                 <th
                   key={col.key}
-                  className={`tl-th tl-align-${col.align}`}
+                  className={`tl-th tl-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
                   onClick={() => handleSort(col.key)}
+                  draggable
+                  onDragStart={() => grid.onDragStart(idx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragEnd={grid.onDragEnd}
+                  style={{ width: col.width || 'auto', cursor: 'grab' }}
                 >
                   {col.label}
                   {settings.sortBy === col.key && (
@@ -354,7 +296,7 @@ function TradeLog({ windowId }) {
           <tbody>
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length} className="tl-empty">
+                <td colSpan={grid.visibleColumns.length} className="tl-empty">
                   No positions to display
                 </td>
               </tr>
@@ -371,8 +313,13 @@ function TradeLog({ windowId }) {
                 ].filter(Boolean).join(' ')
 
                 return (
-                  <tr key={row.id} className={rowClass} onClick={() => handleRowClick(row.market)}>
-                    {visibleColumns.map((col) => {
+                  <tr
+                    key={row.id}
+                    className={rowClass}
+                    onClick={() => handleRowClick(row.market)}
+                    style={{ height: grid.rowHeight, ...grid.getRowStyle(row) }}
+                  >
+                    {grid.visibleColumns.map((col) => {
                       const val = row[col.key]
 
                       if (col.key === 'market') {
@@ -403,7 +350,7 @@ function TradeLog({ windowId }) {
                         const cls = val >= 0 ? 'text-win' : 'text-loss'
                         return (
                           <td key={col.key} className={`tl-td tl-align-${col.align} ${cls}`}>
-                            {isOpen ? `$${val.toFixed(2)}` : '—'}
+                            {isOpen ? `$${val.toFixed(2)}` : '\u2014'}
                           </td>
                         )
                       }
@@ -412,7 +359,7 @@ function TradeLog({ windowId }) {
                         const cls = val >= 0 ? 'text-win' : 'text-loss'
                         return (
                           <td key={col.key} className={`tl-td tl-align-${col.align} ${val !== 0 ? cls : ''}`}>
-                            {!isOpen ? `$${val.toFixed(2)}` : '—'}
+                            {!isOpen ? `$${val.toFixed(2)}` : '\u2014'}
                           </td>
                         )
                       }
@@ -442,6 +389,7 @@ function TradeLog({ windowId }) {
       {showSettings && (
         <TradeLogSettings
           settings={settings}
+          grid={grid}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />

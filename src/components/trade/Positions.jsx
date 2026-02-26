@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './Positions.css'
@@ -7,19 +7,9 @@ import './Positions.css'
 const LS_KEY_PREFIX = 'positions-settings-'
 
 const DEFAULT_SETTINGS = {
-  columns: {
-    market: true,
-    account: true,
-    shares: true,
-    avgCost: true,
-    realized: true,
-    unrealized: true,
-    type: true,
-  },
   sortBy: 'unrealized',
   sortDirection: 'desc',
   refreshInterval: 2,
-  fontSize: 'medium',
   flashOnChange: true,
 }
 
@@ -84,52 +74,24 @@ function saveSettings(windowId, settings) {
   } catch { /* ignore */ }
 }
 
-function mapApiPositions(apiPositions) {
-  return apiPositions.map((p) => ({
-    market: p.market_ticker,
-    account: 'KA-100482',
-    shares: Math.abs(p.position || 0),
-    avgCost: p.market_exposure && p.position
-      ? +(Math.abs(p.market_exposure / p.position) / 100).toFixed(2)
-      : 0,
-    realized: p.realized_pnl ? +(p.realized_pnl / 100).toFixed(2) : 0,
-    unrealized: p.total_traded ? +((p.total_traded - Math.abs(p.market_exposure || 0)) / 100).toFixed(2) : 0,
-    type: (p.position || 0) >= 0 ? 'Long' : 'Short',
-  }))
-}
-
 function Positions({ windowId }) {
+  const grid = useGridCustomization('positions-' + windowId, COLUMNS)
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [mockPositions, setMockPositions] = useState(generateMockPositions)
+  const [positions, setPositions] = useState(generateMockPositions)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const prevUnrealizedRef = useRef({})
   const intervalRef = useRef(null)
-
-  // Portfolio hook for real data
-  const { connected } = useKalshiConnection()
-  const { balance, positions: apiPositions, refresh: refreshPortfolio } = usePortfolio(
-    settings.refreshInterval * 1000
-  )
-
-  // Portfolio loaded when connected and first fetch has returned
-  const portfolioLoaded = connected && balance !== null
-
-  // Use API positions when connected and loaded, mock when not connected
-  const positions = portfolioLoaded
-    ? mapApiPositions(apiPositions)
-    : mockPositions
 
   // Persist settings
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh mock data on interval (only when not connected)
+  // Refresh data on interval
   const refreshData = useCallback(() => {
-    if (connected) return
-    setMockPositions((prev) => {
+    setPositions((prev) => {
       const newPositions = generateMockPositions()
 
       // Check for P&L changes if flash is enabled
@@ -152,13 +114,12 @@ function Positions({ windowId }) {
 
       return newPositions
     })
-  }, [settings.flashOnChange, connected])
+  }, [settings.flashOnChange])
 
   useEffect(() => {
-    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData, connected])
+  }, [settings.refreshInterval, refreshData])
 
   // Color link subscription
   useEffect(() => {
@@ -209,12 +170,8 @@ function Positions({ windowId }) {
     }))
   }
 
-  const visibleColumns = COLUMNS.filter((c) => settings.columns[c.key])
-
-  const fontClass = `pos--font-${settings.fontSize}`
-
   return (
-    <div className={`positions ${fontClass}`}>
+    <div className={`positions pos--font-${grid.fontSize}`}>
       {/* Header bar */}
       <div className="pos-header-bar">
         <span className="pos-title">Open Positions</span>
@@ -230,21 +187,21 @@ function Positions({ windowId }) {
         </div>
       </div>
 
-      {/* Loading indicator when API is connecting */}
-      {connected && !portfolioLoaded && (
-        <div className="pos-loading">Loading portfolio data...</div>
-      )}
-
       {/* Table */}
-      <div className="pos-table-wrap">
+      <div className="pos-table-wrap" style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}>
         <table className="pos-table">
           <thead>
             <tr>
-              {visibleColumns.map((col) => (
+              {grid.visibleColumns.map((col, idx) => (
                 <th
                   key={col.key}
-                  className={`pos-th pos-align-${col.align}`}
+                  className={`pos-th pos-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
                   onClick={() => handleSort(col.key)}
+                  draggable
+                  onDragStart={() => grid.onDragStart(idx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragEnd={grid.onDragEnd}
+                  style={{ width: col.width || 'auto', cursor: 'grab' }}
                 >
                   {col.label}
                   {settings.sortBy === col.key && (
@@ -259,7 +216,7 @@ function Positions({ windowId }) {
           <tbody>
             {sortedPositions.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length} className="pos-empty">
+                <td colSpan={grid.visibleColumns.length} className="pos-empty">
                   No open positions
                 </td>
               </tr>
@@ -279,8 +236,9 @@ function Positions({ windowId }) {
                     key={pos.market}
                     className={rowClasses}
                     onClick={() => handleRowClick(pos.market)}
+                    style={{ height: grid.rowHeight, ...grid.getRowStyle(pos) }}
                   >
-                    {visibleColumns.map((col) => {
+                    {grid.visibleColumns.map((col) => {
                       const val = pos[col.key]
 
                       // Market column: colored by Long/Short
@@ -344,6 +302,7 @@ function Positions({ windowId }) {
       {showSettings && (
         <PositionsSettings
           settings={settings}
+          grid={grid}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />

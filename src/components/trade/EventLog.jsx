@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useKalshiConnection } from '../../hooks/useKalshiData'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import EventLogSettings from './EventLogSettings'
 import './EventLog.css'
 
 const LS_KEY_PREFIX = 'event-log-settings-'
 
 const DEFAULT_SETTINGS = {
-  logLevel: 'all', // 'all' | 'info' | 'warn' | 'error'
+  logLevel: 'all',
   maxLines: 500,
   autoScroll: true,
-  fontSize: 'medium',
 }
+
+const COLUMNS = [
+  { key: 'time',    label: 'Time',    align: 'left' },
+  { key: 'level',   label: 'Level',   align: 'center' },
+  { key: 'source',  label: 'Source',  align: 'left' },
+  { key: 'message', label: 'Message', align: 'left' },
+]
 
 function loadSettings(windowId) {
   try {
@@ -66,7 +72,7 @@ function getStartupEntries() {
     time: t(2800),
     level: 'warn',
     source: 'API',
-    message: 'No API key configured — using demo mode',
+    message: 'No API key configured \u2014 using demo mode',
   })
   entries.push({
     id: 5,
@@ -100,48 +106,25 @@ const PERIODIC_EVENTS = [
   { level: 'info', source: 'DATA', message: 'Market data refreshed' },
   { level: 'warn', source: 'WS', message: 'Latency spike detected: 450ms' },
   { level: 'info', source: 'API', message: 'REST rate limit: 48/60 remaining' },
-  { level: 'error', source: 'API', message: 'Request timeout on /markets — retrying' },
+  { level: 'error', source: 'API', message: 'Request timeout on /markets \u2014 retrying' },
   { level: 'info', source: 'DATA', message: 'Ticker subscription updated' },
   { level: 'warn', source: 'DATA', message: 'Stale quote detected for FED-DEC23' },
   { level: 'info', source: 'WS', message: 'Reconnect successful' },
-  { level: 'error', source: 'WS', message: 'Connection dropped — reconnecting...' },
+  { level: 'error', source: 'WS', message: 'Connection dropped \u2014 reconnecting...' },
   { level: 'info', source: 'SYSTEM', message: 'Auto-save layout complete' },
   { level: 'info', source: 'AUTH', message: 'Session token refreshed' },
 ]
 
 function EventLog({ windowId }) {
+  const grid = useGridCustomization('event-log-' + windowId, COLUMNS)
   const [entries, setEntries] = useState(() => getStartupEntries())
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
   const logEndRef = useRef(null)
   const nextIdRef = useRef(8) // startup entries use 1-7
 
-  // Real connection status from Kalshi API
-  const { connected } = useKalshiConnection()
-  const prevConnectedRef = useRef(connected)
-
-  // Log real connection status changes
-  useEffect(() => {
-    if (connected === prevConnectedRef.current) return
-    prevConnectedRef.current = connected
-
-    setEntries((prev) => {
-      const newEntry = {
-        id: nextIdRef.current++,
-        time: new Date(),
-        level: connected ? 'info' : 'warn',
-        source: 'API',
-        message: connected
-          ? 'Connected to Kalshi API'
-          : 'Disconnected from Kalshi API — using mock data',
-      }
-      const updated = [...prev, newEntry]
-      if (updated.length > settings.maxLines) {
-        return updated.slice(updated.length - settings.maxLines)
-      }
-      return updated
-    })
-  }, [connected, settings.maxLines])
+  // Build a set of visible column keys for fast lookup
+  const visibleKeys = new Set(grid.visibleColumns.map((c) => c.key))
 
   // Persist settings
   useEffect(() => {
@@ -210,10 +193,11 @@ function EventLog({ windowId }) {
         return true // 'info' shows all
       })
 
-  const fontClass = `el--font-${settings.fontSize}`
-
   return (
-    <div className={`event-log ${fontClass}`}>
+    <div
+      className={`event-log el--font-${grid.fontSize}`}
+      style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}
+    >
       {/* Toolbar */}
       <div className="el-toolbar">
         <div className="el-toolbar-left">
@@ -252,13 +236,25 @@ function EventLog({ windowId }) {
           <div className="el-empty">No log entries</div>
         ) : (
           filteredEntries.map((entry) => (
-            <div key={entry.id} className={`el-entry el-entry--${entry.level}`}>
-              <span className="el-time">{formatTime(entry.time)}</span>
-              <span className={`el-level el-level--${entry.level}`}>
-                {entry.level.toUpperCase()}
-              </span>
-              <span className="el-source">[{entry.source}]</span>
-              <span className="el-message">{entry.message}</span>
+            <div
+              key={entry.id}
+              className={`el-entry el-entry--${entry.level}`}
+              style={{ height: grid.rowHeight }}
+            >
+              {visibleKeys.has('time') && (
+                <span className="el-time">{formatTime(entry.time)}</span>
+              )}
+              {visibleKeys.has('level') && (
+                <span className={`el-level el-level--${entry.level}`}>
+                  {entry.level.toUpperCase()}
+                </span>
+              )}
+              {visibleKeys.has('source') && (
+                <span className="el-source">[{entry.source}]</span>
+              )}
+              {visibleKeys.has('message') && (
+                <span className="el-message">{entry.message}</span>
+              )}
             </div>
           ))
         )}
@@ -269,6 +265,7 @@ function EventLog({ windowId }) {
       {showSettings && (
         <EventLogSettings
           settings={settings}
+          grid={grid}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />

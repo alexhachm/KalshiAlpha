@@ -73,6 +73,14 @@
   user-select: none;
 }
 
+.ts-header > span[draggable] {
+  cursor: grab;
+}
+
+.ts-header > span.drag-over {
+  border-left: 2px solid var(--accent-info);
+}
+
 /* Trade list */
 .ts-list {
   flex: 1;

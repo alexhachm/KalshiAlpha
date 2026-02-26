@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
+import GridSettingsPanel from '../GridSettingsPanel'
+import '../GridSettingsPanel.css'
 
-const FONT_SIZES = ['small', 'medium', 'large']
-
-function EventLogSettings({ settings, onChange, onClose }) {
+function EventLogSettings({ settings, grid, onChange, onClose }) {
   const [local, setLocal] = useState({ ...settings })
 
   const update = (key, value) => {
@@ -22,6 +22,10 @@ function EventLogSettings({ settings, onChange, onClose }) {
           <button className="el-settings-close" onClick={onClose}>&times;</button>
         </div>
         <div className="el-settings-body">
+          <GridSettingsPanel {...grid} />
+
+          <div className="el-settings-divider" />
+
           <div className="el-settings-row">
             <label>Log Level Filter</label>
             <select
@@ -53,17 +57,6 @@ function EventLogSettings({ settings, onChange, onClose }) {
               onChange={(e) => update('autoScroll', e.target.checked)}
             />
           </div>
-          <div className="el-settings-row">
-            <label>Font Size</label>
-            <select
-              value={local.fontSize}
-              onChange={(e) => update('fontSize', e.target.value)}
-            >
-              {FONT_SIZES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
-          </div>
         </div>
         <div className="el-settings-footer">
           <button className="el-btn el-btn-save" onClick={handleSave}>Save</button>
@@ -74,7 +67,7 @@ function EventLogSettings({ settings, onChange, onClose }) {
   )
 }
 
-/* Inline styles — follows MontageSettings pattern */
+/* Inline styles */
 const style = document.createElement('style')
 style.textContent = `
 .el-settings-overlay {
@@ -91,7 +84,7 @@ style.textContent = `
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  width: 280px;
+  width: 320px;
   max-height: 90%;
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -127,6 +120,12 @@ style.textContent = `
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.el-settings-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
 }
 
 .el-settings-row {

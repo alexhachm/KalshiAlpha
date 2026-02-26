@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
+import GridSettingsPanel from '../GridSettingsPanel'
 
-const FONT_SIZES = ['small', 'medium', 'large']
 const CLICK_ACTIONS = [
   { value: 'limit', label: 'Place Limit Order' },
   { value: 'select', label: 'Select Price Only' },
 ]
 
-function PriceLadderSettings({ settings, onChange, onClose }) {
+function PriceLadderSettings({ settings, onChange, onClose, grid }) {
   const [local, setLocal] = useState({ ...settings })
 
   const update = (key, value) => {
@@ -26,6 +26,9 @@ function PriceLadderSettings({ settings, onChange, onClose }) {
           <button className="pls-close" onClick={onClose}>&times;</button>
         </div>
         <div className="pls-body">
+          {/* Grid customization: columns, appearance, conditional formatting */}
+          <GridSettingsPanel {...grid} />
+
           <div className="pls-row">
             <label>Visible Levels</label>
             <input
@@ -54,17 +57,6 @@ function PriceLadderSettings({ settings, onChange, onClose }) {
               value={local.flashDuration}
               onChange={(e) => update('flashDuration', Math.max(0, Number(e.target.value)))}
             />
-          </div>
-          <div className="pls-row">
-            <label>Font Size</label>
-            <select
-              value={local.fontSize}
-              onChange={(e) => update('fontSize', e.target.value)}
-            >
-              {FONT_SIZES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
           </div>
           <div className="pls-row">
             <label>Show Volume Bars</label>

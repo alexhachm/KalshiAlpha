@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useTickerData, useOrderEntry } from '../../hooks/useKalshiData'
+import { subscribeToTicker } from '../../services/mockData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
   getColorGroup,
 } from '../../services/linkBus'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PriceLadderSettings from './PriceLadderSettings'
 import './PriceLadder.css'
+
+const COLUMNS = [
+  { key: 'bidSize', label: 'Bid', numeric: true },
+  { key: 'price', label: 'Price', numeric: true },
+  { key: 'askSize', label: 'Ask', numeric: true },
+  { key: 'volume', label: 'Vol', numeric: true },
+]
 
 const TICKERS = [
   'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
@@ -69,21 +77,19 @@ function buildLadder(data) {
 }
 
 function PriceLadder({ windowId }) {
+  const grid = useGridCustomization('priceLadder-' + windowId, COLUMNS)
+
   const [ticker, setTicker] = useState(TICKERS[0])
+  const [data, setData] = useState(null)
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
   const [orderSize, setOrderSize] = useState(settings.defaultSize)
   const [workingOrders, setWorkingOrders] = useState([])
   const [flashPrices, setFlashPrices] = useState({})
 
-  // Data hooks
-  const { data, error: tickerError } = useTickerData(ticker)
-  const { submitOrder, cancelOrder: cancelApiOrder, error: orderError } = useOrderEntry()
-
   const ladderRef = useRef(null)
   const lastPriceRef = useRef(null)
   const hasCenteredRef = useRef(false)
-  const prevDataRef = useRef(null)
   const flashTimersRef = useRef({})
   const orderIdRef = useRef(1)
 
@@ -92,38 +98,34 @@ function PriceLadder({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Flash detection on data changes
+  // Subscribe to mock data
   useEffect(() => {
-    if (!data) {
-      prevDataRef.current = null
-      return
-    }
-    const prev = prevDataRef.current
-    if (prev && data.lastTrade.price !== prev.lastTrade.price) {
-      const dir = data.lastTrade.price > prev.lastTrade.price ? 'up' : 'down'
-      const p = data.lastTrade.price
-      setFlashPrices((fp) => ({ ...fp, [p]: dir }))
-      clearTimeout(flashTimersRef.current[p])
-      flashTimersRef.current[p] = setTimeout(() => {
-        setFlashPrices((fp) => {
-          const next = { ...fp }
-          delete next[p]
-          return next
-        })
-      }, settings.flashDuration)
-    }
-    if (data.lastTrade) {
-      lastPriceRef.current = data.lastTrade.price
-    }
-    prevDataRef.current = data
-  }, [data, settings.flashDuration])
-
-  // Reset flash tracking and centering on ticker change
-  useEffect(() => {
-    prevDataRef.current = null
     hasCenteredRef.current = false
-    Object.values(flashTimersRef.current).forEach(clearTimeout)
-  }, [ticker])
+    const unsub = subscribeToTicker(ticker, (newData) => {
+      setData((prev) => {
+        // Flash detection on last trade price change
+        if (prev && newData.lastTrade.price !== prev.lastTrade.price) {
+          const dir = newData.lastTrade.price > prev.lastTrade.price ? 'up' : 'down'
+          const p = newData.lastTrade.price
+          setFlashPrices((fp) => ({ ...fp, [p]: dir }))
+          clearTimeout(flashTimersRef.current[p])
+          flashTimersRef.current[p] = setTimeout(() => {
+            setFlashPrices((fp) => {
+              const next = { ...fp }
+              delete next[p]
+              return next
+            })
+          }, settings.flashDuration)
+        }
+        lastPriceRef.current = newData.lastTrade.price
+        return newData
+      })
+    })
+    return () => {
+      unsub()
+      Object.values(flashTimersRef.current).forEach(clearTimeout)
+    }
+  }, [ticker, settings.flashDuration])
 
   // Center on last trade price
   useEffect(() => {
@@ -143,6 +145,7 @@ function PriceLadder({ windowId }) {
     ({ ticker: linkedTicker }) => {
       if (linkedTicker && linkedTicker !== ticker) {
         setTicker(linkedTicker)
+        setData(null)
       }
     },
     [ticker]
@@ -159,11 +162,13 @@ function PriceLadder({ windowId }) {
   const handleTickerChange = (e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
+    setData(null)
+    hasCenteredRef.current = false
     emitLinkedMarket(windowId, newTicker)
   }
 
   // Click-to-trade: place limit order at clicked price
-  const handleLevelClick = async (price, side) => {
+  const handleLevelClick = (price, side) => {
     if (settings.clickAction !== 'limit') return
     const order = {
       id: orderIdRef.current++,
@@ -174,27 +179,11 @@ function PriceLadder({ windowId }) {
       status: 'working',
       time: new Date().toLocaleTimeString(),
     }
-    try {
-      await submitOrder({
-        ticker,
-        action: 'buy',
-        side,
-        type: 'limit',
-        yes_price: price,
-        count: orderSize,
-      })
-    } catch {
-      // API not connected — fall back to local mock
-      setWorkingOrders((prev) => [...prev, order])
-    }
+    setWorkingOrders((prev) => [...prev, order])
   }
 
-  const cancelOrder = async (orderId) => {
-    try {
-      await cancelApiOrder(orderId)
-    } catch {
-      setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
-    }
+  const cancelOrder = (orderId) => {
+    setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
   }
 
   const handleSettingsChange = (newSettings) => {
@@ -245,10 +234,16 @@ function PriceLadder({ windowId }) {
       })()
     : null
 
-  const fontClass = `pl--font-${settings.fontSize}`
+  const fontClass = `pl--font-${grid.fontSize}`
 
   return (
-    <div className={`price-ladder ${fontClass}`}>
+    <div
+      className={`price-ladder ${fontClass}`}
+      style={{
+        ...(grid.bgColor ? { backgroundColor: grid.bgColor } : {}),
+        ...(grid.textColor ? { color: grid.textColor } : {}),
+      }}
+    >
       {/* Ticker selector bar */}
       <div className="pl-ticker-bar">
         <select
@@ -272,21 +267,25 @@ function PriceLadder({ windowId }) {
         </button>
       </div>
 
-      {/* Error display */}
-      {(tickerError || orderError) && (
-        <div className="pl-error">
-          {tickerError && <span>Data: {tickerError}</span>}
-          {orderError && <span>Order: {orderError}</span>}
-        </div>
-      )}
-
       {data ? (
         <>
           {/* Column headers */}
           <div className="pl-header-row">
-            <span className="pl-col pl-col-bid">Bids</span>
-            <span className="pl-col pl-col-price">Price</span>
-            <span className="pl-col pl-col-ask">Asks</span>
+            {grid.visibleColumns.map((col, idx) => {
+              const isOver = grid.dragState.dragging && grid.dragState.overIndex === idx
+              return (
+                <span
+                  key={col.key}
+                  className={`pl-col pl-col-${col.key}${isOver ? ' drag-over' : ''}`}
+                  draggable
+                  onDragStart={() => grid.onDragStart(idx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragEnd={grid.onDragEnd}
+                >
+                  {col.label}
+                </span>
+              )
+            })}
             {settings.showWorkingOrders && (
               <span className="pl-col pl-col-orders">Orders</span>
             )}
@@ -300,51 +299,74 @@ function PriceLadder({ windowId }) {
               const isBelowSpread = level.bidSize > 0 && level.askSize === 0
               const flash = flashPrices[level.price]
               const orders = ordersByPrice[level.price]
+              const rowStyle = grid.getRowStyle(level)
 
               return (
                 <div
                   key={level.price}
                   data-price={level.price}
                   className={`pl-row ${isLast ? 'pl-row--last' : ''} ${flash ? `pl-flash-${flash}` : ''}`}
+                  style={{ height: grid.rowHeight, ...rowStyle }}
                 >
-                  {/* Bid cell */}
-                  <div
-                    className="pl-cell pl-cell-bid"
-                    onClick={() => level.bidSize > 0 && handleLevelClick(level.price, 'yes')}
-                  >
-                    {settings.showVolumeBars && level.bidSize > 0 && (
-                      <div
-                        className="pl-volume-bar pl-volume-bid"
-                        style={{ width: `${(level.bidSize / maxBid) * 100}%` }}
-                      />
-                    )}
-                    <span className="pl-cell-text">
-                      {level.bidSize > 0 ? level.bidSize : ''}
-                    </span>
-                  </div>
+                  {grid.visibleColumns.map((col) => {
+                    if (col.key === 'bidSize') {
+                      return (
+                        <div
+                          key="bidSize"
+                          className="pl-cell pl-cell-bid"
+                          onClick={() => level.bidSize > 0 && handleLevelClick(level.price, 'yes')}
+                        >
+                          {settings.showVolumeBars && level.bidSize > 0 && (
+                            <div
+                              className="pl-volume-bar pl-volume-bid"
+                              style={{ width: `${(level.bidSize / maxBid) * 100}%` }}
+                            />
+                          )}
+                          <span className="pl-cell-text">
+                            {level.bidSize > 0 ? level.bidSize : ''}
+                          </span>
+                        </div>
+                      )
+                    }
+                    if (col.key === 'price') {
+                      return (
+                        <div key="price" className={`pl-cell pl-cell-price ${isAboveSpread ? 'pl-price-ask' : ''} ${isBelowSpread ? 'pl-price-bid' : ''}`}>
+                          {level.price}
+                        </div>
+                      )
+                    }
+                    if (col.key === 'askSize') {
+                      return (
+                        <div
+                          key="askSize"
+                          className="pl-cell pl-cell-ask"
+                          onClick={() => level.askSize > 0 && handleLevelClick(level.price, 'no')}
+                        >
+                          {settings.showVolumeBars && level.askSize > 0 && (
+                            <div
+                              className="pl-volume-bar pl-volume-ask"
+                              style={{ width: `${(level.askSize / maxAsk) * 100}%` }}
+                            />
+                          )}
+                          <span className="pl-cell-text">
+                            {level.askSize > 0 ? level.askSize : ''}
+                          </span>
+                        </div>
+                      )
+                    }
+                    if (col.key === 'volume') {
+                      return (
+                        <div key="volume" className="pl-cell pl-cell-volume">
+                          <span className="pl-cell-text">
+                            {level.bidSize + level.askSize > 0 ? level.bidSize + level.askSize : ''}
+                          </span>
+                        </div>
+                      )
+                    }
+                    return null
+                  })}
 
-                  {/* Price cell */}
-                  <div className={`pl-cell pl-cell-price ${isAboveSpread ? 'pl-price-ask' : ''} ${isBelowSpread ? 'pl-price-bid' : ''}`}>
-                    {level.price}
-                  </div>
-
-                  {/* Ask cell */}
-                  <div
-                    className="pl-cell pl-cell-ask"
-                    onClick={() => level.askSize > 0 && handleLevelClick(level.price, 'no')}
-                  >
-                    {settings.showVolumeBars && level.askSize > 0 && (
-                      <div
-                        className="pl-volume-bar pl-volume-ask"
-                        style={{ width: `${(level.askSize / maxAsk) * 100}%` }}
-                      />
-                    )}
-                    <span className="pl-cell-text">
-                      {level.askSize > 0 ? level.askSize : ''}
-                    </span>
-                  </div>
-
-                  {/* Working orders column */}
+                  {/* Working orders column (not part of grid columns) */}
                   {settings.showWorkingOrders && (
                     <div className="pl-cell pl-cell-orders">
                       {orders && orders.map((o) => (
@@ -394,6 +416,7 @@ function PriceLadder({ windowId }) {
           settings={settings}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
+          grid={grid}
         />
       )}
     </div>

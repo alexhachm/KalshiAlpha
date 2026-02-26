@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react'
 import { useHistoricalScan } from '../../hooks/useKalshiData'
 import { emitLinkedMarket } from '../../services/linkBus'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
+import GridSettingsPanel from '../GridSettingsPanel'
 import { Settings, Download, Search } from 'lucide-react'
 import './HistoricalScanner.css'
 
@@ -13,14 +15,16 @@ const PATTERNS = [
   { key: 'gap-fill', label: 'Gap Fill' },
 ]
 
-const SORT_COLUMNS = [
+const HS_COLUMNS = [
   { key: 'date', label: 'Date' },
   { key: 'ticker', label: 'Ticker' },
   { key: 'pattern', label: 'Pattern' },
   { key: 'signal', label: 'Signal' },
-  { key: 'roi', label: 'ROI %' },
-  { key: 'confidence', label: 'Confidence' },
+  { key: 'roi', label: 'ROI %', numeric: true },
+  { key: 'confidence', label: 'Confidence', numeric: true },
 ]
+
+const FONT_SIZE_MAP = { small: 11, medium: 12, large: 14 }
 
 const DEFAULT_SETTINGS = {
   maxResults: 100,
@@ -91,6 +95,8 @@ function exportToCSV(results) {
 
 function HistoricalScanner({ windowId }) {
   const { results, scanning, scan } = useHistoricalScan()
+  const grid = useGridCustomization(`histScanner-${windowId}`, HS_COLUMNS)
+  const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 12
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem(`historical-scanner-settings-${windowId}`)
@@ -244,58 +250,83 @@ function HistoricalScanner({ windowId }) {
               onChange={(e) => updateSetting('showConfidenceBars', e.target.checked)}
             />
           </div>
+          <GridSettingsPanel {...grid} />
         </div>
       )}
 
       {/* Results table */}
-      <div className="hs-table-wrap">
+      <div className="hs-table-wrap" style={{ fontSize: fontSizePx }}>
         <table className="hs-table">
           <thead>
             <tr>
-              {SORT_COLUMNS.map((col) => (
-                <th
-                  key={col.key}
-                  className={`hs-th${settings.sortColumn === col.key ? ' hs-th--sorted' : ''}`}
-                  onClick={() => handleSortClick(col.key)}
-                >
-                  {col.label}
-                  {settings.sortColumn === col.key && (
-                    <span className="hs-sort-arrow">
-                      {settings.sortAsc ? ' \u25B2' : ' \u25BC'}
-                    </span>
-                  )}
-                </th>
-              ))}
+              {grid.visibleColumns.map((col) => {
+                const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+                const isDragOver = grid.dragState.dragging && grid.dragState.overIndex === fullIdx
+                return (
+                  <th
+                    key={col.key}
+                    className={`hs-th${settings.sortColumn === col.key ? ' hs-th--sorted' : ''}${isDragOver ? ' drag-over' : ''}`}
+                    onClick={() => handleSortClick(col.key)}
+                    draggable
+                    onDragStart={() => grid.onDragStart(fullIdx)}
+                    onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                    onDragEnd={grid.onDragEnd}
+                    style={col.width ? { width: col.width } : undefined}
+                  >
+                    {col.label}
+                    {settings.sortColumn === col.key && (
+                      <span className="hs-sort-arrow">
+                        {settings.sortAsc ? ' \u25B2' : ' \u25BC'}
+                      </span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => (
-              <tr
-                key={row.id}
-                className="hs-row"
-                onClick={() => handleRowClick(row.ticker)}
-              >
-                <td className="hs-cell-date">{formatDate(row.date)}</td>
-                <td className="hs-cell-ticker">{row.ticker}</td>
-                <td className="hs-cell-pattern">{row.pattern}</td>
-                <td className={`hs-cell-signal hs-signal-${row.signal}`}>
-                  {row.signal.toUpperCase()}
-                </td>
-                <td className={`hs-cell-roi ${row.roi >= 0 ? 'hs-roi-positive' : 'hs-roi-negative'}`}>
-                  {row.roi >= 0 ? '+' : ''}{row.roi.toFixed(1)}%
-                </td>
-                <td className="hs-cell-confidence">
-                  {settings.showConfidenceBars ? (
-                    <ConfidenceBars level={row.confidence} />
-                  ) : (
-                    `${row.confidence}/5`
-                  )}
-                </td>
-              </tr>
-            ))}
+            {sorted.map((row) => {
+              const rowStyle = grid.getRowStyle(row) || {}
+              return (
+                <tr
+                  key={row.id}
+                  className="hs-row"
+                  onClick={() => handleRowClick(row.ticker)}
+                  style={{ ...rowStyle, height: grid.rowHeight }}
+                >
+                  {grid.visibleColumns.map((col) => {
+                    let content, className = `hs-cell-${col.key}`
+                    switch (col.key) {
+                      case 'date': content = formatDate(row.date); break
+                      case 'ticker': content = row.ticker; break
+                      case 'pattern': content = row.pattern; break
+                      case 'signal':
+                        content = row.signal.toUpperCase()
+                        className += ` hs-signal-${row.signal}`
+                        break
+                      case 'roi':
+                        content = `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`
+                        className += ` ${row.roi >= 0 ? 'hs-roi-positive' : 'hs-roi-negative'}`
+                        break
+                      case 'confidence':
+                        content = settings.showConfidenceBars
+                          ? <ConfidenceBars level={row.confidence} />
+                          : `${row.confidence}/5`
+                        break
+                      default: content = null
+                    }
+                    return (
+                      <td key={col.key} className={className} style={col.width ? { width: col.width } : undefined}>
+                        {content}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={6} className="hs-empty">
+                <td colSpan={grid.visibleColumns.length} className="hs-empty">
                   {scanning
                     ? 'Scanning historical data...'
                     : hasScanned

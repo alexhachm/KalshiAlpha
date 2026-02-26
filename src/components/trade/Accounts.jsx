@@ -1,22 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { usePortfolio, useKalshiConnection } from '../../hooks/useKalshiData'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import AccountsSettings from './AccountsSettings'
 
 const LS_KEY_PREFIX = 'accounts-settings-'
 
 const DEFAULT_SETTINGS = {
-  columns: {
-    account: true,
-    type: true,
-    realizedPnl: true,
-    unrealizedPnl: true,
-    initEquity: true,
-    tickets: true,
-    shares: true,
-  },
   decimalPrecision: 2,
   refreshInterval: 5,
-  fontSize: 'medium',
 }
 
 const COLUMNS = [
@@ -72,50 +62,28 @@ function formatValue(value, precision) {
 }
 
 function Accounts({ windowId }) {
+  const grid = useGridCustomization('accounts-' + windowId, COLUMNS)
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [mockAccounts, setMockAccounts] = useState(generateMockAccounts)
+  const [accounts, setAccounts] = useState(generateMockAccounts)
   const [sortCol, setSortCol] = useState(null)
   const [sortDir, setSortDir] = useState('asc')
   const intervalRef = useRef(null)
-
-  // Portfolio hook for real data
-  const { connected } = useKalshiConnection()
-  const { balance, positions: apiPositions, fills: apiFills } = usePortfolio(
-    settings.refreshInterval * 1000
-  )
-
-  // Build real account data from portfolio
-  const apiAccounts = connected && balance
-    ? [{
-        account: 'KA-100482',
-        type: 'Paper',
-        realizedPnl: apiFills.reduce((s, f) => s + (f.realized_pnl || 0), 0) / 100,
-        unrealizedPnl: apiPositions.reduce((s, p) => s + (p.unrealized_pnl || 0), 0) / 100,
-        initEquity: balance.balance || 0,
-        tickets: apiFills.length,
-        shares: apiPositions.reduce((s, p) => s + Math.abs(p.position || 0), 0),
-      }]
-    : null
-
-  const accounts = apiAccounts || mockAccounts
 
   // Persist settings
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh mock data on interval (only when not connected)
+  // Refresh data on interval
   const refreshData = useCallback(() => {
-    if (connected) return
-    setMockAccounts(generateMockAccounts())
-  }, [connected])
+    setAccounts(generateMockAccounts())
+  }, [])
 
   useEffect(() => {
-    if (connected) return
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
-  }, [settings.refreshInterval, refreshData, connected])
+  }, [settings.refreshInterval, refreshData])
 
   const handleSettingsChange = (newSettings) => {
     setSettings(newSettings)
@@ -145,8 +113,6 @@ function Accounts({ windowId }) {
     })
   }
 
-  const visibleColumns = COLUMNS.filter((c) => settings.columns[c.key])
-
   // Totals row
   const totals = {
     account: 'Total',
@@ -158,10 +124,8 @@ function Accounts({ windowId }) {
     shares: accounts.reduce((s, a) => s + a.shares, 0),
   }
 
-  const fontClass = `acct--font-${settings.fontSize}`
-
   return (
-    <div className={`accounts ${fontClass}`}>
+    <div className={`accounts acct--font-${grid.fontSize}`}>
       {/* Header bar */}
       <div className="acct-header-bar">
         <span className="acct-title">Account Overview</span>
@@ -174,21 +138,21 @@ function Accounts({ windowId }) {
         </button>
       </div>
 
-      {/* Loading indicator when API is connecting */}
-      {connected && !balance && (
-        <div style={{ textAlign: 'center', padding: '8px', color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic' }}>Loading account data...</div>
-      )}
-
       {/* Table */}
-      <div className="acct-table-wrap">
+      <div className="acct-table-wrap" style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}>
         <table className="acct-table">
           <thead>
             <tr>
-              {visibleColumns.map((col) => (
+              {grid.visibleColumns.map((col, idx) => (
                 <th
                   key={col.key}
-                  className={`acct-th acct-align-${col.align}`}
+                  className={`acct-th acct-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
                   onClick={() => handleSort(col.key)}
+                  draggable
+                  onDragStart={() => grid.onDragStart(idx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragEnd={grid.onDragEnd}
+                  style={{ width: col.width || 'auto', cursor: 'grab' }}
                 >
                   {col.label}
                   {sortCol === col.key && (
@@ -202,8 +166,12 @@ function Accounts({ windowId }) {
           </thead>
           <tbody>
             {sortedAccounts.map((acct) => (
-              <tr key={acct.account} className="acct-row">
-                {visibleColumns.map((col) => {
+              <tr
+                key={acct.account}
+                className="acct-row"
+                style={{ height: grid.rowHeight, ...grid.getRowStyle(acct) }}
+              >
+                {grid.visibleColumns.map((col) => {
                   const val = acct[col.key]
                   const displayVal = col.numeric
                     ? formatValue(val, settings.decimalPrecision)
@@ -234,8 +202,8 @@ function Accounts({ windowId }) {
               </tr>
             ))}
             {/* Totals row */}
-            <tr className="acct-row acct-totals-row">
-              {visibleColumns.map((col) => {
+            <tr className="acct-row acct-totals-row" style={{ height: grid.rowHeight }}>
+              {grid.visibleColumns.map((col) => {
                 const val = totals[col.key]
                 const displayVal = col.numeric
                   ? formatValue(val, settings.decimalPrecision)
@@ -270,6 +238,7 @@ function Accounts({ windowId }) {
       {showSettings && (
         <AccountsSettings
           settings={settings}
+          grid={grid}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />
