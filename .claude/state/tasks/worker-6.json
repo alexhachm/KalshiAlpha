@@ -1,0 +1,8 @@
+{
+  "subject": "IDLE: superseded by Master-2 rebase plan",
+  "description": "REQUEST_ID: none\nDOMAIN: integration\nASSIGNED_TO: worker-6\n\nYour previous integration task has been superseded by Master-2's new decomposition plan. Domain workers 1, 2, 3, and 5 will handle the branch rebases. Master-3 will handle the final merges.\n\nGo idle. Wait for your next assigned task via worker-signal.",
+  "domain": "integration",
+  "files": [],
+  "tier": 0,
+  "request_id": "none"
+}
