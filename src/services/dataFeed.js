@@ -331,6 +331,14 @@ function subscribeToScanner(callback) {
 }
 
 /**
+ * Generate static OHLCV candle data for initial chart rendering.
+ * Delegates to mockData.generateOHLCV.
+ */
+function generateOHLCV(ticker, count = 200, timeframeMinutes = 5) {
+  return mockData.generateOHLCV(ticker, count, timeframeMinutes);
+}
+
+/**
  * Subscribe to OHLCV candle data for charting.
  * When connected: fetches candles from REST, updates from WS trades.
  * When disconnected: uses mock data if available.
@@ -670,6 +678,8 @@ function subscribeToPositionChanges(callback) {
 export {
   // Connection
   initialize,
+  // OHLCV generation (for initial chart data)
+  generateOHLCV,
   disconnectFeed,
   isConnected,
   onConnectionChange,
