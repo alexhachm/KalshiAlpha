@@ -71,10 +71,17 @@
   text-align: center;
 }
 
-.pl-col-bid { flex: 1; text-align: right; padding-right: 4px; }
-.pl-col-price { width: 42px; text-align: center; }
-.pl-col-ask { flex: 1; text-align: left; padding-left: 4px; }
+.pl-col-bidSize { flex: 1; text-align: right; padding-right: 4px; cursor: grab; }
+.pl-col-price { width: 42px; text-align: center; cursor: grab; }
+.pl-col-askSize { flex: 1; text-align: left; padding-left: 4px; cursor: grab; }
+.pl-col-volume { width: 48px; text-align: center; cursor: grab; }
 .pl-col-orders { width: 56px; text-align: center; }
+
+/* Drag-over highlight */
+.drag-over {
+  background: rgba(0, 210, 255, 0.15);
+  border-left: 2px solid var(--accent-highlight);
+}
 
 /* Scrollable ladder */
 .pl-ladder-scroll {
@@ -180,6 +187,12 @@
 
 .pl-cell-ask:hover {
   background: rgba(255, 68, 68, 0.08);
+}
+
+.pl-cell-volume {
+  width: 48px;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .pl-cell-orders {

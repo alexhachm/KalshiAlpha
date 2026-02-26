@@ -1,44 +1,37 @@
 # Domain: trade
-<!-- Updated 2026-02-25T07:30:00Z by worker-7. Max ~800 tokens. -->
+<!-- Updated 2026-02-26T22:12:00Z by worker-5. Max ~800 tokens. -->
 
 ## Key Files
-- `src/components/trade/Accounts.jsx` — Account overview table (7 cols, mock data, sortable, totals row)
-- `src/components/trade/AccountsSettings.jsx` — Settings panel for Accounts (column visibility, precision, refresh, font)
-- `src/components/trade/Accounts.css` — Styles for Accounts component
-- `src/components/trade/Positions.jsx` — Open positions table (7 cols, Long/Short coloring, flash, linkBus)
-- `src/components/trade/PositionsSettings.jsx` — Settings panel for Positions (columns, sort, refresh, font, flash)
-- `src/components/trade/Positions.css` — Styles for Positions component
-- `src/components/trade/TradeLog.jsx` — All positions (open+closed) table with filter/sort/CSV export
-- `src/components/trade/TradeLogSettings.jsx` — Settings: columns, filter, date range, sort, font, flash
-- `src/components/trade/TradeLog.css` — Styles for TradeLog
-- `src/components/trade/Montage.jsx` — Order entry with Level II book display
-- `src/components/trade/MontageSettings.jsx` — Montage settings panel
-- `src/components/trade/PriceLadder.jsx` — DOM/price ladder with click-to-trade
-- `src/components/trade/PriceLadderSettings.jsx` — PriceLadder settings
-- `src/components/trade/EventLog.jsx` — System event log
-- `src/components/trade/EventLogSettings.jsx` — EventLog settings
-- `src/components/WindowManager.jsx` — Component registry, maps type strings to components
+- `src/components/trade/TradeLog.jsx` — All positions table (open+closed). Uses useGridCustomization for columns. Has filter bar, CSV export, flash-on-change, color link bus.
+- `src/components/trade/Positions.jsx` — Open-only positions table. Same grid hook pattern. Flash-on-change, color link.
+- `src/components/trade/Accounts.jsx` — Account overview table with totals row. Grid hook, decimal precision setting.
+- `src/components/trade/EventLog.jsx` — System event log (div-based, not table). Grid hook for column visibility + appearance. Auto-scroll, level filter, periodic mock events.
+- `src/components/trade/*Settings.jsx` — Each embeds `<GridSettingsPanel {...grid} />` for column/appearance controls, plus component-specific settings (sort, filter, refresh, etc.).
+- `src/hooks/useGridCustomization.js` — Shared hook: column visibility/order/width, fontSize, rowHeight, bg/textColor, conditional formatting rules. Persists to `localStorage` under `gridCustom_${toolId}`.
+- `src/components/GridSettingsPanel.jsx` — Reusable settings sub-panel for grid hook. Column drag list, appearance controls, conditional formatting rule builder.
 
 ## Gotchas & Undocumented Behavior
-- CSS class prefix convention: component-specific (acct-, pos-, tl-, montage-) to avoid collisions
-- Settings inline styles use `document.createElement(style)` with data-attribute guard to avoid duplication
-- `text-win` and `text-loss` are global CSS classes from index.css for green/red P&L coloring
-- linkBus subscribeToLink requires colorId + callback + windowId; cleanup via unsubscribeFromLink
-- WindowManager passes `windowId`, `title`, and `type` as props to all components
+- Grid hook uses `gridCustom_` localStorage prefix, separate from each component's own `*-settings-` prefix for non-grid settings (sort, filter, etc.)
+- EventLog is NOT a table — it uses div-based entry rendering. Grid hook controls column visibility via a Set lookup on visibleKeys.
+- Accounts has no dedicated CSS file — styles are injected inline from AccountsSettings.jsx.
+- TradeLog exportCsv uses grid.visibleColumns directly (no need to re-add visible:true).
+- `text-win` and `text-loss` are global CSS classes from index.css for green/red P&L coloring.
+- linkBus subscribeToLink requires colorId + callback + windowId; cleanup via unsubscribeFromLink.
 
 ## Patterns That Work
-- Follow Accounts.jsx pattern exactly: LS_KEY_PREFIX, loadSettings/saveSettings, DEFAULT_SETTINGS, COLUMNS array, generateMock* functions
-- Settings panels: local state copy, handleSave applies to parent, overlay click-to-close with stopPropagation
-- Use React.memo for exported components
-- All numeric P&L formatting: `val.toFixed(2)` with `$` prefix
-- Sort state can live in settings (persisted) or in component state (ephemeral) — Positions uses persisted
+- `const grid = useGridCustomization(toolId, COLUMNS)` at component top
+- `grid.visibleColumns` replaces old `COLUMNS.filter(c => settings.columns[c.key])`
+- `<GridSettingsPanel {...grid} />` spread pattern for settings panels
+- `style={{ height: grid.rowHeight, ...grid.getRowStyle(row) }}` on each `<tr>`
+- Drag handlers on `<th>`: draggable, onDragStart/onDragOver/onDragEnd from grid
+- Settings panels: local state copy, handleSave applies to parent, overlay click-to-close
 
 ## Testing Strategy
-- `npm run build` must pass — catches import/syntax errors
-- Manual: open component from Trade menu, verify columns/sorting/settings
-- Check localStorage keys match pattern: `{component}-settings-{windowId}`
+- `npm run build` is primary verification (no lint/test scripts)
+- Dev server starts clean with no import resolution errors
+- Open each component's settings panel to verify GridSettingsPanel renders
 
 ## Recent State
-- ALL trade components now built and registered in WindowManager on main
-- Accounts, Positions, TradeLog, Montage, PriceLadder, EventLog — all complete
-- No remaining trade Placeholder entries in WindowManager
+- All 4 trade components integrated with useGridCustomization (PR #30)
+- Hook + GridSettingsPanel cherry-picked from commit b317cb7
+- Montage, PriceLadder NOT yet integrated with grid hook (separate domain/task)
