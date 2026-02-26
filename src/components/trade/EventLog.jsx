@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useKalshiConnection } from '../../hooks/useKalshiData'
 import EventLogSettings from './EventLogSettings'
 import './EventLog.css'
 
@@ -114,6 +115,33 @@ function EventLog({ windowId }) {
   const [showSettings, setShowSettings] = useState(false)
   const logEndRef = useRef(null)
   const nextIdRef = useRef(8) // startup entries use 1-7
+
+  // Real connection status from Kalshi API
+  const { connected } = useKalshiConnection()
+  const prevConnectedRef = useRef(connected)
+
+  // Log real connection status changes
+  useEffect(() => {
+    if (connected === prevConnectedRef.current) return
+    prevConnectedRef.current = connected
+
+    setEntries((prev) => {
+      const newEntry = {
+        id: nextIdRef.current++,
+        time: new Date(),
+        level: connected ? 'info' : 'warn',
+        source: 'API',
+        message: connected
+          ? 'Connected to Kalshi API'
+          : 'Disconnected from Kalshi API — using mock data',
+      }
+      const updated = [...prev, newEntry]
+      if (updated.length > settings.maxLines) {
+        return updated.slice(updated.length - settings.maxLines)
+      }
+      return updated
+    })
+  }, [connected, settings.maxLines])
 
   // Persist settings
   useEffect(() => {

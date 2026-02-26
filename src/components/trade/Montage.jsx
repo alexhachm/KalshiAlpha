@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { subscribeToTicker } from '../../services/dataFeed'
+import { useTickerData, useOrderEntry } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -42,9 +42,12 @@ const DEFAULT_SETTINGS = {
 
 function Montage({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [data, setData] = useState(null)
   const [settings, setSettings] = useState(() => loadSettings() || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Data hooks
+  const { data, error: tickerError } = useTickerData(ticker)
+  const { submitOrder, cancelOrder: cancelApiOrder, submitting, error: orderError } = useOrderEntry()
 
   // Order entry state
   const [orderSize, setOrderSize] = useState(settings.defaultOrderSize)
@@ -55,7 +58,7 @@ function Montage({ windowId }) {
   const [confirmDialog, setConfirmDialog] = useState(null)
 
   // Flash state for price changes
-  const prevPricesRef = useRef({ yes: null, no: null })
+  const prevDataRef = useRef(null)
   const flashTimerRef = useRef({})
   const [bidFlash, setBidFlash] = useState(null)
   const [askFlash, setAskFlash] = useState(null)
@@ -66,35 +69,38 @@ function Montage({ windowId }) {
     saveSettings(settings)
   }, [settings])
 
-  // Subscribe to mock data
+  // Flash detection on data changes
   useEffect(() => {
-    const unsub = subscribeToTicker(ticker, (newData) => {
-      setData((prev) => {
-        if (prev) {
-          const prevYes = prev.yes.price
-          const prevNo = prev.no.price
-          if (newData.yes.price !== prevYes) {
-            setBidFlash(newData.yes.price > prevYes ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.bid)
-            flashTimerRef.current.bid = setTimeout(
-              () => setBidFlash(null),
-              settings.flashDuration
-            )
-          }
-          if (newData.no.price !== prevNo) {
-            setAskFlash(newData.no.price > prevNo ? 'up' : 'down')
-            clearTimeout(flashTimerRef.current.ask)
-            flashTimerRef.current.ask = setTimeout(
-              () => setAskFlash(null),
-              settings.flashDuration
-            )
-          }
-        }
-        return newData
-      })
-    })
-    return unsub
-  }, [ticker, settings.flashDuration])
+    if (!data) {
+      prevDataRef.current = null
+      return
+    }
+    const prev = prevDataRef.current
+    if (prev) {
+      if (data.yes.price !== prev.yes.price) {
+        setBidFlash(data.yes.price > prev.yes.price ? 'up' : 'down')
+        clearTimeout(flashTimerRef.current.bid)
+        flashTimerRef.current.bid = setTimeout(
+          () => setBidFlash(null),
+          settings.flashDuration
+        )
+      }
+      if (data.no.price !== prev.no.price) {
+        setAskFlash(data.no.price > prev.no.price ? 'up' : 'down')
+        clearTimeout(flashTimerRef.current.ask)
+        flashTimerRef.current.ask = setTimeout(
+          () => setAskFlash(null),
+          settings.flashDuration
+        )
+      }
+    }
+    prevDataRef.current = data
+  }, [data, settings.flashDuration])
+
+  // Reset flash tracking on ticker change
+  useEffect(() => {
+    prevDataRef.current = null
+  }, [ticker])
 
   // Cleanup flash timers
   useEffect(() => {
@@ -109,7 +115,6 @@ function Montage({ windowId }) {
     ({ ticker: linkedTicker }) => {
       if (linkedTicker && linkedTicker !== ticker) {
         setTicker(linkedTicker)
-        setData(null)
       }
     },
     [ticker]
@@ -126,7 +131,6 @@ function Montage({ windowId }) {
   const handleTickerChange = (e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
-    setData(null)
     setLimitPrice('')
     emitLinkedMarket(windowId, newTicker)
   }
@@ -161,16 +165,32 @@ function Montage({ windowId }) {
     }
   }
 
-  const executeOrder = (order) => {
+  const executeOrder = async (order) => {
     setConfirmDialog(null)
-    if (order.type === 'limit') {
-      setWorkingOrders((prev) => [...prev, order])
+    try {
+      await submitOrder({
+        ticker,
+        action: 'buy',
+        side: order.side,
+        type: order.type,
+        yes_price: order.price,
+        count: order.size,
+      })
+    } catch {
+      // API not connected — fall back to local mock
+      if (order.type === 'limit') {
+        setWorkingOrders((prev) => [...prev, order])
+      }
     }
-    // Market orders would execute immediately in a real system
   }
 
-  const cancelOrder = (orderId) => {
-    setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
+  const cancelOrder = async (orderId) => {
+    try {
+      await cancelApiOrder(orderId)
+    } catch {
+      // Local fallback
+      setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
+    }
   }
 
   const handleSettingsChange = (newSettings) => {
@@ -211,6 +231,14 @@ function Montage({ windowId }) {
           &#9881;
         </button>
       </div>
+
+      {/* Error display */}
+      {(tickerError || orderError) && (
+        <div className="mt-error">
+          {tickerError && <span>Data: {tickerError}</span>}
+          {orderError && <span>Order: {orderError}</span>}
+        </div>
+      )}
 
       {data ? (
         <>
