@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { GripVertical, Plus, Trash2, RotateCcw } from 'lucide-react'
 import './GridSettingsPanel.css'
 
@@ -37,7 +37,7 @@ function GridSettingsPanel({
   onDragOver,
   onDragEnd,
 }) {
-  const numericColumns = useMemo(() => columns.filter((c) => c.numeric), [columns])
+  const numericColumns = columns.filter((c) => c.numeric)
 
   return (
     <div className="grid-settings">
@@ -115,7 +115,6 @@ function GridSettingsPanel({
               className="gs-color-picker"
               value={bgColor || '#1e1e1e'}
               onChange={(e) => setBgColor(e.target.value)}
-              aria-label="Grid background color"
             />
             {bgColor && (
               <button className="gs-clear-color" onClick={() => setBgColor('')} title="Clear">
@@ -132,7 +131,6 @@ function GridSettingsPanel({
               className="gs-color-picker"
               value={textColor || '#e0e0e0'}
               onChange={(e) => setTextColor(e.target.value)}
-              aria-label="Grid text color"
             />
             {textColor && (
               <button className="gs-clear-color" onClick={() => setTextColor('')} title="Clear">
