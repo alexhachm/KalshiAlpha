@@ -1,10 +1,22 @@
 import React from 'react'
 import Window from './Window'
 import MarketViewer from './MarketViewer'
+// Trade
+import Montage from './trade/Montage'
+import PriceLadder from './trade/PriceLadder'
+import Accounts from './trade/Accounts'
+import Positions from './trade/Positions'
+import TradeLog from './trade/TradeLog'
+import EventLog from './trade/EventLog'
+// Quotes
+import Chart from './quotes/Chart'
+import TimeSale from './quotes/TimeSale'
+// Scanners
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
+import MarketClock from './scanners/MarketClock'
 
-// Placeholder component used for all windows that don't have a real implementation yet
+// Placeholder component for windows without a real implementation yet
 function Placeholder({ title }) {
   return (
     <div className="window-placeholder">
@@ -14,27 +26,26 @@ function Placeholder({ title }) {
 }
 
 // Component registry — maps window type strings to React components.
-// Domain workers will replace Placeholder entries with real implementations.
 const COMPONENT_REGISTRY = {
   // Login
   login: Placeholder,
   // Trade
-  montage: Placeholder,
-  'price-ladder': Placeholder,
-  accounts: Placeholder,
-  positions: Placeholder,
-  'trade-log': Placeholder,
-  'event-log': Placeholder,
+  montage: Montage,
+  'price-ladder': PriceLadder,
+  accounts: Accounts,
+  positions: Positions,
+  'trade-log': TradeLog,
+  'event-log': EventLog,
   // Quotes
-  chart: Placeholder,
-  'time-sale': Placeholder,
+  chart: Chart,
+  'time-sale': TimeSale,
   'market-viewer': MarketViewer,
   'news-chat': Placeholder,
   // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
   'alert-trigger': Placeholder,
-  'market-clock': Placeholder,
+  'market-clock': MarketClock,
   // Setup
   'hotkey-config': Placeholder,
 }
