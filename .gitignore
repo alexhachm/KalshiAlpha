@@ -3,3 +3,4 @@ node_modules/
 .claude-shared-state/
 .claude/logs/
 .claude/signals/
+dist-electron/
