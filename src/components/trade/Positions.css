@@ -162,6 +162,11 @@
   color: var(--accent-loss, #ff4444);
 }
 
+/* Drag-over indicator for column reorder */
+.pos-th.drag-over {
+  border-left: 2px solid var(--accent-info, #4488ff);
+}
+
 /* Empty state */
 .pos-empty {
   text-align: center;

@@ -1,14 +1,6 @@
 import React, { useState } from 'react'
-
-const COLUMN_LABELS = {
-  market: 'Market',
-  account: 'Account',
-  shares: 'Shares',
-  avgCost: 'Avg Cost',
-  realized: 'Realized',
-  unrealized: 'Unrealized',
-  type: 'Type',
-}
+import GridSettingsPanel from '../GridSettingsPanel'
+import '../GridSettingsPanel.css'
 
 const SORT_OPTIONS = [
   { value: 'market', label: 'Market' },
@@ -18,20 +10,11 @@ const SORT_OPTIONS = [
   { value: 'type', label: 'Type' },
 ]
 
-const FONT_SIZES = ['small', 'medium', 'large']
-
-function PositionsSettings({ settings, onChange, onClose }) {
-  const [local, setLocal] = useState({ ...settings, columns: { ...settings.columns } })
+function PositionsSettings({ settings, grid, onChange, onClose }) {
+  const [local, setLocal] = useState({ ...settings })
 
   const update = (key, value) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const toggleColumn = (colKey) => {
-    setLocal((prev) => ({
-      ...prev,
-      columns: { ...prev.columns, [colKey]: !prev.columns[colKey] },
-    }))
   }
 
   const handleSave = () => {
@@ -47,17 +30,7 @@ function PositionsSettings({ settings, onChange, onClose }) {
           <button className="pos-settings-close" onClick={onClose}>&times;</button>
         </div>
         <div className="pos-settings-body">
-          <div className="pos-settings-section-label">Visible Columns</div>
-          {Object.keys(COLUMN_LABELS).map((key) => (
-            <div key={key} className="pos-settings-row">
-              <label>{COLUMN_LABELS[key]}</label>
-              <input
-                type="checkbox"
-                checked={local.columns[key]}
-                onChange={() => toggleColumn(key)}
-              />
-            </div>
-          ))}
+          <GridSettingsPanel {...grid} />
 
           <div className="pos-settings-divider" />
 
@@ -99,18 +72,6 @@ function PositionsSettings({ settings, onChange, onClose }) {
           </div>
 
           <div className="pos-settings-row">
-            <label>Font Size</label>
-            <select
-              value={local.fontSize}
-              onChange={(e) => update('fontSize', e.target.value)}
-            >
-              {FONT_SIZES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="pos-settings-row">
             <label>Flash on Change</label>
             <input
               type="checkbox"
@@ -128,7 +89,7 @@ function PositionsSettings({ settings, onChange, onClose }) {
   )
 }
 
-/* Inline styles — same pattern as AccountsSettings */
+/* Inline styles */
 const style = document.createElement('style')
 style.textContent = `
 .pos-settings-overlay {
@@ -145,7 +106,7 @@ style.textContent = `
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  width: 280px;
+  width: 320px;
   max-height: 90%;
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);

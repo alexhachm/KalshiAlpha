@@ -1,16 +1,6 @@
 import React, { useState } from 'react'
-
-const COLUMN_LABELS = {
-  market:     'Market',
-  account:    'Account',
-  shares:     'Shares',
-  avgCost:    'Avg Cost',
-  realized:   'Realized',
-  unrealized: 'Unrealized',
-  type:       'Type',
-  status:     'Status',
-  date:       'Date',
-}
+import GridSettingsPanel from '../GridSettingsPanel'
+import '../GridSettingsPanel.css'
 
 const SORT_OPTIONS = [
   { value: 'date',       label: 'Date' },
@@ -35,23 +25,11 @@ const DATE_RANGE_OPTIONS = [
   { value: '30d',   label: 'Last 30 Days' },
 ]
 
-const FONT_SIZES = ['small', 'medium', 'large']
-
-function TradeLogSettings({ settings, onChange, onClose }) {
-  const [local, setLocal] = useState({
-    ...settings,
-    columns: { ...settings.columns },
-  })
+function TradeLogSettings({ settings, grid, onChange, onClose }) {
+  const [local, setLocal] = useState({ ...settings })
 
   const update = (key, value) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const toggleColumn = (colKey) => {
-    setLocal((prev) => ({
-      ...prev,
-      columns: { ...prev.columns, [colKey]: !prev.columns[colKey] },
-    }))
   }
 
   const handleSave = () => {
@@ -68,17 +46,7 @@ function TradeLogSettings({ settings, onChange, onClose }) {
         </div>
 
         <div className="tls-body">
-          <div className="tls-section-label">Visible Columns</div>
-          {Object.entries(COLUMN_LABELS).map(([key, label]) => (
-            <div key={key} className="tls-row">
-              <label>{label}</label>
-              <input
-                type="checkbox"
-                checked={local.columns[key] ?? true}
-                onChange={() => toggleColumn(key)}
-              />
-            </div>
-          ))}
+          <GridSettingsPanel {...grid} />
 
           <div className="tls-divider" />
 
@@ -134,15 +102,6 @@ function TradeLogSettings({ settings, onChange, onClose }) {
           </div>
 
           <div className="tls-row">
-            <label>Font Size</label>
-            <select value={local.fontSize} onChange={(e) => update('fontSize', e.target.value)}>
-              {FONT_SIZES.map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="tls-row">
             <label>Flash on Change</label>
             <input
               type="checkbox"
@@ -177,7 +136,7 @@ style.textContent = `
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  width: 290px;
+  width: 320px;
   max-height: 90%;
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0,0,0,0.5);

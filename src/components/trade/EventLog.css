@@ -156,3 +156,8 @@
 .el-entry--warn .el-message {
   color: #ffc800;
 }
+
+/* Drag-over indicator for column reorder */
+.drag-over {
+  border-left: 2px solid var(--accent-info, #4488ff);
+}

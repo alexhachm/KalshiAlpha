@@ -198,6 +198,11 @@
 .tl-badge-open   { background: rgba(68, 136, 255, 0.15); color: #6699ff; }
 .tl-badge-closed { background: rgba(100, 100, 100, 0.15); color: var(--text-muted); }
 
+/* Drag-over indicator for column reorder */
+.tl-th.drag-over {
+  border-left: 2px solid var(--accent-info, #4488ff);
+}
+
 /* Empty state */
 .tl-empty {
   text-align: center;

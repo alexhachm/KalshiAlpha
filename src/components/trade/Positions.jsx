@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './Positions.css'
@@ -6,19 +7,9 @@ import './Positions.css'
 const LS_KEY_PREFIX = 'positions-settings-'
 
 const DEFAULT_SETTINGS = {
-  columns: {
-    market: true,
-    account: true,
-    shares: true,
-    avgCost: true,
-    realized: true,
-    unrealized: true,
-    type: true,
-  },
   sortBy: 'unrealized',
   sortDirection: 'desc',
   refreshInterval: 2,
-  fontSize: 'medium',
   flashOnChange: true,
 }
 
@@ -84,6 +75,7 @@ function saveSettings(windowId, settings) {
 }
 
 function Positions({ windowId }) {
+  const grid = useGridCustomization('positions-' + windowId, COLUMNS)
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const [positions, setPositions] = useState(generateMockPositions)
@@ -178,12 +170,8 @@ function Positions({ windowId }) {
     }))
   }
 
-  const visibleColumns = COLUMNS.filter((c) => settings.columns[c.key])
-
-  const fontClass = `pos--font-${settings.fontSize}`
-
   return (
-    <div className={`positions ${fontClass}`}>
+    <div className={`positions pos--font-${grid.fontSize}`}>
       {/* Header bar */}
       <div className="pos-header-bar">
         <span className="pos-title">Open Positions</span>
@@ -200,15 +188,20 @@ function Positions({ windowId }) {
       </div>
 
       {/* Table */}
-      <div className="pos-table-wrap">
+      <div className="pos-table-wrap" style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}>
         <table className="pos-table">
           <thead>
             <tr>
-              {visibleColumns.map((col) => (
+              {grid.visibleColumns.map((col, idx) => (
                 <th
                   key={col.key}
-                  className={`pos-th pos-align-${col.align}`}
+                  className={`pos-th pos-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
                   onClick={() => handleSort(col.key)}
+                  draggable
+                  onDragStart={() => grid.onDragStart(idx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragEnd={grid.onDragEnd}
+                  style={{ width: col.width || 'auto', cursor: 'grab' }}
                 >
                   {col.label}
                   {settings.sortBy === col.key && (
@@ -223,7 +216,7 @@ function Positions({ windowId }) {
           <tbody>
             {sortedPositions.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length} className="pos-empty">
+                <td colSpan={grid.visibleColumns.length} className="pos-empty">
                   No open positions
                 </td>
               </tr>
@@ -243,8 +236,9 @@ function Positions({ windowId }) {
                     key={pos.market}
                     className={rowClasses}
                     onClick={() => handleRowClick(pos.market)}
+                    style={{ height: grid.rowHeight, ...grid.getRowStyle(pos) }}
                   >
-                    {visibleColumns.map((col) => {
+                    {grid.visibleColumns.map((col) => {
                       const val = pos[col.key]
 
                       // Market column: colored by Long/Short
@@ -308,6 +302,7 @@ function Positions({ windowId }) {
       {showSettings && (
         <PositionsSettings
           settings={settings}
+          grid={grid}
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />
