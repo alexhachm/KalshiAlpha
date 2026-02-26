@@ -2,15 +2,6 @@ import React from 'react'
 import Window from './Window'
 import MarketViewer from './MarketViewer'
 import LiveScanner from './scanners/LiveScanner'
-import Chart from './quotes/Chart'
-import Montage from './trade/Montage'
-import Accounts from './trade/Accounts'
-import Positions from './trade/Positions'
-import PriceLadder from './trade/PriceLadder'
-import TradeLog from './trade/TradeLog'
-import EventLog from './trade/EventLog'
-import TimeSale from './quotes/TimeSale'
-import MarketClock from './scanners/MarketClock'
 import HistoricalScanner from './scanners/HistoricalScanner'
 
 // Placeholder component used for all windows that don't have a real implementation yet
@@ -28,22 +19,22 @@ const COMPONENT_REGISTRY = {
   // Login
   login: Placeholder,
   // Trade
-  montage: Montage,
-  'price-ladder': PriceLadder,
-  accounts: Accounts,
-  positions: Positions,
-  'trade-log': TradeLog,
-  'event-log': EventLog,
+  montage: Placeholder,
+  'price-ladder': Placeholder,
+  accounts: Placeholder,
+  positions: Placeholder,
+  'trade-log': Placeholder,
+  'event-log': Placeholder,
   // Quotes
-  chart: Chart,
-  'time-sale': TimeSale,
+  chart: Placeholder,
+  'time-sale': Placeholder,
   'market-viewer': MarketViewer,
   'news-chat': Placeholder,
   // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
   'alert-trigger': Placeholder,
-  'market-clock': MarketClock,
+  'market-clock': Placeholder,
   // Setup
   'hotkey-config': Placeholder,
 }
@@ -53,6 +44,14 @@ function WindowManager({ windows, onClose, onFocus }) {
     <>
       {Object.values(windows).map((win) => {
         const Component = COMPONENT_REGISTRY[win.type] || Placeholder
+        const componentProps = {
+          title: win.title,
+          windowId: win.id,
+          type: win.type,
+        }
+        // Pass ticker context if the window was opened with one
+        if (win.ticker) componentProps.ticker = win.ticker
+
         return (
           <Window
             key={win.id}
@@ -67,7 +66,7 @@ function WindowManager({ windows, onClose, onFocus }) {
             onClose={onClose}
             onFocus={onFocus}
           >
-            <Component title={win.title} windowId={win.id} type={win.type} />
+            <Component {...componentProps} />
           </Window>
         )
       })}
