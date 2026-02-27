@@ -109,6 +109,7 @@ function WindowManager({
             activeTabIndex={win.activeTabIndex}
             onSetActiveTab={onSetActiveTab}
             onDetachTab={onDetachTab}
+            {...(win.type === 'time-sale' ? { minWidth: 50, minHeight: 30 } : {})}
           >
             <Component {...componentProps} />
           </Window>
