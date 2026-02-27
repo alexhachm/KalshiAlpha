@@ -19,22 +19,91 @@
   gap: var(--spacing-xs, 4px);
 }
 
-.mt-ticker-select {
+/* Current ticker badge */
+.mt-current-ticker {
+  background: var(--bg-tertiary);
+  color: var(--accent-highlight);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Search wrapper */
+.mt-search-wrapper {
   flex: 1;
-  background: var(--bg-input, var(--bg-tertiary));
-  color: var(--text-heading, var(--text-primary));
+  position: relative;
+}
+
+.mt-search-input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm, 3px);
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xl, 16px);
-  font-weight: 600;
-  cursor: pointer;
+  font-size: 11px;
+  box-sizing: border-box;
 }
 
-.mt-ticker-select:focus {
+.mt-search-input:focus {
   outline: none;
   border-color: var(--border-focus, var(--accent-highlight));
+}
+
+.mt-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0 0 3px 3px;
+  z-index: 100;
+}
+
+.mt-search-item {
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.mt-search-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mt-search-ticker {
+  color: var(--accent-highlight);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mt-search-title {
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-search-loading,
+.mt-search-empty {
+  color: var(--text-muted);
+  cursor: default;
+  font-style: italic;
+}
+
+.mt-search-loading:hover,
+.mt-search-empty:hover {
+  background: transparent;
 }
 
 .mt-settings-btn {
