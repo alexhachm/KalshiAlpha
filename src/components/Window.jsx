@@ -5,6 +5,9 @@ import {
   setColorGroup,
   removeFromGroup,
   getColorGroup,
+  subscribeToDrag,
+  unsubscribeDrag,
+  emitDragDelta,
 } from '../services/linkBus'
 import {
   register,
@@ -38,6 +41,7 @@ function Window({
   children,
 }) {
   const windowRef = useRef(null)
+  const bodyRef = useRef(null)
   const posRef = useRef({ x: initialX, y: initialY })
   const sizeRef = useRef({ width: initialWidth, height: initialHeight })
   const mergeHighlightRef = useRef(null)
@@ -49,6 +53,10 @@ function Window({
     if (!current) return -1
     return LINK_COLORS.findIndex((c) => c.id === current)
   })
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  // Ref for use inside drag callbacks (avoids stale closure)
+  const colorIndexRef = useRef(colorIndex)
+  useEffect(() => { colorIndexRef.current = colorIndex }, [colorIndex])
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null)
@@ -70,6 +78,24 @@ function Window({
     return () => unregister(id)
   }, [id])
 
+  // Subscribe to drag sync for same-color group
+  useEffect(() => {
+    if (colorIndex < 0) return
+    const colorId = LINK_COLORS[colorIndex].id
+    subscribeToDrag(colorId, id, (dx, dy) => {
+      posRef.current = {
+        x: posRef.current.x + dx,
+        y: Math.max(0, posRef.current.y + dy),
+      }
+      snapUpdate(id, { ...posRef.current, ...sizeRef.current })
+      if (windowRef.current) {
+        windowRef.current.style.left = posRef.current.x + 'px'
+        windowRef.current.style.top = posRef.current.y + 'px'
+      }
+    })
+    return () => unsubscribeDrag(colorId, id)
+  }, [colorIndex, id])
+
   // Close context menu on outside click
   useEffect(() => {
     if (!contextMenu) return
@@ -77,6 +103,14 @@ function Window({
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [contextMenu])
+
+  // Close color picker on outside click
+  useEffect(() => {
+    if (!showColorPicker) return
+    const handleClick = () => setShowColorPicker(false)
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showColorPicker])
 
   // Clear merge highlight on any element
   const clearMergeHighlight = useCallback(() => {
@@ -89,15 +123,36 @@ function Window({
   const handleChipClick = useCallback(
     (e) => {
       e.stopPropagation()
-      setColorIndex((prev) => {
-        const next = prev + 1
-        if (next >= LINK_COLORS.length) {
-          removeFromGroup(id)
-          return -1
-        }
-        setColorGroup(id, LINK_COLORS[next].id)
-        return next
-      })
+      if (e.shiftKey) {
+        // Shift+click: cycle through colors (legacy behavior)
+        setColorIndex((prev) => {
+          const next = prev + 1
+          if (next >= LINK_COLORS.length) {
+            removeFromGroup(id)
+            return -1
+          }
+          setColorGroup(id, LINK_COLORS[next].id)
+          return next
+        })
+      } else {
+        // Left-click: toggle color picker dropdown
+        setShowColorPicker((prev) => !prev)
+      }
+    },
+    [id]
+  )
+
+  const handleColorSelect = useCallback(
+    (e, idx) => {
+      e.stopPropagation()
+      if (idx === -1) {
+        removeFromGroup(id)
+        setColorIndex(-1)
+      } else {
+        setColorGroup(id, LINK_COLORS[idx].id)
+        setColorIndex(idx)
+      }
+      setShowColorPicker(false)
     },
     [id]
   )
@@ -117,6 +172,9 @@ function Window({
       const origX = posRef.current.x
       const origY = posRef.current.y
 
+      let lastX = origX
+      let lastY = origY
+
       const onMove = (moveEvt) => {
         const rawX = origX + (moveEvt.clientX - startX)
         const rawY = Math.max(0, origY + (moveEvt.clientY - startY))
@@ -129,6 +187,13 @@ function Window({
           sizeRef.current.width,
           sizeRef.current.height
         )
+
+        // Calculate delta for group drag
+        const dx = snapped.x - lastX
+        const dy = snapped.y - lastY
+        lastX = snapped.x
+        lastY = snapped.y
+
         posRef.current = { x: snapped.x, y: snapped.y }
 
         // Update snap registry
@@ -138,6 +203,12 @@ function Window({
           width: sizeRef.current.width,
           height: sizeRef.current.height,
         })
+
+        // Emit drag delta to linked group
+        const ci = colorIndexRef.current
+        if (ci >= 0 && (dx !== 0 || dy !== 0)) {
+          emitDragDelta(LINK_COLORS[ci].id, id, dx, dy)
+        }
 
         // Merge detection — highlight target window
         const targetId = findMergeTarget(
@@ -248,6 +319,10 @@ function Window({
     [id, onFocus]
   )
 
+  const dispatchToggleSettings = useCallback(() => {
+    bodyRef.current?.dispatchEvent(new CustomEvent('toggle-settings', { bubbles: true }))
+  }, [])
+
   const handleContextMenu = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -256,7 +331,13 @@ function Window({
       x: e.clientX - (rect?.left || 0),
       y: e.clientY - (rect?.top || 0),
     })
+    bodyRef.current?.dispatchEvent(new CustomEvent('toggle-settings', { bubbles: true }))
   }, [])
+
+  const handleOpenSettings = useCallback(() => {
+    setContextMenu(null)
+    dispatchToggleSettings()
+  }, [dispatchToggleSettings])
 
   const handlePopOut = useCallback(() => {
     setContextMenu(null)
@@ -306,19 +387,45 @@ function Window({
         onDoubleClick={handleTitleBarDoubleClick}
         onContextMenu={handleContextMenu}
       >
-        <div
-          className="window-color-chip"
-          style={{
-            backgroundColor:
-              colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
-          }}
-          onClick={handleChipClick}
-          title={
-            colorIndex >= 0
-              ? `Linked: ${LINK_COLORS[colorIndex].id} (click to cycle)`
-              : 'Unlinked (click to link)'
-          }
-        />
+        <div className="window-color-chip-wrap">
+          <div
+            className="window-color-chip"
+            style={{
+              backgroundColor:
+                colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
+            }}
+            onClick={handleChipClick}
+            title={
+              colorIndex >= 0
+                ? `Linked: ${LINK_COLORS[colorIndex].id} (click for picker, shift+click to cycle)`
+                : 'Unlinked (click to link)'
+            }
+          />
+          {showColorPicker && (
+            <div
+              className="window-color-picker"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="window-color-picker-swatches">
+                {LINK_COLORS.map((c, i) => (
+                  <div
+                    key={c.id}
+                    className={`window-color-swatch${colorIndex === i ? ' window-color-swatch--active' : ''}`}
+                    style={{ backgroundColor: c.hex }}
+                    onClick={(e) => handleColorSelect(e, i)}
+                    title={c.id}
+                  />
+                ))}
+              </div>
+              <div
+                className="window-color-unlink"
+                onClick={(e) => handleColorSelect(e, -1)}
+              >
+                Unlink
+              </div>
+            </div>
+          )}
+        </div>
         {isPinned && (
           <span className="window-pin-icon" title="Pinned to top">
             📌
@@ -361,7 +468,7 @@ function Window({
         </div>
       )}
 
-      <div className="window-body">{children}</div>
+      <div ref={bodyRef} className="window-body">{children}</div>
 
       {/* Right-click context menu */}
       {contextMenu && (
@@ -381,8 +488,8 @@ function Window({
           </div>
           <div className="window-context-separator" />
           <div
-            className="window-context-item window-context-item--disabled"
-            title="Component settings — coming soon"
+            className="window-context-item"
+            onClick={handleOpenSettings}
           >
             {title} Settings…
           </div>

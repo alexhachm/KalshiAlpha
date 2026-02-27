@@ -68,6 +68,16 @@ function Montage({ windowId }) {
   const [bidFlash, setBidFlash] = useState(null)
   const [askFlash, setAskFlash] = useState(null)
   const orderIdRef = useRef(1)
+  const containerRef = useRef(null)
+
+  // Toggle settings via right-click header event
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = () => setShowSettings((s) => !s)
+    el.addEventListener('toggle-settings', handler)
+    return () => el.removeEventListener('toggle-settings', handler)
+  }, [])
 
   // Persist settings
   useEffect(() => {
@@ -225,7 +235,7 @@ function Montage({ windowId }) {
     : []
 
   return (
-    <div className={`montage ${fontClass}`}>
+    <div ref={containerRef} className={`montage ${fontClass}`}>
       {/* Ticker search bar */}
       <div className="mt-ticker-bar">
         <span className="mt-current-ticker">{ticker}</span>
