@@ -16,10 +16,10 @@ const TICKERS = [
 ]
 
 const TS_COLUMNS = [
-  { key: 'time', label: 'Time', align: 'left' },
   { key: 'price', label: 'Price', align: 'right', numeric: true },
-  { key: 'size', label: 'Size', align: 'right', numeric: true },
-  { key: 'side', label: 'Side', align: 'right' },
+  { key: 'size', label: 'Qty', align: 'right', numeric: true },
+  { key: 'time', label: 'Time', align: 'left' },
+  { key: 'side', label: 'Exchange', align: 'right' },
 ]
 
 const FONT_SIZE_MAP = { small: 10, medium: 11, large: 13 }
@@ -30,6 +30,9 @@ const DEFAULT_SETTINGS = {
   soundOnLarge: false,
   largeSizeThreshold: 500,
   autoScroll: true,
+  hideMilliseconds: false,
+  priceDecimals: false,
+  abbreviateSize: false,
 }
 
 function loadSettings(windowId) {
@@ -49,13 +52,23 @@ function saveSettings(windowId, settings) {
   }
 }
 
-function formatTime(ts) {
+function formatTime(ts, hideMs) {
   const d = new Date(ts)
   const h = String(d.getHours()).padStart(2, '0')
   const m = String(d.getMinutes()).padStart(2, '0')
   const s = String(d.getSeconds()).padStart(2, '0')
+  if (hideMs) return `${h}:${m}:${s}`
   const ms = String(d.getMilliseconds()).padStart(3, '0')
   return `${h}:${m}:${s}.${ms}`
+}
+
+function formatPrice(price, useTwo) {
+  return useTwo ? `${Number(price).toFixed(2)}¢` : `${price}¢`
+}
+
+function formatSize(size, abbreviate) {
+  if (!abbreviate || size < 1000) return size
+  return `${(size / 1000).toFixed(1)}k`
 }
 
 function TimeSale({ windowId }) {
@@ -196,9 +209,9 @@ function TimeSale({ windowId }) {
                   className={`ts-col-${col.key}`}
                   style={col.width ? { flex: `0 0 ${col.width}px` } : undefined}
                 >
-                  {col.key === 'time' ? formatTime(trade.timestamp) :
-                   col.key === 'price' ? `${trade.price}¢` :
-                   col.key === 'size' ? trade.size :
+                  {col.key === 'time' ? formatTime(trade.timestamp, settings.hideMilliseconds) :
+                   col.key === 'price' ? formatPrice(trade.price, settings.priceDecimals) :
+                   col.key === 'size' ? formatSize(trade.size, settings.abbreviateSize) :
                    col.key === 'side' ? trade.side : null}
                 </span>
               ))}
@@ -257,6 +270,31 @@ function TimeSale({ windowId }) {
                 type="checkbox"
                 checked={settings.autoScroll}
                 onChange={(e) => updateSetting('autoScroll', e.target.checked)}
+              />
+            </label>
+            <div className="ts-settings-divider" />
+            <label className="ts-setting-row">
+              <span>Hide Milliseconds</span>
+              <input
+                type="checkbox"
+                checked={settings.hideMilliseconds}
+                onChange={(e) => updateSetting('hideMilliseconds', e.target.checked)}
+              />
+            </label>
+            <label className="ts-setting-row">
+              <span>2 Decimal Price</span>
+              <input
+                type="checkbox"
+                checked={settings.priceDecimals}
+                onChange={(e) => updateSetting('priceDecimals', e.target.checked)}
+              />
+            </label>
+            <label className="ts-setting-row">
+              <span>Abbreviate Size</span>
+              <input
+                type="checkbox"
+                checked={settings.abbreviateSize}
+                onChange={(e) => updateSetting('abbreviateSize', e.target.checked)}
               />
             </label>
             <GridSettingsPanel {...grid} />

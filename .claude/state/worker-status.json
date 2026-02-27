@@ -9,13 +9,13 @@
     "last_heartbeat": null
   },
   "worker-2": {
-    "status": "idle",
-    "domain": null,
-    "current_task": null,
+    "status": "busy",
+    "domain": "quotes",
+    "current_task": "Make TimeSale window compact and configurable",
     "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-02-25T19:47:22Z",
+    "last_heartbeat": "2026-02-27T00:19:07Z",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
   },
   "worker-3": {
