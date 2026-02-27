@@ -29,8 +29,9 @@ const DEFAULT_SETTINGS = {
   sizeFilter: 0,
   soundOnLarge: false,
   largeSizeThreshold: 500,
-  autoScroll: true,
 }
+
+const isAtBottom = (el) => el.scrollHeight - el.scrollTop - el.clientHeight < 2
 
 function loadSettings(windowId) {
   try {
@@ -65,6 +66,7 @@ function TimeSale({ windowId }) {
   const [showSettings, setShowSettings] = useState(false)
   const [paused, setPaused] = useState(false)
   const listRef = useRef(null)
+  const autoScrollRef = useRef(true)
   const pausedRef = useRef(false)
   const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 11
@@ -98,12 +100,24 @@ function TimeSale({ windowId }) {
     return unsub
   }, [ticker])
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when new trades arrive
   useEffect(() => {
-    if (settings.autoScroll && listRef.current) {
+    if (autoScrollRef.current && listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight
     }
-  }, [trades, settings.autoScroll])
+  }, [trades])
+
+  // Freescroll: scroll away = pause, double-click = resume
+  const handleListScroll = useCallback(() => {
+    if (!listRef.current) return
+    autoScrollRef.current = isAtBottom(listRef.current)
+  }, [])
+
+  const handleListDoubleClick = useCallback(() => {
+    if (!listRef.current) return
+    listRef.current.scrollTop = listRef.current.scrollHeight
+    autoScrollRef.current = true
+  }, [])
 
   // Color link bus integration
   const handleLinkEvent = useCallback(
@@ -194,7 +208,13 @@ function TimeSale({ windowId }) {
       </div>
 
       {/* Trade list */}
-      <div className="ts-list" ref={listRef} style={{ fontSize: fontSizePx }}>
+      <div
+        className="ts-list"
+        ref={listRef}
+        style={{ fontSize: fontSizePx }}
+        onScroll={handleListScroll}
+        onDoubleClick={handleListDoubleClick}
+      >
         {displayTrades.map((trade) => {
           const rowStyle = grid.getRowStyle(trade) || {}
           return (
@@ -264,14 +284,6 @@ function TimeSale({ windowId }) {
                 step={100}
                 value={settings.largeSizeThreshold}
                 onChange={(e) => updateSetting('largeSizeThreshold', parseInt(e.target.value, 10) || 500)}
-              />
-            </label>
-            <label className="ts-setting-row">
-              <span>Auto-Scroll</span>
-              <input
-                type="checkbox"
-                checked={settings.autoScroll}
-                onChange={(e) => updateSetting('autoScroll', e.target.checked)}
               />
             </label>
             <GridSettingsPanel {...grid} />
