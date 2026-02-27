@@ -2,7 +2,6 @@ import React, { useReducer, useState, useCallback, useEffect } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
-import { useHotkeyDispatch } from '../hooks/useHotkeyDispatch'
 import './Shell.css'
 
 const CASCADE_OFFSET = 30
@@ -37,14 +36,36 @@ function windowReducer(state, action) {
       const id = state.nextId
       const count = Object.keys(state.windows).length
       const sizes = TYPE_SIZES[action.payload.type] || {}
+      const w = sizes.width || DEFAULT_WIDTH
+      const h = sizes.height || DEFAULT_HEIGHT
+
+      // Tile: compute grid from viewport, place in first sequential cell
+      const vw = action.payload.vw || window.innerWidth
+      const vh = action.payload.vh || window.innerHeight
+      const cols = Math.max(1, Math.floor(vw / DEFAULT_WIDTH))
+      const rows = Math.max(1, Math.floor(vh / DEFAULT_HEIGHT))
+      const totalCells = cols * rows
+
+      let x, y
+      if (count < totalCells) {
+        const col = count % cols
+        const row = Math.floor(count / cols)
+        x = col * DEFAULT_WIDTH
+        y = row * DEFAULT_HEIGHT
+      } else {
+        // Fallback to cascade when grid is full
+        x = INITIAL_X + (count % 10) * CASCADE_OFFSET
+        y = INITIAL_Y + (count % 10) * CASCADE_OFFSET
+      }
+
       const win = {
         id,
         type: action.payload.type,
         title: action.payload.title,
-        initialX: INITIAL_X + (count % 10) * CASCADE_OFFSET,
-        initialY: INITIAL_Y + (count % 10) * CASCADE_OFFSET,
-        initialWidth: sizes.width || DEFAULT_WIDTH,
-        initialHeight: sizes.height || DEFAULT_HEIGHT,
+        initialX: x,
+        initialY: y,
+        initialWidth: w,
+        initialHeight: h,
         zIndex: state.nextZ,
       }
       // Attach ticker/context if provided (e.g. from Positions double-click)
@@ -222,7 +243,7 @@ function Shell() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const openWindow = useCallback((type, title, ticker) => {
-    dispatch({ type: 'OPEN_WINDOW', payload: { type, title, ticker } })
+    dispatch({ type: 'OPEN_WINDOW', payload: { type, title, ticker, vw: window.innerWidth, vh: window.innerHeight } })
   }, [])
 
   // Listen for 'open-window' custom events from child components
@@ -267,21 +288,6 @@ function Shell() {
   const openSettings = useCallback(() => {
     setIsSettingsOpen(true)
   }, [])
-
-  const getFocusedWindow = useCallback(() => {
-    // The window with the highest zIndex is considered focused
-    let focused = null
-    let maxZ = -1
-    for (const win of Object.values(state.windows)) {
-      if (win.zIndex > maxZ) {
-        maxZ = win.zIndex
-        focused = win
-      }
-    }
-    return focused
-  }, [state.windows])
-
-  useHotkeyDispatch({ focusWindow, getFocusedWindow, windows: state.windows })
 
   return (
     <div className="shell">
