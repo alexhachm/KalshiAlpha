@@ -57,6 +57,7 @@ function saveSettings(windowId, settings) {
 }
 
 function Chart({ windowId }) {
+  const outerRef = useRef(null)
   const chartContainerRef = useRef(null)
   const chartRef = useRef(null)
   const mainSeriesRef = useRef(null)
@@ -71,6 +72,15 @@ function Chart({ windowId }) {
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
+
+  // Toggle settings via right-click header event
+  useEffect(() => {
+    const el = outerRef.current
+    if (!el) return
+    const handler = () => setShowSettings((s) => !s)
+    el.addEventListener('toggle-settings', handler)
+    return () => el.removeEventListener('toggle-settings', handler)
+  }, [])
 
   const updateSetting = useCallback((key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
@@ -270,7 +280,7 @@ function Chart({ windowId }) {
   const ohlc = formatOHLC(crosshairData)
 
   return (
-    <div className="chart-component">
+    <div ref={outerRef} className="chart-component">
       <div className="chart-toolbar">
         <select className="chart-ticker-select" value={ticker} onChange={handleTickerChange}>
           {TICKERS.map((t) => (
