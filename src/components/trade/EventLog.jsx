@@ -5,6 +5,8 @@ import './EventLog.css'
 
 const LS_KEY_PREFIX = 'event-log-settings-'
 
+const isAtBottom = (el) => el.scrollHeight - el.scrollTop - el.clientHeight < 2
+
 const DEFAULT_SETTINGS = {
   logLevel: 'all',
   maxLines: 500,
@@ -120,7 +122,8 @@ function EventLog({ windowId }) {
   const [entries, setEntries] = useState(() => getStartupEntries())
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
-  const logEndRef = useRef(null)
+  const listRef = useRef(null)
+  const autoScrollRef = useRef(true)
   const nextIdRef = useRef(8) // startup entries use 1-7
 
   // Build a set of visible column keys for fast lookup
@@ -133,10 +136,23 @@ function EventLog({ windowId }) {
 
   // Auto-scroll to bottom when new entries arrive
   useEffect(() => {
-    if (settings.autoScroll && logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (settings.autoScroll && autoScrollRef.current && listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight
     }
   }, [entries, settings.autoScroll])
+
+  // Freescroll: scroll away = pause, scroll to bottom = resume
+  const handleListScroll = useCallback(() => {
+    if (!listRef.current) return
+    autoScrollRef.current = isAtBottom(listRef.current)
+  }, [])
+
+  // Double-click to snap back to newest entries
+  const handleListDoubleClick = useCallback(() => {
+    if (!listRef.current) return
+    listRef.current.scrollTop = listRef.current.scrollHeight
+    autoScrollRef.current = true
+  }, [])
 
   // Simulate periodic events
   useEffect(() => {
@@ -231,7 +247,7 @@ function EventLog({ windowId }) {
       </div>
 
       {/* Log entries */}
-      <div className="el-entries">
+      <div className="el-entries" ref={listRef} onScroll={handleListScroll} onDoubleClick={handleListDoubleClick}>
         {filteredEntries.length === 0 ? (
           <div className="el-empty">No log entries</div>
         ) : (
@@ -258,7 +274,6 @@ function EventLog({ windowId }) {
             </div>
           ))
         )}
-        <div ref={logEndRef} />
       </div>
 
       {/* Settings panel */}
