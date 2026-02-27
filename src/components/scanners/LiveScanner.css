@@ -221,9 +221,19 @@
 }
 
 .ls-cell-ticker {
-  color: var(--accent-highlight);
   font-weight: 600;
   font-size: var(--font-size-sm);
+}
+
+.ls-cell-ticker .scanner-ticker-link {
+  color: #4da6ff;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.ls-cell-ticker .scanner-ticker-link:hover {
+  color: #6db8ff;
+  text-decoration: underline;
 }
 
 .ls-cell-strategy {

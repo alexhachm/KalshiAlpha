@@ -240,7 +240,7 @@ function LiveScanner({ windowId }) {
                     let content, className = `ls-cell-${col.key}`
                     switch (col.key) {
                       case 'time': content = alert.time; break
-                      case 'ticker': content = alert.ticker; break
+                      case 'ticker': content = <span className="scanner-ticker-link">{alert.ticker}</span>; break
                       case 'strategy': content = alert.strategy; break
                       case 'type':
                         content = alert.type.toUpperCase()
