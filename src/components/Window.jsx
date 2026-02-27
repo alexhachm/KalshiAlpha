@@ -18,8 +18,8 @@ import {
 } from './SnapManager'
 import './Window.css'
 
-const MIN_WIDTH = 200
-const MIN_HEIGHT = 150
+const DEFAULT_MIN_WIDTH = 200
+const DEFAULT_MIN_HEIGHT = 150
 
 function Window({
   id,
@@ -38,6 +38,8 @@ function Window({
   activeTabIndex,
   onSetActiveTab,
   onDetachTab,
+  minWidth = DEFAULT_MIN_WIDTH,
+  minHeight = DEFAULT_MIN_HEIGHT,
   children,
 }) {
   const windowRef = useRef(null)
@@ -277,18 +279,18 @@ function Window({
         let { width, height } = origSize
 
         if (direction.includes('e')) {
-          width = Math.max(MIN_WIDTH, origSize.width + dx)
+          width = Math.max(minWidth, origSize.width + dx)
         }
         if (direction.includes('s')) {
-          height = Math.max(MIN_HEIGHT, origSize.height + dy)
+          height = Math.max(minHeight, origSize.height + dy)
         }
         if (direction.includes('w')) {
-          const newWidth = Math.max(MIN_WIDTH, origSize.width - dx)
+          const newWidth = Math.max(minWidth, origSize.width - dx)
           x = origPos.x + origSize.width - newWidth
           width = newWidth
         }
         if (direction.includes('n')) {
-          const newHeight = Math.max(MIN_HEIGHT, origSize.height - dy)
+          const newHeight = Math.max(minHeight, origSize.height - dy)
           y = Math.max(0, origPos.y + origSize.height - newHeight)
           height = newHeight
         }

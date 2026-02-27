@@ -30,9 +30,9 @@ const DEFAULT_SETTINGS = {
   soundOnLarge: false,
   largeSizeThreshold: 500,
   autoScroll: true,
-  hideMilliseconds: false,
-  priceDecimals: false,
-  abbreviateSize: false,
+  hideMilliseconds: true,
+  priceDecimals: true,
+  abbreviateSize: true,
 }
 
 const isAtBottom = (el) => el.scrollHeight - el.scrollTop - el.clientHeight < 2
