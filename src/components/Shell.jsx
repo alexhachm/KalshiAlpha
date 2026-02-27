@@ -2,10 +2,10 @@ import React, { useReducer, useState, useCallback, useEffect } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
+import { findOpenPosition } from './SnapManager'
 import { useHotkeyDispatch } from '../hooks/useHotkeyDispatch'
 import './Shell.css'
 
-const CASCADE_OFFSET = 30
 const DEFAULT_WIDTH = 400
 const DEFAULT_HEIGHT = 300
 const INITIAL_X = 50
@@ -35,36 +35,19 @@ function windowReducer(state, action) {
   switch (action.type) {
     case 'OPEN_WINDOW': {
       const id = state.nextId
-      const count = Object.keys(state.windows).length
       const sizes = TYPE_SIZES[action.payload.type] || {}
       const w = sizes.width || DEFAULT_WIDTH
       const h = sizes.height || DEFAULT_HEIGHT
 
-      // Tile: compute grid from viewport, place in first sequential cell
-      const vw = action.payload.vw || window.innerWidth
-      const vh = action.payload.vh || window.innerHeight
-      const cols = Math.max(1, Math.floor(vw / DEFAULT_WIDTH))
-      const rows = Math.max(1, Math.floor(vh / DEFAULT_HEIGHT))
-      const totalCells = cols * rows
-
-      let x, y
-      if (count < totalCells) {
-        const col = count % cols
-        const row = Math.floor(count / cols)
-        x = col * DEFAULT_WIDTH
-        y = row * DEFAULT_HEIGHT
-      } else {
-        // Fallback to cascade when grid is full
-        x = INITIAL_X + (count % 10) * CASCADE_OFFSET
-        y = INITIAL_Y + (count % 10) * CASCADE_OFFSET
-      }
+      // Use SnapManager to find an open position that avoids existing windows
+      const pos = action.payload.position || { x: INITIAL_X, y: INITIAL_Y }
 
       const win = {
         id,
         type: action.payload.type,
         title: action.payload.title,
-        initialX: x,
-        initialY: y,
+        initialX: pos.x,
+        initialY: pos.y,
         initialWidth: w,
         initialHeight: h,
         zIndex: state.nextZ,
@@ -244,7 +227,11 @@ function Shell() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const openWindow = useCallback((type, title, ticker) => {
-    dispatch({ type: 'OPEN_WINDOW', payload: { type, title, ticker, vw: window.innerWidth, vh: window.innerHeight } })
+    const sizes = TYPE_SIZES[type] || {}
+    const w = sizes.width || DEFAULT_WIDTH
+    const h = sizes.height || DEFAULT_HEIGHT
+    const position = findOpenPosition(w, h)
+    dispatch({ type: 'OPEN_WINDOW', payload: { type, title, ticker, position } })
   }, [])
 
   // Listen for 'open-window' custom events from child components
