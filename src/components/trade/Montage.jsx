@@ -49,6 +49,7 @@ function Montage({ windowId }) {
   const { data, error: tickerError } = useTickerData(ticker)
   const { submitOrder, cancelOrder: cancelApiOrder, submitting, error: orderError } = useOrderEntry()
 
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
   const { results: searchResults, loading: searchLoading, search } = useMarketSearch()
