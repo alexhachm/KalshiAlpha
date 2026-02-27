@@ -331,8 +331,9 @@ function subscribeToScanner(callback) {
 }
 
 /**
- * Generate static OHLCV candle data for initial chart rendering.
- * Delegates to mockData.generateOHLCV.
+ * Generate historical OHLCV candle data.
+ * When connected: returns empty array (use subscribeToOHLCV for real data).
+ * When disconnected: delegates to mock data.
  */
 function generateOHLCV(ticker, count = 200, timeframeMinutes = 5) {
   return mockData.generateOHLCV(ticker, count, timeframeMinutes);
@@ -687,6 +688,7 @@ export {
   subscribeToTicker,
   subscribeToMarketRace,
   subscribeToScanner,
+  generateOHLCV,
   subscribeToOHLCV,
   subscribeToTimeSales,
   getHistoricalScanResults,

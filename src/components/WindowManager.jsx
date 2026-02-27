@@ -4,6 +4,7 @@ import PopoutWindow from './PopoutWindow'
 import MarketViewer from './MarketViewer'
 // Trade
 import Montage from './trade/Montage'
+import NewsChat from './trade/NewsChat'
 import PriceLadder from './trade/PriceLadder'
 import Accounts from './trade/Accounts'
 import Positions from './trade/Positions'
@@ -42,7 +43,7 @@ const COMPONENT_REGISTRY = {
   chart: Chart,
   'time-sale': TimeSale,
   'market-viewer': MarketViewer,
-  'news-chat': Placeholder,
+  'news-chat': NewsChat,
   // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,

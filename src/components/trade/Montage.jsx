@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useTickerData, useOrderEntry } from '../../hooks/useKalshiData'
+import { useTickerData, useOrderEntry, useMarketSearch } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -48,6 +48,11 @@ function Montage({ windowId }) {
   // Data hooks
   const { data, error: tickerError } = useTickerData(ticker)
   const { submitOrder, cancelOrder: cancelApiOrder, submitting, error: orderError } = useOrderEntry()
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const { results: searchResults, loading: searchLoading, search } = useMarketSearch()
+  const searchTimerRef = useRef(null)
 
   // Order entry state
   const [orderSize, setOrderSize] = useState(settings.defaultOrderSize)
@@ -127,12 +132,21 @@ function Montage({ windowId }) {
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
   }, [windowId, handleLinkEvent])
 
-  // Ticker change handler
-  const handleTickerChange = (e) => {
-    const newTicker = e.target.value
-    setTicker(newTicker)
+  // Search handlers
+  const handleSearchChange = (e) => {
+    const q = e.target.value
+    setSearchQuery(q)
+    clearTimeout(searchTimerRef.current)
+    if (q.trim().length >= 2) {
+      searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
+    }
+  }
+
+  const handleSearchSelect = (t) => {
+    setTicker(t)
+    setSearchQuery('')
     setLimitPrice('')
-    emitLinkedMarket(windowId, newTicker)
+    emitLinkedMarket(windowId, t)
   }
 
   // Set limit price when clicking a bid/ask level
@@ -212,17 +226,32 @@ function Montage({ windowId }) {
 
   return (
     <div className={`montage ${fontClass}`}>
-      {/* Ticker selector bar */}
+      {/* Ticker search bar */}
       <div className="mt-ticker-bar">
-        <select
-          className="mt-ticker-select"
-          value={ticker}
-          onChange={handleTickerChange}
-        >
-          {TICKERS.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+        <span className="mt-current-ticker">{ticker}</span>
+        <div className="mt-search-wrapper">
+          <input
+            className="mt-search-input"
+            type="text"
+            placeholder="Search markets..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+          {searchQuery.trim().length >= 2 && (
+            <div className="mt-search-results">
+              {searchLoading && <div className="mt-search-item mt-search-loading">Searching...</div>}
+              {!searchLoading && searchResults.length === 0 && (
+                <div className="mt-search-item mt-search-empty">No results</div>
+              )}
+              {searchResults.map((m) => (
+                <div key={m.ticker} className="mt-search-item" onClick={() => handleSearchSelect(m.ticker)}>
+                  <span className="mt-search-ticker">{m.ticker}</span>
+                  {m.title && <span className="mt-search-title">{m.title}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           className="mt-settings-btn"
           onClick={() => setShowSettings(true)}

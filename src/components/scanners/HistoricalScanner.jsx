@@ -298,7 +298,7 @@ function HistoricalScanner({ windowId }) {
                     let content, className = `hs-cell-${col.key}`
                     switch (col.key) {
                       case 'date': content = formatDate(row.date); break
-                      case 'ticker': content = row.ticker; break
+                      case 'ticker': content = <span className="scanner-ticker-link">{row.ticker}</span>; break
                       case 'pattern': content = row.pattern; break
                       case 'signal':
                         content = row.signal.toUpperCase()

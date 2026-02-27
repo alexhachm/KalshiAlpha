@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { createChart, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts'
+import { createChart, ColorType, CrosshairMode, LineStyle, CandlestickSeries, LineSeries, AreaSeries, HistogramSeries } from 'lightweight-charts'
 import { generateOHLCV, subscribeToOHLCV } from '../../services/dataFeed'
 import {
   subscribeToLink,
@@ -61,7 +61,6 @@ function Chart({ windowId }) {
   const chartRef = useRef(null)
   const mainSeriesRef = useRef(null)
   const volumeSeriesRef = useRef(null)
-  const resizeObserverRef = useRef(null)
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
@@ -90,6 +89,7 @@ function Chart({ windowId }) {
     }
 
     const chart = createChart(chartContainerRef.current, {
+      autoSize: true,
       layout: {
         background: { type: ColorType.Solid, color: '#121212' },
         textColor: '#a0a0a0',
@@ -129,10 +129,10 @@ function Chart({ windowId }) {
 
     chartRef.current = chart
 
-    // Create main series based on chart type
+    // Create main series based on chart type (lightweight-charts v5 API)
     let mainSeries
     if (settings.chartType === 'candlestick') {
-      mainSeries = chart.addCandlestickSeries({
+      mainSeries = chart.addSeries(CandlestickSeries, {
         upColor: settings.upColor,
         downColor: settings.downColor,
         borderUpColor: settings.upColor,
@@ -141,14 +141,14 @@ function Chart({ windowId }) {
         wickDownColor: settings.downColor,
       })
     } else if (settings.chartType === 'line') {
-      mainSeries = chart.addLineSeries({
+      mainSeries = chart.addSeries(LineSeries, {
         color: '#00d2ff',
         lineWidth: 2,
         crosshairMarkerRadius: 4,
       })
     } else {
       // area
-      mainSeries = chart.addAreaSeries({
+      mainSeries = chart.addSeries(AreaSeries, {
         topColor: 'rgba(0, 210, 255, 0.4)',
         bottomColor: 'rgba(0, 210, 255, 0.0)',
         lineColor: '#00d2ff',
@@ -157,10 +157,10 @@ function Chart({ windowId }) {
     }
     mainSeriesRef.current = mainSeries
 
-    // Volume series
+    // Volume series (lightweight-charts v5 API)
     let volumeSeries = null
     if (settings.showVolume) {
-      volumeSeries = chart.addHistogramSeries({
+      volumeSeries = chart.addSeries(HistogramSeries, {
         color: '#555',
         priceFormat: { type: 'volume' },
         priceScaleId: 'volume',
@@ -205,18 +205,7 @@ function Chart({ windowId }) {
     // Fit content
     chart.timeScale().fitContent()
 
-    // Resize observer
-    const ro = new ResizeObserver(() => {
-      if (chartContainerRef.current && chartRef.current) {
-        const { width, height } = chartContainerRef.current.getBoundingClientRect()
-        chartRef.current.resize(width, height)
-      }
-    })
-    ro.observe(chartContainerRef.current)
-    resizeObserverRef.current = ro
-
     return () => {
-      ro.disconnect()
       chart.remove()
       chartRef.current = null
       mainSeriesRef.current = null
