@@ -5,6 +5,9 @@ import {
   setColorGroup,
   removeFromGroup,
   getColorGroup,
+  subscribeToDrag,
+  unsubscribeDrag,
+  emitDragDelta,
 } from '../services/linkBus'
 import {
   register,
@@ -51,6 +54,9 @@ function Window({
     return LINK_COLORS.findIndex((c) => c.id === current)
   })
   const [showColorPicker, setShowColorPicker] = useState(false)
+  // Ref for use inside drag callbacks (avoids stale closure)
+  const colorIndexRef = useRef(colorIndex)
+  useEffect(() => { colorIndexRef.current = colorIndex }, [colorIndex])
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null)
@@ -71,6 +77,24 @@ function Window({
     })
     return () => unregister(id)
   }, [id])
+
+  // Subscribe to drag sync for same-color group
+  useEffect(() => {
+    if (colorIndex < 0) return
+    const colorId = LINK_COLORS[colorIndex].id
+    subscribeToDrag(colorId, id, (dx, dy) => {
+      posRef.current = {
+        x: posRef.current.x + dx,
+        y: Math.max(0, posRef.current.y + dy),
+      }
+      snapUpdate(id, { ...posRef.current, ...sizeRef.current })
+      if (windowRef.current) {
+        windowRef.current.style.left = posRef.current.x + 'px'
+        windowRef.current.style.top = posRef.current.y + 'px'
+      }
+    })
+    return () => unsubscribeDrag(colorId, id)
+  }, [colorIndex, id])
 
   // Close context menu on outside click
   useEffect(() => {
@@ -148,6 +172,9 @@ function Window({
       const origX = posRef.current.x
       const origY = posRef.current.y
 
+      let lastX = origX
+      let lastY = origY
+
       const onMove = (moveEvt) => {
         const rawX = origX + (moveEvt.clientX - startX)
         const rawY = Math.max(0, origY + (moveEvt.clientY - startY))
@@ -160,6 +187,13 @@ function Window({
           sizeRef.current.width,
           sizeRef.current.height
         )
+
+        // Calculate delta for group drag
+        const dx = snapped.x - lastX
+        const dy = snapped.y - lastY
+        lastX = snapped.x
+        lastY = snapped.y
+
         posRef.current = { x: snapped.x, y: snapped.y }
 
         // Update snap registry
@@ -169,6 +203,12 @@ function Window({
           width: sizeRef.current.width,
           height: sizeRef.current.height,
         })
+
+        // Emit drag delta to linked group
+        const ci = colorIndexRef.current
+        if (ci >= 0 && (dx !== 0 || dy !== 0)) {
+          emitDragDelta(LINK_COLORS[ci].id, id, dx, dy)
+        }
 
         // Merge detection — highlight target window
         const targetId = findMergeTarget(

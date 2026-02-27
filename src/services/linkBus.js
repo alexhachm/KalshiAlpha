@@ -106,6 +106,33 @@ function emitLinkedMarket(windowId, ticker) {
   });
 }
 
+// --- Drag sync (group drag) ---
+// colorId -> Array<{ windowId, callback }>
+const dragSubscribers = {};
+
+function subscribeToDrag(colorId, windowId, callback) {
+  if (!dragSubscribers[colorId]) dragSubscribers[colorId] = [];
+  // Replace existing subscription for this windowId
+  dragSubscribers[colorId] = dragSubscribers[colorId].filter((s) => s.windowId !== windowId);
+  dragSubscribers[colorId].push({ windowId, callback });
+}
+
+function unsubscribeDrag(colorId, windowId) {
+  if (!dragSubscribers[colorId]) return;
+  dragSubscribers[colorId] = dragSubscribers[colorId].filter((s) => s.windowId !== windowId);
+  if (dragSubscribers[colorId].length === 0) delete dragSubscribers[colorId];
+}
+
+function emitDragDelta(colorId, sourceWindowId, dx, dy) {
+  const subs = dragSubscribers[colorId];
+  if (!subs) return;
+  subs.forEach((sub) => {
+    if (sub.windowId !== sourceWindowId) {
+      try { sub.callback(dx, dy) } catch {}
+    }
+  });
+}
+
 // --- Enable/Disable ---
 
 function setLinkingEnabled(enabled) {
@@ -129,6 +156,9 @@ export {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
+  subscribeToDrag,
+  unsubscribeDrag,
+  emitDragDelta,
   loadLinkState,
   saveLinkState,
   setLinkingEnabled,
