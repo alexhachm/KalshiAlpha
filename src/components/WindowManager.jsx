@@ -1,6 +1,8 @@
 import React from 'react'
 import Window from './Window'
 import MarketViewer from './MarketViewer'
+import Montage from './trade/Montage'
+import NewsChat from './trade/NewsChat'
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
 
@@ -19,7 +21,7 @@ const COMPONENT_REGISTRY = {
   // Login
   login: Placeholder,
   // Trade
-  montage: Placeholder,
+  montage: Montage,
   'price-ladder': Placeholder,
   accounts: Placeholder,
   positions: Placeholder,
@@ -29,7 +31,7 @@ const COMPONENT_REGISTRY = {
   chart: Placeholder,
   'time-sale': Placeholder,
   'market-viewer': MarketViewer,
-  'news-chat': Placeholder,
+  'news-chat': NewsChat,
   // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
