@@ -38,6 +38,7 @@ function Window({
   children,
 }) {
   const windowRef = useRef(null)
+  const bodyRef = useRef(null)
   const posRef = useRef({ x: initialX, y: initialY })
   const sizeRef = useRef({ width: initialWidth, height: initialHeight })
   const mergeHighlightRef = useRef(null)
@@ -248,6 +249,10 @@ function Window({
     [id, onFocus]
   )
 
+  const dispatchToggleSettings = useCallback(() => {
+    bodyRef.current?.dispatchEvent(new CustomEvent('toggle-settings', { bubbles: true }))
+  }, [])
+
   const handleContextMenu = useCallback((e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -256,7 +261,13 @@ function Window({
       x: e.clientX - (rect?.left || 0),
       y: e.clientY - (rect?.top || 0),
     })
+    bodyRef.current?.dispatchEvent(new CustomEvent('toggle-settings', { bubbles: true }))
   }, [])
+
+  const handleOpenSettings = useCallback(() => {
+    setContextMenu(null)
+    dispatchToggleSettings()
+  }, [dispatchToggleSettings])
 
   const handlePopOut = useCallback(() => {
     setContextMenu(null)
@@ -361,7 +372,7 @@ function Window({
         </div>
       )}
 
-      <div className="window-body">{children}</div>
+      <div ref={bodyRef} className="window-body">{children}</div>
 
       {/* Right-click context menu */}
       {contextMenu && (
@@ -381,8 +392,8 @@ function Window({
           </div>
           <div className="window-context-separator" />
           <div
-            className="window-context-item window-context-item--disabled"
-            title="Component settings — coming soon"
+            className="window-context-item"
+            onClick={handleOpenSettings}
           >
             {title} Settings…
           </div>

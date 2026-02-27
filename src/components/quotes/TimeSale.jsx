@@ -65,6 +65,7 @@ function TimeSale({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const listRef = useRef(null)
+  const containerRef = useRef(null)
   const autoScrollRef = useRef(true)
   const pausedRef = useRef(false)
   const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
@@ -74,6 +75,15 @@ function TimeSale({ windowId }) {
   useEffect(() => {
     saveSettings(windowId, settings)
   }, [windowId, settings])
+
+  // Toggle settings via right-click header event
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = () => setShowSettings((s) => !s)
+    el.addEventListener('toggle-settings', handler)
+    return () => el.removeEventListener('toggle-settings', handler)
+  }, [])
 
   const updateSetting = useCallback((key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
@@ -144,7 +154,7 @@ function TimeSale({ windowId }) {
   const displayTrades = visibleTrades.slice(-settings.maxRows)
 
   return (
-    <div className="ts-component">
+    <div ref={containerRef} className="ts-component">
       <div className="ts-toolbar">
         <select className="ts-ticker-select" value={ticker} onChange={handleTickerChange}>
           {TICKERS.map((t) => (
