@@ -688,7 +688,6 @@ export {
   subscribeToTicker,
   subscribeToMarketRace,
   subscribeToScanner,
-  generateOHLCV,
   subscribeToOHLCV,
   subscribeToTimeSales,
   getHistoricalScanResults,

@@ -40,6 +40,65 @@
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
 }
 
+.window-color-chip-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.window-color-picker {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  z-index: 1000;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  min-width: 104px;
+}
+
+.window-color-picker-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.window-color-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.window-color-swatch:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+}
+
+.window-color-swatch--active {
+  border: 2px solid #fff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+}
+
+.window-color-unlink {
+  font-size: 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  padding: 2px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: color 0.1s;
+}
+
+.window-color-unlink:hover {
+  color: var(--text-primary, #fff);
+}
+
 .window-title {
   flex: 1;
   font-size: 10.5px;

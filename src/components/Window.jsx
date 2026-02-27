@@ -49,6 +49,7 @@ function Window({
     if (!current) return -1
     return LINK_COLORS.findIndex((c) => c.id === current)
   })
+  const [showColorPicker, setShowColorPicker] = useState(false)
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null)
@@ -78,6 +79,14 @@ function Window({
     return () => document.removeEventListener('mousedown', handleClick)
   }, [contextMenu])
 
+  // Close color picker on outside click
+  useEffect(() => {
+    if (!showColorPicker) return
+    const handleClick = () => setShowColorPicker(false)
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showColorPicker])
+
   // Clear merge highlight on any element
   const clearMergeHighlight = useCallback(() => {
     if (mergeHighlightRef.current) {
@@ -89,15 +98,36 @@ function Window({
   const handleChipClick = useCallback(
     (e) => {
       e.stopPropagation()
-      setColorIndex((prev) => {
-        const next = prev + 1
-        if (next >= LINK_COLORS.length) {
-          removeFromGroup(id)
-          return -1
-        }
-        setColorGroup(id, LINK_COLORS[next].id)
-        return next
-      })
+      if (e.shiftKey) {
+        // Shift+click: cycle through colors (legacy behavior)
+        setColorIndex((prev) => {
+          const next = prev + 1
+          if (next >= LINK_COLORS.length) {
+            removeFromGroup(id)
+            return -1
+          }
+          setColorGroup(id, LINK_COLORS[next].id)
+          return next
+        })
+      } else {
+        // Left-click: toggle color picker dropdown
+        setShowColorPicker((prev) => !prev)
+      }
+    },
+    [id]
+  )
+
+  const handleColorSelect = useCallback(
+    (e, idx) => {
+      e.stopPropagation()
+      if (idx === -1) {
+        removeFromGroup(id)
+        setColorIndex(-1)
+      } else {
+        setColorGroup(id, LINK_COLORS[idx].id)
+        setColorIndex(idx)
+      }
+      setShowColorPicker(false)
     },
     [id]
   )
@@ -306,19 +336,45 @@ function Window({
         onDoubleClick={handleTitleBarDoubleClick}
         onContextMenu={handleContextMenu}
       >
-        <div
-          className="window-color-chip"
-          style={{
-            backgroundColor:
-              colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
-          }}
-          onClick={handleChipClick}
-          title={
-            colorIndex >= 0
-              ? `Linked: ${LINK_COLORS[colorIndex].id} (click to cycle)`
-              : 'Unlinked (click to link)'
-          }
-        />
+        <div className="window-color-chip-wrap">
+          <div
+            className="window-color-chip"
+            style={{
+              backgroundColor:
+                colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
+            }}
+            onClick={handleChipClick}
+            title={
+              colorIndex >= 0
+                ? `Linked: ${LINK_COLORS[colorIndex].id} (click for picker, shift+click to cycle)`
+                : 'Unlinked (click to link)'
+            }
+          />
+          {showColorPicker && (
+            <div
+              className="window-color-picker"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="window-color-picker-swatches">
+                {LINK_COLORS.map((c, i) => (
+                  <div
+                    key={c.id}
+                    className={`window-color-swatch${colorIndex === i ? ' window-color-swatch--active' : ''}`}
+                    style={{ backgroundColor: c.hex }}
+                    onClick={(e) => handleColorSelect(e, i)}
+                    title={c.id}
+                  />
+                ))}
+              </div>
+              <div
+                className="window-color-unlink"
+                onClick={(e) => handleColorSelect(e, -1)}
+              >
+                Unlink
+              </div>
+            </div>
+          )}
+        </div>
         {isPinned && (
           <span className="window-pin-icon" title="Pinned to top">
             📌
