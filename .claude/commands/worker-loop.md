@@ -10,8 +10,13 @@ git branch --show-current
 
 ## Phase 1: Startup
 
-1. Determine your worker ID from branch name
-2. Set status to "running" in worker-status.json:
+1. Set up mac10 CLI:
+```bash
+export PATH="$(pwd)/.claude/scripts:$PATH"
+```
+
+2. Determine your worker ID from branch name
+3. Set status to "running" in worker-status.json:
 ```bash
 bash .claude/scripts/state-lock.sh .claude/state/worker-status.json 'jq ".\"worker-N\".status = \"running\" | .\"worker-N\".last_heartbeat = \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"" .claude/state/worker-status.json > /tmp/ws.json && mv /tmp/ws.json .claude/state/worker-status.json'
 ```
@@ -74,34 +79,33 @@ echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [worker-N] [TEAM_BURST] task=\"[subject]\
 
 ### Step 1: Check for assigned task
 
-Read your task file (written by M2 or M3 before launching you):
+**PRIMARY: Use mac10 CLI to get your assigned task:**
 ```bash
-cat .claude/state/tasks/worker-N.json 2>/dev/null
+mac10 my-task N
 ```
 (Replace N with your worker number.)
 
-**If the file exists and contains a task:**
-1. Parse the task details (subject, description, domain, files, validation, tier, request_id)
-2. Create a local TaskCreate for your own progress tracking:
+This returns the full task JSON from the coordinator database — the single source of truth.
+
+**If mac10 returns a task (JSON with `id`, `subject`, `description`):**
+1. Parse the task details (id, subject, description, domain, files, validation, tier, request_id)
+2. Tell mac10 you're starting:
+   ```bash
+   mac10 start-task N TASK_ID
+   ```
+3. Create a local TaskCreate for your own progress tracking:
    ```
    TaskCreate({
-     subject: "[subject from file]",
-     description: "[description from file]",
+     subject: "[subject from task]",
+     description: "[description from task]",
      activeForm: "Working on [subject]..."
    })
    ```
-3. Remove the task file so you don't re-read it on a future launch:
-   ```bash
-   rm .claude/state/tasks/worker-N.json
-   ```
 4. Proceed to Step 2 (validate domain)
 
-**If the file does NOT exist:** Check worker-status.json as a fallback:
-```bash
-jq -r '.["worker-N"]' .claude/state/worker-status.json
-```
-If your entry shows `status: "assigned"` and `current_task` is set, use that as your task.
-Otherwise → go to **Phase 3 (No-Task Exit)**.
+**If mac10 returns no task or errors:** → go to **Phase 3 (No-Task Exit)**.
+
+**IMPORTANT:** Do NOT read `.claude/state/tasks/worker-N.json` — those files are stale and deprecated. The mac10 coordinator database is the only source of truth for task assignments.
 
 **RESET tasks take absolute priority.** If subject starts with "RESET:":
 1. **Distill first** (Phase 4)
@@ -212,12 +216,13 @@ cat .claude/state/change-summaries.md
 
 1. **Update status:** status="completed_task", last_pr="[URL]", increment tasks_completed
 
-2. **Mark task:** `TaskUpdate(task_id, status="completed")`
-
-3. **Signal Master-3:**
+2. **Mark task as complete in mac10 coordinator:**
 ```bash
-touch .claude/signals/.completion-signal
+mac10 complete-task N TASK_ID PR_URL BRANCH_NAME "Task completed successfully"
 ```
+This notifies the coordinator and Master-2/Master-3 automatically. Replace N with worker number, TASK_ID with the task id from Step 1.
+
+3. **Mark local task:** `TaskUpdate(task_id, status="completed")`
 
 4. **Log completion:**
 ```bash
@@ -245,16 +250,15 @@ SUMMARY'
 
 ### If coming from Phase 2 (just completed a task):
 
-Wait ONCE for a follow-up task assignment (15 seconds):
+Check mac10 for a new assignment (the sentinel/allocator may have assigned another task):
 ```bash
-bash .claude/scripts/signal-wait.sh .claude/signals/.worker-signal 15
-cat .claude/state/tasks/worker-N.json 2>/dev/null
+mac10 my-task N
 ```
 
-**If the task file exists and contains a task:**
+**If mac10 returns a new task:**
 1. Parse the task details
-2. Create a local TaskCreate for your own progress tracking
-3. Remove the task file: `rm .claude/state/tasks/worker-N.json`
+2. Start it: `mac10 start-task N TASK_ID`
+3. Create a local TaskCreate for your own progress tracking
 4. → go back to **Phase 2, Step 2** (validate domain).
 
 **If no task found:**
