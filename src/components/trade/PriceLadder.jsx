@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { subscribeToTicker } from '../../services/mockData'
+import { useTickerData } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -80,7 +80,7 @@ function PriceLadder({ windowId }) {
   const grid = useGridCustomization('priceLadder-' + windowId, COLUMNS)
 
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [data, setData] = useState(null)
+  const { data } = useTickerData(ticker)
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
   const [orderSize, setOrderSize] = useState(settings.defaultSize)
@@ -98,34 +98,36 @@ function PriceLadder({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Subscribe to mock data
+  // Reset centering when ticker changes
   useEffect(() => {
     hasCenteredRef.current = false
-    const unsub = subscribeToTicker(ticker, (newData) => {
-      setData((prev) => {
-        // Flash detection on last trade price change
-        if (prev && newData.lastTrade.price !== prev.lastTrade.price) {
-          const dir = newData.lastTrade.price > prev.lastTrade.price ? 'up' : 'down'
-          const p = newData.lastTrade.price
-          setFlashPrices((fp) => ({ ...fp, [p]: dir }))
-          clearTimeout(flashTimersRef.current[p])
-          flashTimersRef.current[p] = setTimeout(() => {
-            setFlashPrices((fp) => {
-              const next = { ...fp }
-              delete next[p]
-              return next
-            })
-          }, settings.flashDuration)
-        }
-        lastPriceRef.current = newData.lastTrade.price
-        return newData
-      })
-    })
-    return () => {
-      unsub()
-      Object.values(flashTimersRef.current).forEach(clearTimeout)
+  }, [ticker])
+
+  // Flash detection on last trade price change
+  useEffect(() => {
+    if (!data || !data.lastTrade) return
+    const newPrice = data.lastTrade.price
+    const prevPrice = lastPriceRef.current
+    lastPriceRef.current = newPrice
+
+    if (prevPrice !== null && newPrice !== prevPrice) {
+      const dir = newPrice > prevPrice ? 'up' : 'down'
+      setFlashPrices((fp) => ({ ...fp, [newPrice]: dir }))
+      clearTimeout(flashTimersRef.current[newPrice])
+      flashTimersRef.current[newPrice] = setTimeout(() => {
+        setFlashPrices((fp) => {
+          const next = { ...fp }
+          delete next[newPrice]
+          return next
+        })
+      }, settings.flashDuration)
     }
-  }, [ticker, settings.flashDuration])
+  }, [data, settings.flashDuration])
+
+  // Cleanup flash timers on unmount
+  useEffect(() => {
+    return () => Object.values(flashTimersRef.current).forEach(clearTimeout)
+  }, [])
 
   // Center on last trade price
   useEffect(() => {
