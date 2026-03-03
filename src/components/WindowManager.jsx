@@ -17,6 +17,7 @@ import TimeSale from './quotes/TimeSale'
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
 import MarketClock from './scanners/MarketClock'
+import AlertTrigger from './scanners/AlertTrigger'
 import HotkeyManager from './HotkeyManager'
 
 // Placeholder component for windows without a real implementation yet
@@ -47,7 +48,7 @@ const COMPONENT_REGISTRY = {
   // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
-  'alert-trigger': Placeholder,
+  'alert-trigger': AlertTrigger,
   'market-clock': MarketClock,
   // Setup
   'hotkey-config': HotkeyManager,
