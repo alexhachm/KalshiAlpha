@@ -195,3 +195,79 @@
   accent-color: var(--accent-highlight);
   cursor: pointer;
 }
+
+/* Settings divider */
+.chart-settings-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+/* Overlay ticker checkboxes in settings */
+.chart-overlay-tickers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.chart-setting-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.chart-overlay-ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.chart-overlay-ticker-row input[type="checkbox"] {
+  accent-color: var(--accent-highlight);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* Overlay legend bar */
+.chart-overlay-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.chart-overlay-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-overlay-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
+}
+
+.chart-type-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chart-type-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}

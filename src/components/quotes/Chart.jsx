@@ -7,6 +7,7 @@ import {
   emitLinkedMarket,
   getColorGroup,
 } from '../../services/linkBus'
+import ChartSettings from './ChartSettings'
 import './Chart.css'
 
 const TICKERS = [
@@ -29,6 +30,11 @@ const CHART_TYPES = [
   { label: 'Area', value: 'area' },
 ]
 
+const OVERLAY_COLORS = [
+  '#00d2ff', '#ff6b6b', '#ffd93d', '#6bcb77',
+  '#a855f7', '#ff8c42', '#4ecdc4', '#f472b6',
+]
+
 const DEFAULT_SETTINGS = {
   chartType: 'candlestick',
   timeframe: 5,
@@ -37,6 +43,18 @@ const DEFAULT_SETTINGS = {
   upColor: '#00c853',
   downColor: '#ff1744',
   showVolume: true,
+  overlayMode: false,
+  overlayTickers: [],
+}
+
+function normalizeToPercent(candles) {
+  if (!candles.length) return []
+  const base = candles[0].close
+  if (base === 0) return candles.map((c) => ({ time: c.time, value: 0 }))
+  return candles.map((c) => ({
+    time: c.time,
+    value: ((c.close - base) / base) * 100,
+  }))
 }
 
 function loadSettings(windowId) {
@@ -62,11 +80,15 @@ function Chart({ windowId }) {
   const chartRef = useRef(null)
   const mainSeriesRef = useRef(null)
   const volumeSeriesRef = useRef(null)
+  const overlaySeriesRef = useRef([])
+  const basePricesRef = useRef({})
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const [crosshairData, setCrosshairData] = useState(null)
+
+  const overlayTickersKey = (settings.overlayTickers || []).join(',')
 
   // Persist settings
   useEffect(() => {
@@ -96,7 +118,11 @@ function Chart({ windowId }) {
       chartRef.current = null
       mainSeriesRef.current = null
       volumeSeriesRef.current = null
+      overlaySeriesRef.current = []
     }
+
+    const isOverlay = settings.overlayMode
+    const showVol = settings.showVolume && !isOverlay
 
     const chart = createChart(chartContainerRef.current, {
       autoSize: true,
@@ -125,7 +151,7 @@ function Chart({ windowId }) {
       },
       rightPriceScale: {
         borderColor: '#333',
-        scaleMargins: { top: 0.1, bottom: settings.showVolume ? 0.25 : 0.05 },
+        scaleMargins: { top: 0.1, bottom: showVol ? 0.25 : 0.05 },
       },
       timeScale: {
         borderColor: '#333',
@@ -139,78 +165,126 @@ function Chart({ windowId }) {
 
     chartRef.current = chart
 
-    // Create main series based on chart type (lightweight-charts v5 API)
-    let mainSeries
-    if (settings.chartType === 'candlestick') {
-      mainSeries = chart.addSeries(CandlestickSeries, {
-        upColor: settings.upColor,
-        downColor: settings.downColor,
-        borderUpColor: settings.upColor,
-        borderDownColor: settings.downColor,
-        wickUpColor: settings.upColor,
-        wickDownColor: settings.downColor,
+    if (isOverlay) {
+      // --- Overlay mode: percent-normalized line series ---
+      const allTickers = [ticker, ...(settings.overlayTickers || [])]
+      const overlayArr = []
+
+      allTickers.forEach((t, i) => {
+        const candles = generateOHLCV(t, 200, settings.timeframe)
+        if (!candles.length) return
+
+        basePricesRef.current[t] = candles[0].close
+        const normalized = normalizeToPercent(candles)
+
+        const series = chart.addSeries(LineSeries, {
+          color: OVERLAY_COLORS[i % OVERLAY_COLORS.length],
+          lineWidth: i === 0 ? 2 : 1.5,
+          title: t,
+          priceFormat: {
+            type: 'custom',
+            formatter: (p) => p.toFixed(2) + '%',
+            minMove: 0.01,
+          },
+        })
+        series.setData(normalized)
+
+        if (i === 0) {
+          mainSeriesRef.current = series
+        }
+        overlayArr.push({ ticker: t, series })
       })
-    } else if (settings.chartType === 'line') {
-      mainSeries = chart.addSeries(LineSeries, {
-        color: '#00d2ff',
-        lineWidth: 2,
-        crosshairMarkerRadius: 4,
+
+      overlaySeriesRef.current = overlayArr
+
+      // Crosshair for overlay: show % values for each ticker
+      chart.subscribeCrosshairMove((param) => {
+        if (!param.time || !param.seriesData) {
+          setCrosshairData(null)
+          return
+        }
+        const vals = {}
+        overlayArr.forEach(({ ticker: t, series }, i) => {
+          const d = param.seriesData.get(series)
+          if (d) vals[t] = { value: d.value, colorIdx: i }
+        })
+        if (Object.keys(vals).length > 0) {
+          setCrosshairData({ overlay: true, data: vals })
+        }
       })
     } else {
-      // area
-      mainSeries = chart.addSeries(AreaSeries, {
-        topColor: 'rgba(0, 210, 255, 0.4)',
-        bottomColor: 'rgba(0, 210, 255, 0.0)',
-        lineColor: '#00d2ff',
-        lineWidth: 2,
-      })
-    }
-    mainSeriesRef.current = mainSeries
-
-    // Volume series (lightweight-charts v5 API)
-    let volumeSeries = null
-    if (settings.showVolume) {
-      volumeSeries = chart.addSeries(HistogramSeries, {
-        color: '#555',
-        priceFormat: { type: 'volume' },
-        priceScaleId: 'volume',
-      })
-      chart.priceScale('volume').applyOptions({
-        scaleMargins: { top: 0.8, bottom: 0 },
-      })
-      volumeSeriesRef.current = volumeSeries
-    }
-
-    // Load historical data
-    const candles = generateOHLCV(ticker, 200, settings.timeframe)
-
-    if (settings.chartType === 'candlestick') {
-      mainSeries.setData(candles)
-    } else {
-      mainSeries.setData(candles.map((c) => ({ time: c.time, value: c.close })))
-    }
-
-    if (volumeSeries) {
-      volumeSeries.setData(
-        candles.map((c) => ({
-          time: c.time,
-          value: c.volume,
-          color: c.close >= c.open ? 'rgba(0, 200, 83, 0.3)' : 'rgba(255, 23, 68, 0.3)',
-        }))
-      )
-    }
-
-    // Crosshair move handler for data display
-    chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !param.seriesData) {
-        setCrosshairData(null)
-        return
+      // --- Normal mode: candlestick/line/area ---
+      let mainSeries
+      if (settings.chartType === 'candlestick') {
+        mainSeries = chart.addSeries(CandlestickSeries, {
+          upColor: settings.upColor,
+          downColor: settings.downColor,
+          borderUpColor: settings.upColor,
+          borderDownColor: settings.downColor,
+          wickUpColor: settings.upColor,
+          wickDownColor: settings.downColor,
+        })
+      } else if (settings.chartType === 'line') {
+        mainSeries = chart.addSeries(LineSeries, {
+          color: '#00d2ff',
+          lineWidth: 2,
+          crosshairMarkerRadius: 4,
+        })
+      } else {
+        mainSeries = chart.addSeries(AreaSeries, {
+          topColor: 'rgba(0, 210, 255, 0.4)',
+          bottomColor: 'rgba(0, 210, 255, 0.0)',
+          lineColor: '#00d2ff',
+          lineWidth: 2,
+        })
       }
-      const data = param.seriesData.get(mainSeries)
-      if (data) {
-        setCrosshairData(data)
+      mainSeriesRef.current = mainSeries
+
+      // Volume series
+      let volumeSeries = null
+      if (settings.showVolume) {
+        volumeSeries = chart.addSeries(HistogramSeries, {
+          color: '#555',
+          priceFormat: { type: 'volume' },
+          priceScaleId: 'volume',
+        })
+        chart.priceScale('volume').applyOptions({
+          scaleMargins: { top: 0.8, bottom: 0 },
+        })
+        volumeSeriesRef.current = volumeSeries
       }
-    })
+
+      // Load historical data
+      const candles = generateOHLCV(ticker, 200, settings.timeframe)
+
+      if (settings.chartType === 'candlestick') {
+        mainSeries.setData(candles)
+      } else {
+        mainSeries.setData(candles.map((c) => ({ time: c.time, value: c.close })))
+      }
+
+      if (volumeSeries) {
+        volumeSeries.setData(
+          candles.map((c) => ({
+            time: c.time,
+            value: c.volume,
+            color: c.close >= c.open ? 'rgba(0, 200, 83, 0.3)' : 'rgba(255, 23, 68, 0.3)',
+          }))
+        )
+      }
+
+      // Crosshair move handler for data display
+      chart.subscribeCrosshairMove((param) => {
+        if (!param.time || !param.seriesData) {
+          setCrosshairData(null)
+          return
+        }
+        const data = param.seriesData.get(mainSeries)
+        if (data) {
+          setCrosshairData(data)
+        }
+      })
+    }
 
     // Fit content
     chart.timeScale().fitContent()
@@ -220,11 +294,34 @@ function Chart({ windowId }) {
       chartRef.current = null
       mainSeriesRef.current = null
       volumeSeriesRef.current = null
+      overlaySeriesRef.current = []
     }
-  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume])
+  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey])
 
   // Subscribe to real-time updates
   useEffect(() => {
+    if (settings.overlayMode) {
+      const allTickers = [ticker, ...(settings.overlayTickers || [])]
+      const unsubs = []
+
+      allTickers.forEach((t) => {
+        const unsub = subscribeToOHLCV(t, settings.timeframe, (bar) => {
+          const entry = overlaySeriesRef.current.find((o) => o.ticker === t)
+          if (!entry) return
+          const base = basePricesRef.current[t]
+          if (!base) return
+          entry.series.update({
+            time: bar.time,
+            value: ((bar.close - base) / base) * 100,
+          })
+        })
+        unsubs.push(unsub)
+      })
+
+      return () => unsubs.forEach((u) => u())
+    }
+
+    // Normal mode
     const unsub = subscribeToOHLCV(ticker, settings.timeframe, (bar) => {
       if (!mainSeriesRef.current) return
       if (settings.chartType === 'candlestick') {
@@ -241,7 +338,7 @@ function Chart({ windowId }) {
       }
     })
     return unsub
-  }, [ticker, settings.timeframe, settings.chartType])
+  }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey])
 
   // Color link bus integration
   const handleLinkEvent = useCallback(
@@ -266,7 +363,7 @@ function Chart({ windowId }) {
     emitLinkedMarket(windowId, newTicker)
   }
 
-  // Format crosshair data for OHLC display
+  // Format crosshair data for OHLC display (normal mode only)
   const formatOHLC = (d) => {
     if (!d) return null
     if ('open' in d) {
@@ -277,7 +374,8 @@ function Chart({ windowId }) {
     return { value: d.value }
   }
 
-  const ohlc = formatOHLC(crosshairData)
+  const ohlc = crosshairData && !crosshairData.overlay ? formatOHLC(crosshairData) : null
+  const availableTickers = TICKERS.filter((t) => t !== ticker)
 
   return (
     <div ref={outerRef} className="chart-component">
@@ -304,12 +402,20 @@ function Chart({ windowId }) {
           {CHART_TYPES.map((ct) => (
             <button
               key={ct.value}
-              className={`chart-type-btn ${settings.chartType === ct.value ? 'chart-type-btn--active' : ''}`}
+              className={`chart-type-btn ${!settings.overlayMode && settings.chartType === ct.value ? 'chart-type-btn--active' : ''}`}
+              disabled={settings.overlayMode}
               onClick={() => updateSetting('chartType', ct.value)}
             >
               {ct.label}
             </button>
           ))}
+          <button
+            className={`chart-type-btn ${settings.overlayMode ? 'chart-type-btn--active' : ''}`}
+            onClick={() => updateSetting('overlayMode', !settings.overlayMode)}
+            title="Overlay comparison mode"
+          >
+            Overlay
+          </button>
         </div>
 
         <button
@@ -321,7 +427,27 @@ function Chart({ windowId }) {
         </button>
       </div>
 
-      {/* OHLC data bar */}
+      {/* Overlay legend */}
+      {settings.overlayMode && (
+        <div className="chart-overlay-legend">
+          {[ticker, ...(settings.overlayTickers || [])].map((t, i) => (
+            <span key={t} className="chart-overlay-legend-item">
+              <span
+                className="chart-overlay-legend-swatch"
+                style={{ backgroundColor: OVERLAY_COLORS[i % OVERLAY_COLORS.length] }}
+              />
+              <span>{t}</span>
+              {crosshairData?.overlay && crosshairData.data[t] != null && (
+                <span className={crosshairData.data[t].value >= 0 ? 'text-win' : 'text-loss'}>
+                  {crosshairData.data[t].value >= 0 ? '+' : ''}{crosshairData.data[t].value.toFixed(2)}%
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* OHLC data bar (normal mode only) */}
       {ohlc && (
         <div className="chart-ohlc-bar">
           {'o' in ohlc ? (
@@ -344,56 +470,12 @@ function Chart({ windowId }) {
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="chart-settings-panel">
-          <div className="chart-settings-header">
-            <span>Chart Settings</span>
-            <button className="chart-settings-close" onClick={() => setShowSettings(false)}>x</button>
-          </div>
-          <div className="chart-settings-body">
-            <label className="chart-setting-row">
-              <span>Grid Lines</span>
-              <input
-                type="checkbox"
-                checked={settings.showGrid}
-                onChange={(e) => updateSetting('showGrid', e.target.checked)}
-              />
-            </label>
-            <label className="chart-setting-row">
-              <span>Volume</span>
-              <input
-                type="checkbox"
-                checked={settings.showVolume}
-                onChange={(e) => updateSetting('showVolume', e.target.checked)}
-              />
-            </label>
-            <label className="chart-setting-row">
-              <span>Crosshair</span>
-              <select
-                value={settings.crosshairStyle}
-                onChange={(e) => updateSetting('crosshairStyle', e.target.value)}
-              >
-                <option value="normal">Normal</option>
-                <option value="magnet">Magnet</option>
-              </select>
-            </label>
-            <label className="chart-setting-row">
-              <span>Up Color</span>
-              <input
-                type="color"
-                value={settings.upColor}
-                onChange={(e) => updateSetting('upColor', e.target.value)}
-              />
-            </label>
-            <label className="chart-setting-row">
-              <span>Down Color</span>
-              <input
-                type="color"
-                value={settings.downColor}
-                onChange={(e) => updateSetting('downColor', e.target.value)}
-              />
-            </label>
-          </div>
-        </div>
+        <ChartSettings
+          settings={settings}
+          onUpdate={updateSetting}
+          onClose={() => setShowSettings(false)}
+          availableTickers={availableTickers}
+        />
       )}
     </div>
   )
