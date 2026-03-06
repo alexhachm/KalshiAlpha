@@ -66,6 +66,7 @@
 
   /* Layout */
   --menu-bar-height: 26px;
+  --titlebar-height: 32px;
   --window-titlebar-height: 22px;
   --window-min-width: 200px;
   --window-min-height: 150px;
@@ -128,6 +129,9 @@
   /* Titlebar close button */
   --titlebar-close-hover: #e81123;
   --titlebar-close-active: #bf0f1d;
+
+  /* Chip / link indicator */
+  --color-chip-unlinked: #555;
 
   /* Flash animations — vivid but not jarring */
   --flash-win-bg: rgba(62, 207, 142, 0.22);

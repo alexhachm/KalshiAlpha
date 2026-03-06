@@ -133,6 +133,11 @@
   color: var(--text-primary);
 }
 
+.window-close-btn:active {
+  background: color-mix(in srgb, var(--accent-sell) 80%, black);
+  color: var(--text-heading);
+}
+
 .window-body {
   flex: 1;
   overflow: auto;
@@ -152,6 +157,11 @@
 .resize-handle {
   position: absolute;
   z-index: 1;
+  transition: background var(--transition-fast);
+}
+
+.resize-handle:hover {
+  background: color-mix(in srgb, var(--accent-highlight) 12%, transparent);
 }
 
 .resize-n {
@@ -240,10 +250,11 @@
   min-width: 180px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   z-index: 100000;
   padding: var(--spacing-xs) 0;
+  font-family: var(--font-sans);
   font-size: var(--font-size-md);
 }
 
@@ -258,6 +269,10 @@
 .window-context-item:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.window-context-item:active {
+  background: var(--bg-active);
 }
 
 .window-context-item--disabled {
@@ -337,6 +352,10 @@
 .window-tab-detach:hover {
   background: var(--accent-sell);
   color: var(--text-primary);
+}
+
+.window-tab-detach:active {
+  background: color-mix(in srgb, var(--accent-sell) 80%, black);
 }
 
 /* ── Merge target highlight ── */

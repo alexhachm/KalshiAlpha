@@ -10,10 +10,10 @@ const MENU_CONFIG = [
   {
     label: 'Trade',
     items: [
-      { label: 'Montage', type: 'montage' },
-      { label: 'Price Ladder', type: 'price-ladder' },
+      { label: 'Montage', type: 'montage', shortcut: 'Ctrl+M' },
+      { label: 'Price Ladder', type: 'price-ladder', shortcut: 'Ctrl+L' },
       { label: 'Accounts', type: 'accounts' },
-      { label: 'Positions', type: 'positions' },
+      { label: 'Positions', type: 'positions', shortcut: 'Ctrl+P' },
       { label: 'Trade Log', type: 'trade-log' },
       { label: 'Event Log', type: 'event-log' },
       { label: 'Order Book', type: 'order-book' },
@@ -22,7 +22,7 @@ const MENU_CONFIG = [
   {
     label: 'Quotes',
     items: [
-      { label: 'Chart', type: 'chart' },
+      { label: 'Chart', type: 'chart', shortcut: 'Ctrl+K' },
       { label: 'Time/Sale', type: 'time-sale' },
       { label: 'Market Viewer', type: 'market-viewer' },
       { label: 'News/Chat', type: 'news-chat' },
@@ -110,7 +110,10 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
                     handleItemClick(item)
                   }}
                 >
-                  {item.label}
+                  <span className="menu-dropdown-label">{item.label}</span>
+                  {item.shortcut && (
+                    <span className="menu-dropdown-shortcut">{item.shortcut}</span>
+                  )}
                 </div>
               ))}
             </div>
