@@ -76,7 +76,7 @@
 }
 
 .mv-price-value {
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   font-family: var(--font-mono);
 }
@@ -222,4 +222,81 @@
 .mv-search-loading:hover,
 .mv-search-empty:hover {
   background: transparent;
+}
+
+/* ── Streaming quote flash animations ── */
+.mv-flash-up {
+  animation: mv-flash-green 0.5s ease-out;
+}
+
+.mv-flash-down {
+  animation: mv-flash-red 0.5s ease-out;
+}
+
+@keyframes mv-flash-green {
+  0% { background: color-mix(in srgb, var(--accent-win) 25%, transparent); }
+  100% { background: transparent; }
+}
+
+@keyframes mv-flash-red {
+  0% { background: color-mix(in srgb, var(--accent-loss) 25%, transparent); }
+  100% { background: transparent; }
+}
+
+/* ── Ask price (complement to mv-bid-price) ── */
+.mv-ask-price {
+  color: var(--accent-sell);
+}
+
+/* ── Spread display ── */
+.mv-spread {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.mv-spread-value {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ── Depth bar visualization ── */
+.mv-depth-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.mv-depth-bar--bid {
+  right: 0;
+  background: var(--accent-buy);
+}
+
+.mv-depth-bar--ask {
+  left: 0;
+  background: var(--accent-sell);
+}
+
+/* ── Volume / change columns ── */
+.mv-change--positive {
+  color: var(--accent-win);
+}
+
+.mv-change--negative {
+  color: var(--accent-loss);
+}
+
+.mv-volume {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* ── Depth table row with relative position for depth bars ── */
+.mv-depth-table tbody tr {
+  position: relative;
 }

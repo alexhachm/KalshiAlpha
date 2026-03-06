@@ -275,3 +275,79 @@
   background: var(--border-color);
   margin: var(--spacing-xs) 0;
 }
+
+/* ── Tab bar for merged / multi-tool windows ── */
+.window-tab-bar {
+  display: flex;
+  align-items: stretch;
+  height: 26px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.window-tab-bar::-webkit-scrollbar {
+  height: 0;
+}
+
+.window-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-md);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-right: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.window-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.window-tab--active {
+  color: var(--accent-highlight);
+  background: var(--bg-tertiary);
+  box-shadow: inset 0 -2px 0 var(--accent-highlight);
+}
+
+.window-tab-label {
+  pointer-events: none;
+}
+
+.window-tab-detach {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.window-tab-detach:hover {
+  background: var(--accent-sell);
+  color: var(--text-primary);
+}
+
+/* ── Merge target highlight ── */
+.window--merge-target {
+  outline: 2px solid var(--accent-highlight);
+  outline-offset: -2px;
+  box-shadow: var(--shadow-glow-highlight);
+}
+
+/* ── Linked color chip glow ── */
+.window-color-chip--linked {
+  box-shadow: 0 0 6px currentColor;
+  border-color: transparent;
+}
