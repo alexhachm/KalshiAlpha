@@ -26,5 +26,11 @@
     "context_budget": 0,
     "claimed_by": null,
     "last_heartbeat": null
+  },
+  "worker-4": {
+    "status": "busy",
+    "last_heartbeat": "2026-03-06T22:59:03Z",
+    "current_task": "Fix merge conflict: agent-4 CRLF unstaged changes (PR #71)",
+    "domain": "frontend"
   }
 }
