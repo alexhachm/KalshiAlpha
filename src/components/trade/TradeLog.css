@@ -103,7 +103,7 @@
 
 .tl-filter-active {
   background: var(--accent-highlight);
-  color: #fff;
+  color: var(--bg-primary);
   border-color: var(--accent-highlight);
 }
 
@@ -157,7 +157,7 @@
 .tl-td {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   white-space: nowrap;
-  border-bottom: 1px solid var(--border-subtle, rgba(51, 51, 51, 0.4));
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .tl-align-left   { text-align: left; }
@@ -171,11 +171,11 @@
 }
 
 .tl-row:nth-child(even) .tl-td {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .tl-row:hover .tl-td {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 .tl-row-selected .tl-td {

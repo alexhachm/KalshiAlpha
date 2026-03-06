@@ -79,7 +79,7 @@
 
 /* Drag-over highlight */
 .drag-over {
-  background: rgba(0, 210, 255, 0.15);
+  background: color-mix(in srgb, var(--accent-highlight) 12%, transparent);
   border-left: 2px solid var(--accent-highlight);
 }
 
@@ -112,17 +112,17 @@
 .pl-row {
   display: flex;
   align-items: center;
-  height: 20px;
-  border-bottom: 1px solid rgba(51, 51, 51, 0.3);
+  height: 18px;
+  border-bottom: 1px solid var(--border-subtle);
   transition: background 0.1s;
 }
 
 .pl-row:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-hover);
 }
 
 .pl-row--last {
-  background: rgba(0, 210, 255, 0.08);
+  background: color-mix(in srgb, var(--accent-highlight) 6%, transparent);
   border-top: 1px solid var(--accent-highlight);
   border-bottom: 1px solid var(--accent-highlight);
 }
@@ -137,12 +137,12 @@
 }
 
 @keyframes pl-flash-green {
-  0% { background: rgba(0, 255, 0, 0.25); }
+  0% { background: color-mix(in srgb, var(--accent-win) 20%, transparent); }
   100% { background: transparent; }
 }
 
 @keyframes pl-flash-red {
-  0% { background: rgba(255, 68, 68, 0.25); }
+  0% { background: color-mix(in srgb, var(--accent-loss) 20%, transparent); }
   100% { background: transparent; }
 }
 
@@ -160,7 +160,7 @@
 }
 
 .pl-cell-bid:hover {
-  background: rgba(0, 255, 0, 0.08);
+  background: color-mix(in srgb, var(--accent-win) 8%, transparent);
 }
 
 .pl-cell-price {
@@ -186,7 +186,7 @@
 }
 
 .pl-cell-ask:hover {
-  background: rgba(255, 68, 68, 0.08);
+  background: color-mix(in srgb, var(--accent-loss) 8%, transparent);
 }
 
 .pl-cell-volume {
@@ -214,7 +214,7 @@
   position: absolute;
   top: 0;
   height: 100%;
-  opacity: 0.2;
+  opacity: 0.12;
 }
 
 .pl-volume-bid {
@@ -238,12 +238,12 @@
 }
 
 .pl-order-bid {
-  background: rgba(0, 255, 0, 0.2);
+  background: color-mix(in srgb, var(--accent-win) 15%, transparent);
   color: var(--accent-win);
 }
 
 .pl-order-ask {
-  background: rgba(255, 68, 68, 0.2);
+  background: color-mix(in srgb, var(--accent-loss) 15%, transparent);
   color: var(--accent-loss);
 }
 

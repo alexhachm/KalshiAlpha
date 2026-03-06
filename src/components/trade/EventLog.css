@@ -99,11 +99,11 @@
 }
 
 .el-entry:nth-child(even) {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .el-entry:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 .el-entry--error {
