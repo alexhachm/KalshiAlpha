@@ -51,15 +51,15 @@
 }
 
 .hk-btn--accent {
-  background: var(--accent-primary, #3b82f6);
-  color: #fff;
+  background: var(--accent-highlight);
+  color: var(--bg-primary);
   border-color: transparent;
 }
 
 .hk-btn--accent:hover {
   opacity: 0.85;
-  background: var(--accent-primary, #3b82f6);
-  color: #fff;
+  background: var(--accent-highlight);
+  color: var(--bg-primary);
 }
 
 .hk-btn--accent:disabled {
@@ -69,8 +69,8 @@
 
 .hk-error {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: rgba(239, 68, 68, 0.15);
-  color: var(--accent-sell, #ef4444);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+  color: var(--accent-sell);
   font-size: var(--font-size-sm, 11.5px);
   flex-shrink: 0;
 }
@@ -120,16 +120,16 @@
   gap: var(--spacing-xs, 4px);
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   cursor: pointer;
-  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid var(--border-subtle);
   transition: background var(--transition-fast, 150ms ease);
 }
 
 .hk-binding-row:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .hk-binding-row--selected {
-  background: var(--bg-selected, rgba(59, 130, 246, 0.15));
+  background: color-mix(in srgb, var(--accent-highlight) 15%, transparent);
 }
 
 .hk-binding-check {
@@ -140,7 +140,7 @@
 .hk-binding-key {
   font-size: var(--font-size-sm, 11.5px);
   font-weight: 600;
-  color: var(--accent-primary, #3b82f6);
+  color: var(--accent-highlight);
   white-space: nowrap;
   min-width: 60px;
 }
@@ -173,7 +173,7 @@
 }
 
 .hk-binding-delete:hover {
-  color: var(--accent-sell, #ef4444);
+  color: var(--accent-sell);
 }
 
 .hk-empty {
@@ -226,8 +226,8 @@
 
 .hk-key-input:focus,
 .hk-key-input--capturing {
-  border-color: var(--accent-primary, #3b82f6);
-  box-shadow: 0 0 0 1px var(--accent-primary, #3b82f6);
+  border-color: var(--accent-highlight);
+  box-shadow: 0 0 0 1px var(--accent-highlight);
 }
 
 .hk-text-input {
@@ -242,7 +242,7 @@
 
 .hk-text-input:focus {
   outline: none;
-  border-color: var(--accent-primary, #3b82f6);
+  border-color: var(--accent-highlight);
 }
 
 .hk-script-input {
@@ -260,7 +260,7 @@
 
 .hk-script-input:focus {
   outline: none;
-  border-color: var(--accent-primary, #3b82f6);
+  border-color: var(--accent-highlight);
 }
 
 .hk-validation {
@@ -269,16 +269,16 @@
 }
 
 .hk-validation--ok {
-  color: var(--accent-buy, #22c55e);
+  color: var(--accent-buy);
 }
 
 .hk-validation--err {
-  color: var(--accent-sell, #ef4444);
+  color: var(--accent-sell);
 }
 
 .hk-warning {
   font-size: var(--font-size-sm, 11.5px);
-  color: #f59e0b;
+  color: var(--accent-warning);
   padding: 2px 0;
 }
 
@@ -321,7 +321,7 @@
 }
 
 .hk-help-header:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .hk-help-toggle {
@@ -362,7 +362,7 @@
 
 .hk-help-cmd-name {
   font-weight: 600;
-  color: var(--accent-primary, #3b82f6);
+  color: var(--accent-highlight);
   font-size: var(--font-size-md, 13px);
 }
 
@@ -388,7 +388,7 @@
 .hk-help-example {
   font-size: var(--font-size-xs, 10px);
   color: var(--text-muted);
-  background: var(--bg-tertiary, rgba(255, 255, 255, 0.04));
+  background: var(--bg-tertiary);
   padding: 2px var(--spacing-xs, 4px);
   border-radius: var(--radius-sm, 3px);
   font-family: var(--font-mono);
@@ -408,7 +408,7 @@
 
 .hk-help-var-name {
   font-weight: 600;
-  color: var(--accent-primary, #3b82f6);
+  color: var(--accent-highlight);
   font-size: var(--font-size-sm, 11.5px);
   min-width: 50px;
 }

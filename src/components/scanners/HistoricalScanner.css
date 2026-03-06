@@ -292,13 +292,13 @@
 }
 
 .hs-cell-ticker .scanner-ticker-link {
-  color: #4da6ff;
+  color: var(--accent-highlight);
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: color var(--transition-fast), filter var(--transition-fast);
 }
 
 .hs-cell-ticker .scanner-ticker-link:hover {
-  color: #6db8ff;
+  filter: brightness(1.2);
   text-decoration: underline;
 }
 

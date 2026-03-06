@@ -53,7 +53,7 @@
 .chart-tf-btn--active {
   color: var(--accent-highlight);
   border-color: var(--accent-highlight);
-  background: rgba(0, 210, 255, 0.1);
+  background: color-mix(in srgb, var(--accent-highlight) 10%, transparent);
 }
 
 .chart-type-btns {
@@ -81,7 +81,7 @@
 .chart-type-btn--active {
   color: var(--accent-highlight);
   border-color: var(--accent-highlight);
-  background: rgba(0, 210, 255, 0.1);
+  background: color-mix(in srgb, var(--accent-highlight) 10%, transparent);
 }
 
 .chart-settings-btn {
@@ -132,7 +132,7 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--bg-primary) 80%, transparent);
   z-index: 10;
 }
 
