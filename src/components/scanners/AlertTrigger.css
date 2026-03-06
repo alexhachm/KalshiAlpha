@@ -125,7 +125,7 @@
 .at-td {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   white-space: nowrap;
-  border-bottom: 1px solid var(--border-subtle, rgba(51, 51, 51, 0.4));
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .at-align-left { text-align: left; }
@@ -138,11 +138,11 @@
 }
 
 .at-row:nth-child(even) .at-td {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .at-row:hover .at-td {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 /* Enabled/Disabled toggle */
@@ -161,13 +161,13 @@
 }
 
 .at-toggle-on {
-  color: var(--accent-buy, #26a69a);
-  border-color: var(--accent-buy, #26a69a);
+  color: var(--accent-buy);
+  border-color: var(--accent-buy);
 }
 
 .at-toggle-off {
-  color: var(--accent-sell, #ef5350);
-  border-color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
+  border-color: var(--accent-sell);
 }
 
 .at-toggle-btn:hover {
@@ -187,7 +187,7 @@
 }
 
 .at-delete-btn:hover {
-  color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
 }
 
 /* Clear history button */
@@ -220,13 +220,13 @@
 
 .at-add-form input,
 .at-add-form select {
-  background: var(--bg-tertiary);
+  background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   padding: 3px 6px;
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
 }
 
 .at-add-form input:focus,
@@ -244,17 +244,17 @@
 }
 
 .at-add-btn {
-  background: var(--accent-highlight, #42a5f5);
-  color: #000;
+  background: var(--accent-highlight);
+  color: var(--bg-primary);
   border: none;
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-sm);
   padding: 3px 10px;
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity var(--transition-fast, 150ms ease);
+  transition: opacity var(--transition-fast);
 }
 
 .at-add-btn:hover {
@@ -269,8 +269,8 @@
   font-size: var(--font-size-xs, 10.5px);
   font-weight: 700;
   letter-spacing: 0.5px;
-  background: color-mix(in srgb, var(--accent-highlight, #42a5f5) 15%, transparent);
-  color: var(--accent-highlight, #42a5f5);
+  background: color-mix(in srgb, var(--accent-highlight) 15%, transparent);
+  color: var(--accent-highlight);
 }
 
 /* Alert flash animation */
@@ -279,7 +279,7 @@
 }
 
 @keyframes at-flash {
-  0% { background: color-mix(in srgb, var(--accent-warning, #ffa726) 35%, transparent); }
+  0% { background: color-mix(in srgb, var(--accent-warning) 35%, transparent); }
   100% { background: transparent; }
 }
 
@@ -302,7 +302,7 @@
 .at-settings-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: color-mix(in srgb, var(--bg-primary) 60%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,7 +316,7 @@
   width: 320px;
   max-height: 90%;
   overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--bg-primary) 80%, transparent);
 }
 
 .at-settings-header {
@@ -359,14 +359,14 @@
   flex: 1;
   padding: 6px 8px;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   cursor: pointer;
-  background: var(--accent-win, #26a69a);
-  color: #000;
-  transition: opacity 0.15s;
+  background: var(--accent-win);
+  color: var(--bg-primary);
+  transition: opacity var(--transition-fast);
 }
 
 .at-btn-save:hover { opacity: 0.85; }
@@ -375,14 +375,14 @@
   flex: 1;
   padding: 6px 8px;
   border: 1px solid var(--border-color);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   cursor: pointer;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
 }
 
 .at-btn-cancel:hover { opacity: 0.85; }
