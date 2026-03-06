@@ -1,12 +1,12 @@
 {
   "worker-1": {
-    "status": "idle",
-    "domain": null,
-    "current_task": null,
+    "status": "busy",
+    "domain": "frontend",
+    "current_task": "Foundation: overhaul index.css design tokens",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": null
+    "last_heartbeat": "2026-03-06T21:04:38Z"
   },
   "worker-2": {
     "status": "idle",

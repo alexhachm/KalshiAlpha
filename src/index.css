@@ -1,57 +1,68 @@
 :root {
-  /* Core backgrounds */
-  --bg-primary: #0b0e11;
-  --bg-secondary: #141820;
-  --bg-tertiary: #1c2230;
-  --bg-hover: #232b3a;
-  --bg-active: #2a3446;
-  --bg-input: #0f1318;
-  --bg-row-alt: #111720;
+  /* Core backgrounds — deep blue-black palette for trading terminal density */
+  --bg-primary: #060910;
+  --bg-secondary: #0d1119;
+  --bg-tertiary: #151c28;
+  --bg-hover: #1c2538;
+  --bg-active: #243044;
+  --bg-input: #080c12;
+  --bg-row-alt: #0a0f17;
 
-  /* Text — all pass WCAG AA on --bg-primary */
-  --text-primary: #c8ccd4;
-  --text-heading: #dfe3eb;
-  --text-secondary: #8891a0;
-  --text-muted: #5c6370;
+  /* Surface & elevation layers (NEW) */
+  --bg-surface: #101520;
+  --bg-elevated: #1a2332;
+  --bg-overlay: rgba(2, 4, 8, 0.82);
 
-  /* Accents */
-  --accent-win: #4a9e7d;
-  --accent-loss: #c45151;
-  --accent-highlight: #c9a84c;
-  --accent-buy: #4a9e7d;
-  --accent-sell: #c45151;
-  --accent-warning: #d4943a;
-  --accent-info: #5c7a99;
-  --accent-neutral: #6b7280;
+  /* Text — crisp contrast hierarchy, all pass WCAG AA on --bg-primary */
+  --text-primary: #cdd1da;
+  --text-heading: #e8ecf4;
+  --text-secondary: #7c8698;
+  --text-muted: #4e5869;
 
-  /* Borders */
-  --border-color: #1f2733;
-  --border-subtle: #181e28;
-  --border-focus: #c9a84c;
+  /* Text extras (NEW) */
+  --text-label: #5a657a;
+  --text-accent: #d4a853;
 
-  /* Typography */
+  /* Accents — refined, non-saturated trading palette */
+  --accent-win: #3ecf8e;
+  --accent-loss: #e05c5c;
+  --accent-highlight: #d4a853;
+  --accent-buy: #3ecf8e;
+  --accent-sell: #e05c5c;
+  --accent-warning: #e5952e;
+  --accent-info: #5490d4;
+  --accent-neutral: #656e80;
+
+  /* Borders — subtle blue-tinted separators */
+  --border-color: #1a2233;
+  --border-subtle: #111827;
+  --border-focus: #d4a853;
+  --border-active: #2a3a55;
+
+  /* Typography — tightened for data density */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-  --font-size-xs: 10px;
-  --font-size-sm: 11px;
-  --font-size-md: 12px;
-  --font-size-lg: 13px;
-  --font-size-xl: 14.5px;
+  --font-size-xs: 9.5px;
+  --font-size-sm: 10.5px;
+  --font-size-md: 11.5px;
+  --font-size-lg: 12.5px;
+  --font-size-xl: 14px;
 
-  /* Spacing */
+  /* Spacing — compact but breathable */
   --spacing-xs: 2px;
   --spacing-sm: 4px;
-  --spacing-md: 8px;
-  --spacing-lg: 12px;
-  --spacing-xl: 16px;
+  --spacing-md: 6px;
+  --spacing-lg: 10px;
+  --spacing-xl: 14px;
 
-  /* Radii */
+  /* Radii — sharp, precise edges */
   --radius-sm: 2px;
   --radius-md: 3px;
+  --radius-lg: 5px;
 
-  /* Transitions */
-  --transition-fast: 100ms ease;
-  --transition-normal: 180ms ease;
+  /* Transitions — snappy, responsive feel */
+  --transition-fast: 80ms ease;
+  --transition-normal: 150ms ease;
 
   /* Layout */
   --menu-bar-height: 26px;
@@ -101,22 +112,31 @@
   --settings-width: 500px;
   --settings-height: 450px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.6);
-  --shadow-chip: 0 0 4px rgba(0, 0, 0, 0.4);
-  --overlay-bg: rgba(0, 0, 0, 0.6);
+  /* Shadows — deep, dramatic with subtle blue-black cast */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 10, 30, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 5, 20, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 5, 20, 0.4);
+  --shadow-chip: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --overlay-bg: rgba(2, 4, 8, 0.8);
+
+  /* Glow effects (NEW) */
+  --shadow-glow-win: 0 0 12px rgba(62, 207, 142, 0.3);
+  --shadow-glow-loss: 0 0 12px rgba(224, 92, 92, 0.3);
+  --shadow-glow-highlight: 0 0 12px rgba(212, 168, 83, 0.25);
+  --shadow-glow-info: 0 0 10px rgba(84, 144, 212, 0.2);
 
   /* Titlebar close button */
   --titlebar-close-hover: #e81123;
   --titlebar-close-active: #bf0f1d;
 
-  /* Flash animations */
-  --flash-win-bg: rgba(74, 158, 125, 0.3);
-  --flash-loss-bg: rgba(196, 81, 81, 0.3);
+  /* Flash animations — vivid but not jarring */
+  --flash-win-bg: rgba(62, 207, 142, 0.22);
+  --flash-loss-bg: rgba(224, 92, 92, 0.22);
 
   /* Scrollbar */
-  --scrollbar-thumb-hover: #3a4a60;
+  --scrollbar-thumb: #1e2a3c;
+  --scrollbar-thumb-hover: #2e3d55;
+  --scrollbar-track: var(--bg-primary);
 
   /* Context menu */
   --context-menu-bg: var(--bg-secondary);
@@ -130,35 +150,46 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden; /* App feel */
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar — thin, unobtrusive */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--scrollbar-track, var(--bg-primary));
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-active);
+  background: var(--scrollbar-thumb, var(--bg-active));
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
+::-webkit-scrollbar-corner {
+  background: var(--bg-primary);
+}
 
+/* Utility classes */
 .mono {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .text-win { color: var(--accent-win); }
 .text-loss { color: var(--accent-loss); }
 .text-muted { color: var(--text-muted); }
+.text-label { color: var(--text-label); }
+.text-accent { color: var(--text-accent); }
 
-/* Animation Utility */
+/* Animation Utility — flash on price change */
 @keyframes flash-green {
   0% { background-color: var(--flash-win-bg); }
   100% { background-color: transparent; }
@@ -169,9 +200,14 @@ body {
   100% { background-color: transparent; }
 }
 
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .flash-up {
-  animation: flash-green 0.5s ease-out;
+  animation: flash-green 0.4s ease-out;
 }
 .flash-down {
-  animation: flash-red 0.5s ease-out;
+  animation: flash-red 0.4s ease-out;
 }
