@@ -1,66 +1,66 @@
 :root {
   /* Core backgrounds */
-  --bg-primary: #121212;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #2a2a2a;
-  --bg-hover: #2a2f2a;
-  --bg-active: #333838;
-  --bg-input: #1a1a1a;
-  --bg-row-alt: #1a1d1a;
+  --bg-primary: #0b0e11;
+  --bg-secondary: #141820;
+  --bg-tertiary: #1c2230;
+  --bg-hover: #232b3a;
+  --bg-active: #2a3446;
+  --bg-input: #0f1318;
+  --bg-row-alt: #111720;
 
   /* Text — all pass WCAG AA on --bg-primary */
-  --text-primary: #e0e0e0;
-  --text-heading: #f0f0f0;
-  --text-secondary: #a0a0a0;
-  --text-muted: #8a8a8a;
+  --text-primary: #c8ccd4;
+  --text-heading: #dfe3eb;
+  --text-secondary: #8891a0;
+  --text-muted: #5c6370;
 
   /* Accents */
-  --accent-win: #26a69a;
-  --accent-loss: #ef5350;
-  --accent-highlight: #4fc3f7;
-  --accent-buy: #26a69a;
-  --accent-sell: #ef5350;
-  --accent-warning: #ffa726;
-  --accent-info: #4fc3f7;
-  --accent-neutral: #78909c;
+  --accent-win: #4a9e7d;
+  --accent-loss: #c45151;
+  --accent-highlight: #c9a84c;
+  --accent-buy: #4a9e7d;
+  --accent-sell: #c45151;
+  --accent-warning: #d4943a;
+  --accent-info: #5c7a99;
+  --accent-neutral: #6b7280;
 
   /* Borders */
-  --border-color: #333333;
-  --border-subtle: #282828;
-  --border-focus: #4fc3f7;
+  --border-color: #1f2733;
+  --border-subtle: #181e28;
+  --border-focus: #c9a84c;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Roboto Mono', 'SF Mono', Consolas, monospace;
-  --font-size-xs: 10.5px;
-  --font-size-sm: 11.5px;
-  --font-size-md: 13px;
-  --font-size-lg: 14.5px;
-  --font-size-xl: 16px;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-md: 12px;
+  --font-size-lg: 13px;
+  --font-size-xl: 14.5px;
 
   /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
+  --spacing-xs: 2px;
+  --spacing-sm: 4px;
+  --spacing-md: 8px;
+  --spacing-lg: 12px;
+  --spacing-xl: 16px;
 
   /* Radii */
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
 
   /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  --transition-fast: 100ms ease;
+  --transition-normal: 180ms ease;
 
   /* Layout */
-  --menu-bar-height: 30px;
-  --window-titlebar-height: 26px;
+  --menu-bar-height: 26px;
+  --window-titlebar-height: 22px;
   --window-min-width: 200px;
   --window-min-height: 150px;
   --window-default-width: 400px;
   --window-default-height: 300px;
-  --resize-handle-size: 6px;
+  --resize-handle-size: 4px;
   --cascade-offset: 30px;
 
   /* Component-specific defaults */
@@ -119,18 +119,18 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: 4px;
+  background: #2a3446;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: #3a4a60;
 }
 
 .mono {
@@ -143,12 +143,12 @@ body {
 
 /* Animation Utility */
 @keyframes flash-green {
-  0% { background-color: rgba(38, 166, 154, 0.3); }
+  0% { background-color: rgba(74, 158, 125, 0.3); }
   100% { background-color: transparent; }
 }
 
 @keyframes flash-red {
-  0% { background-color: rgba(239, 83, 80, 0.3); }
+  0% { background-color: rgba(196, 81, 81, 0.3); }
   100% { background-color: transparent; }
 }
 
