@@ -29,7 +29,7 @@
   height: 12px;
   margin-right: var(--spacing-sm);
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   border: 1px solid var(--border-subtle);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -54,16 +54,16 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 6px;
-  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
   min-width: 104px;
 }
 
 .window-color-picker-swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .window-color-swatch {
@@ -72,7 +72,7 @@
   border-radius: 50%;
   cursor: pointer;
   border: 1px solid var(--border-subtle);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .window-color-swatch:hover {
@@ -86,13 +86,13 @@
 }
 
 .window-color-unlink {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   color: var(--text-secondary);
   cursor: pointer;
   text-align: center;
-  padding: 2px 0;
+  padding: var(--spacing-xs) 0;
   border-top: 1px solid var(--border-subtle);
-  transition: color 0.1s;
+  transition: color var(--transition-fast);
 }
 
 .window-color-unlink:hover {
@@ -101,7 +101,7 @@
 
 .window-title {
   flex: 1;
-  font-size: 10.5px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -120,7 +120,7 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 2px;
+  padding: var(--spacing-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,7 +229,7 @@
 }
 
 .window-pin-icon {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   margin-right: var(--spacing-xs);
   flex-shrink: 0;
 }
@@ -241,14 +241,14 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   z-index: 100000;
   padding: var(--spacing-xs) 0;
   font-size: var(--font-size-md);
 }
 
 .window-context-item {
-  padding: 6px var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
   cursor: pointer;
   color: var(--text-secondary);
   white-space: nowrap;
