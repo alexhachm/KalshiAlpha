@@ -211,3 +211,202 @@ body {
 .flash-down {
   animation: flash-red 0.4s ease-out;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Loading Skeletons — shimmer animation for data panels
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-line {
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-block {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-hover) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-sm);
+}
+
+.skeleton-row .skeleton-line {
+  flex: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Empty States — centered message with optional icon
+   ═══════════════════════════════════════════════════════════════ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  height: 100%;
+  min-height: 60px;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+  font-family: var(--font-mono);
+}
+
+.empty-state-icon {
+  font-size: 20px;
+  opacity: 0.4;
+  line-height: 1;
+}
+
+.empty-state-text {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Toast Notifications — slide-in from top-right, auto-dismiss
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes toast-slide-in {
+  0% { transform: translateX(110%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes toast-slide-out {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+
+.toast-container {
+  position: fixed;
+  top: calc(var(--menu-bar-height) + var(--spacing-md));
+  right: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 200px;
+  max-width: 320px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  animation: toast-slide-in 0.25s ease-out;
+}
+
+.toast--dismissing {
+  animation: toast-slide-out 0.2s ease-in forwards;
+}
+
+.toast--info {
+  border-left: 3px solid var(--accent-info);
+}
+
+.toast--success {
+  border-left: 3px solid var(--accent-win);
+}
+
+.toast--warning {
+  border-left: 3px solid var(--accent-warning);
+}
+
+.toast--error {
+  border-left: 3px solid var(--accent-loss);
+}
+
+.toast-title {
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-heading);
+}
+
+.toast-message {
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Connection Status Indicator — pulsing dot with state variants
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes connection-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.connection-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connection-dot--connected {
+  background: var(--accent-win);
+  box-shadow: 0 0 4px rgba(62, 207, 142, 0.5);
+}
+
+.connection-dot--disconnected {
+  background: var(--accent-loss);
+  box-shadow: 0 0 4px rgba(224, 92, 92, 0.5);
+}
+
+.connection-dot--reconnecting {
+  background: var(--accent-warning);
+  box-shadow: 0 0 4px rgba(229, 149, 46, 0.5);
+  animation: connection-pulse 1.2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Latency Indicator — color-coded latency display
+   ═══════════════════════════════════════════════════════════════ */
+
+.latency-indicator {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.latency--good { color: var(--accent-win); }
+.latency--fair { color: var(--accent-warning); }
+.latency--poor { color: var(--accent-loss); }

@@ -298,6 +298,22 @@
   border-color: var(--border-focus);
 }
 
+/* Spread row — visual gap between best bid and best ask */
+.pl-row--spread {
+  background: color-mix(in srgb, var(--accent-highlight) 4%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--accent-highlight) 25%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent-highlight) 25%, transparent);
+}
+
+.pl-spread-label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 /* Loading state */
 .pl-loading {
   display: flex;

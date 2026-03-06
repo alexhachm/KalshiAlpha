@@ -236,3 +236,22 @@
   border-top: 1px solid var(--border-color);
   margin: var(--spacing-sm) 0;
 }
+
+/* Flash animation on new trades */
+@keyframes ts-flash-buy {
+  0% { background: color-mix(in srgb, var(--accent-win) 22%, transparent); }
+  100% { background: transparent; }
+}
+
+@keyframes ts-flash-sell {
+  0% { background: color-mix(in srgb, var(--accent-loss) 22%, transparent); }
+  100% { background: transparent; }
+}
+
+.ts-row--flash-buy {
+  animation: ts-flash-buy 0.5s ease-out;
+}
+
+.ts-row--flash-sell {
+  animation: ts-flash-sell 0.5s ease-out;
+}
