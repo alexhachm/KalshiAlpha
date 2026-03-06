@@ -9,8 +9,8 @@
 .ts-toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 1px 2px;
+  gap: var(--spacing-xs);
+  padding: 1px var(--spacing-xs);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
@@ -21,22 +21,22 @@
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 2px 6px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs) var(--spacing-md);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-md);
   cursor: pointer;
 }
 
 .ts-trade-count {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
 
 .ts-toolbar-right {
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-xs);
   margin-left: auto;
 }
 
@@ -45,10 +45,10 @@
   color: var(--text-secondary);
   border: none;
   cursor: pointer;
-  font-size: 12px;
-  padding: 2px 5px;
-  border-radius: 3px;
-  transition: all 0.15s;
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
 }
 
 .ts-btn:hover {
@@ -63,13 +63,13 @@
 /* Column header */
 .ts-header {
   display: flex;
-  padding: 1px 2px;
+  padding: 1px var(--spacing-xs);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   font-family: var(--font-mono);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 10px;
+  font-size: var(--font-size-sm);
   flex-shrink: 0;
   user-select: none;
   overflow: hidden;
@@ -94,9 +94,9 @@
 /* Trade row */
 .ts-row {
   display: flex;
-  padding: 0px 2px;
+  padding: 0 var(--spacing-xs);
   border-bottom: 1px solid var(--border-subtle);
-  transition: background 0.1s;
+  transition: background var(--transition-fast);
   line-height: 1.2;
 }
 
@@ -163,7 +163,7 @@
   justify-content: center;
   height: 100%;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--font-size-lg);
 }
 
 /* Settings panel overlay */
@@ -174,8 +174,8 @@
   width: 200px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--bg-primary) 80%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   z-index: 10;
 }
 
@@ -183,9 +183,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 10px;
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
-  font-size: 11px;
+  font-size: var(--font-size-md);
   color: var(--text-primary);
 }
 
@@ -194,8 +194,8 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 13px;
-  padding: 0 4px;
+  font-size: var(--font-size-lg);
+  padding: 0 var(--spacing-sm);
 }
 
 .ts-settings-close:hover {
@@ -203,15 +203,15 @@
 }
 
 .ts-settings-body {
-  padding: 8px 10px;
+  padding: var(--spacing-lg) var(--spacing-lg);
 }
 
 .ts-setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
-  font-size: 11px;
+  padding: var(--spacing-sm) 0;
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
 }
 
@@ -220,9 +220,9 @@
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 1px 4px;
-  font-size: 10px;
+  border-radius: var(--radius-md);
+  padding: 1px var(--spacing-sm);
+  font-size: var(--font-size-sm);
   font-family: var(--font-mono);
   text-align: right;
 }
@@ -234,5 +234,5 @@
 
 .ts-settings-divider {
   border-top: 1px solid var(--border-color);
-  margin: 4px 0;
+  margin: var(--spacing-sm) 0;
 }

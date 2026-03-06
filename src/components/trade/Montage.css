@@ -24,8 +24,8 @@
   background: var(--bg-tertiary);
   color: var(--accent-highlight);
   border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 4px 6px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   font-family: var(--font-mono);
   font-size: inherit;
   font-weight: 600;
@@ -46,13 +46,13 @@
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-md);
   box-sizing: border-box;
 }
 
 .mt-search-input:focus {
   outline: none;
-  border-color: var(--border-focus, var(--accent-highlight));
+  border-color: var(--border-focus);
 }
 
 .mt-search-results {
@@ -64,17 +64,17 @@
   overflow-y: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 0 0 3px 3px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
   z-index: 100;
 }
 
 .mt-search-item {
-  padding: 4px 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-lg);
   align-items: center;
-  font-size: 11px;
+  font-size: var(--font-size-md);
 }
 
 .mt-search-item:hover {
@@ -115,7 +115,7 @@
   cursor: pointer;
   font-size: var(--font-size-lg);
   line-height: 1;
-  transition: color var(--transition-fast, 150ms ease);
+  transition: color var(--transition-fast);
 }
 
 .mt-settings-btn:hover {
@@ -125,7 +125,7 @@
 /* Level II Book */
 .mt-book {
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-xs);
   flex-shrink: 0;
 }
 
@@ -138,20 +138,20 @@
 .mt-book-header {
   display: flex;
   justify-content: space-between;
-  padding: 2px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-heading, var(--text-secondary));
+  color: var(--text-heading);
   border-bottom: 1px solid var(--border-color);
 }
 
 .mt-book-row {
   display: flex;
   justify-content: space-between;
-  padding: 2px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
-  transition: background var(--transition-fast, 150ms ease);
+  transition: background var(--transition-fast);
 }
 
 .mt-book-row:hover {
@@ -220,7 +220,7 @@
 
 .mt-input,
 .mt-select {
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -232,7 +232,7 @@
 .mt-input:focus,
 .mt-select:focus {
   outline: none;
-  border-color: var(--border-focus, var(--accent-highlight));
+  border-color: var(--border-focus);
 }
 
 .mt-shares-input {
@@ -263,7 +263,7 @@
   font-size: var(--font-size-md);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity var(--transition-fast, 150ms ease), transform 100ms ease;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
 .mt-btn:hover {
@@ -303,15 +303,15 @@
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-heading, var(--text-secondary));
-  padding: 2px 0 var(--spacing-xs);
+  color: var(--text-heading);
+  padding: var(--spacing-xs) 0 var(--spacing-xs);
 }
 
 .mt-wo-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2px 0;
+  padding: var(--spacing-xs) 0;
   font-size: var(--font-size-sm);
 }
 
@@ -327,7 +327,7 @@
   padding: 1px var(--spacing-sm);
   font-size: var(--font-size-xs);
   cursor: pointer;
-  transition: color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .mt-wo-cancel:hover {
@@ -368,7 +368,7 @@
 .mt-confirm-title {
   font-size: var(--font-size-md);
   font-weight: 700;
-  color: var(--text-heading, var(--text-primary));
+  color: var(--text-heading);
   margin-bottom: var(--spacing-sm);
 }
 
