@@ -412,6 +412,84 @@ body {
 .latency--poor { color: var(--accent-loss); }
 
 /* ═══════════════════════════════════════════════════════════════
+   Context Menu — generic reusable classes using --context-menu-* tokens
+   ═══════════════════════════════════════════════════════════════ */
+
+.context-menu {
+  position: absolute;
+  min-width: 160px;
+  background: var(--context-menu-bg);
+  border: 1px solid var(--context-menu-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--context-menu-shadow);
+  z-index: 100000;
+  padding: var(--spacing-xs) 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.context-menu-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.context-menu-item--disabled {
+  color: var(--text-muted);
+  cursor: default;
+  pointer-events: none;
+}
+
+.context-menu-item--danger {
+  color: var(--accent-sell);
+}
+
+.context-menu-item--danger:hover {
+  background: color-mix(in srgb, var(--accent-sell) 12%, transparent);
+  color: var(--accent-sell);
+}
+
+.context-menu-shortcut {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.context-menu-icon {
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-xs) 0;
+}
+
+.context-menu-label {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Tooltips — hover tooltip with arrow, positioned variants
    ═══════════════════════════════════════════════════════════════ */
 
@@ -687,4 +765,208 @@ body {
 
 .shell-status-bar-session--pre {
   color: var(--accent-warning);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Table Interaction Utilities — sort, resize, selection, keyboard nav
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Sort indicators — generic th with CSS arrows */
+.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.th-sortable:hover {
+  color: var(--text-secondary);
+}
+
+.th-sortable::after {
+  content: '⇅';
+  display: inline-block;
+  margin-left: var(--spacing-xs);
+  font-size: 8px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.th-sortable:hover::after {
+  opacity: 0.6;
+}
+
+.th-sorted-asc,
+.th-sorted-desc {
+  color: var(--accent-highlight);
+}
+
+.th-sorted-asc::after {
+  content: '▲';
+  display: inline-block;
+  margin-left: var(--spacing-xs);
+  font-size: 8px;
+  color: var(--accent-highlight);
+  opacity: 1;
+}
+
+.th-sorted-desc::after {
+  content: '▼';
+  display: inline-block;
+  margin-left: var(--spacing-xs);
+  font-size: 8px;
+  color: var(--accent-highlight);
+  opacity: 1;
+}
+
+/* Column resize handle — right edge of th */
+.th-resizable {
+  position: relative;
+}
+
+.th-resizable::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  cursor: col-resize;
+  background: transparent;
+  border-right: 1px solid transparent;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.th-resizable:hover::before {
+  border-right-color: var(--border-color);
+}
+
+.th-resizable--resizing::before {
+  border-right-color: var(--accent-highlight);
+  background: color-mix(in srgb, var(--accent-highlight) 15%, transparent);
+}
+
+/* Drag-over drop target — generic version */
+.drag-over {
+  border-left: 2px solid var(--accent-highlight) !important;
+}
+
+/* Row selection — generic classes for any table */
+.row-selected {
+  background: color-mix(in srgb, var(--accent-highlight) 10%, transparent) !important;
+}
+
+.row-selected td {
+  background: color-mix(in srgb, var(--accent-highlight) 10%, transparent) !important;
+}
+
+.row-multi-selected {
+  background: color-mix(in srgb, var(--accent-info) 10%, transparent) !important;
+}
+
+.row-multi-selected td {
+  background: color-mix(in srgb, var(--accent-info) 10%, transparent) !important;
+}
+
+/* Hover highlight for row interactions */
+.row-hover:hover {
+  background: var(--bg-hover);
+}
+
+.row-hover:hover td {
+  background: var(--bg-hover);
+}
+
+/* Copyable cell — cursor hint + hover feedback */
+.cell-copyable {
+  cursor: copy;
+  position: relative;
+}
+
+.cell-copyable:hover {
+  background: color-mix(in srgb, var(--accent-highlight) 6%, transparent);
+}
+
+.cell-copyable:active {
+  background: color-mix(in srgb, var(--accent-highlight) 15%, transparent);
+}
+
+/* Sticky table header — generic utility */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Focus-Visible — keyboard navigation accessibility
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Global focus-visible for all interactive elements */
+:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* Tighter focus ring for compact elements (buttons, tabs) */
+button:focus-visible,
+[role="tab"]:focus-visible,
+[role="button"]:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 0px;
+  border-radius: var(--radius-sm);
+}
+
+/* Input focus — border change instead of outline (inputs already have borders) */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--border-focus) 30%, transparent);
+}
+
+/* Table row keyboard navigation */
+tr:focus-visible,
+.focusable-row:focus-visible {
+  outline: none;
+  background: var(--bg-hover);
+  box-shadow: inset 2px 0 0 var(--accent-highlight);
+}
+
+/* Focus-within for grouped controls (form groups, toolbars) */
+.focus-group:focus-within {
+  border-color: var(--border-focus);
+}
+
+/* Skip focus ring on mouse clicks — only show for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Scroll Shadows — overflow indicators for scrollable containers
+   ═══════════════════════════════════════════════════════════════ */
+
+.scroll-shadow-top::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  display: block;
+  height: 0;
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.scroll-shadow-bottom::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 0;
+  box-shadow: 0 -4px 8px -2px rgba(0, 0, 0, 0.4);
+  z-index: 3;
+  pointer-events: none;
 }
