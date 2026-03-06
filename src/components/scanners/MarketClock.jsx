@@ -10,6 +10,18 @@ const DEFAULT_SETTINGS = {
   fontSize: 32,
 }
 
+// Kalshi exchange hours: Mon-Fri roughly 00:00-23:00 ET
+// Simplified: weekday = open, weekend = closed
+function getMarketStatus(date) {
+  const etOffset = -5 // EST (simplified, ignores DST)
+  const utcH = date.getUTCHours()
+  const etH = (utcH + etOffset + 24) % 24
+  const day = date.getUTCDay() // 0=Sun, 6=Sat
+  if (day === 0 || day === 6) return 'closed'
+  if (etH >= 0 && etH < 23) return 'open'
+  return 'closed'
+}
+
 function formatTime(date, settings) {
   const h = settings.timezone === 'utc' ? date.getUTCHours() : date.getHours()
   const m = settings.timezone === 'utc' ? date.getUTCMinutes() : date.getMinutes()
@@ -81,6 +93,7 @@ function MarketClock({ windowId }) {
   const timeStr = formatTime(now, settings)
   const dateStr = settings.showDate ? formatDate(now, settings) : null
   const tzLabel = settings.timezone === 'utc' ? 'UTC' : 'LOCAL'
+  const marketStatus = getMarketStatus(now)
 
   return (
     <div className="market-clock">
@@ -95,6 +108,10 @@ function MarketClock({ windowId }) {
         </div>
         {dateStr && <div className="mc-date">{dateStr}</div>}
         <div className="mc-tz">{tzLabel}</div>
+        <div className={`mc-status mc-status--${marketStatus}`}>
+          <span className="mc-status-dot" />
+          {marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
+        </div>
       </div>
 
       <button

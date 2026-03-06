@@ -5,6 +5,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .at--font-small { font-size: var(--font-size-sm); }
@@ -54,6 +55,12 @@
 
 .at-settings-btn:hover {
   color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.at-settings-btn:active {
+  background: var(--bg-active);
 }
 
 /* Panels layout */
@@ -212,6 +219,11 @@
 
 .at-toggle-btn:hover {
   opacity: 0.8;
+  background: var(--bg-hover);
+}
+
+.at-toggle-btn:active {
+  opacity: 0.65;
 }
 
 /* Delete button */
@@ -245,6 +257,12 @@
 
 .at-clear-btn:hover {
   color: var(--text-primary);
+  border-color: var(--border-color);
+  background: var(--bg-hover);
+}
+
+.at-clear-btn:active {
+  background: var(--bg-active);
 }
 
 /* Add Rule form */
@@ -299,6 +317,15 @@
 
 .at-add-btn:hover {
   opacity: 0.85;
+}
+
+.at-add-btn:active {
+  opacity: 0.7;
+}
+
+.at-add-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 /* Type badge */

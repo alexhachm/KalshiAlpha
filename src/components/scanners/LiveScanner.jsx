@@ -64,8 +64,10 @@ function LiveScanner({ windowId }) {
   })
   const [showSettings, setShowSettings] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [newRowIds, setNewRowIds] = useState(new Set())
   const alertsRef = useRef([])
   const tableBodyRef = useRef(null)
+  const newRowTimerRef = useRef(null)
   const grid = useGridCustomization(`liveScanner-${windowId}`, LS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 12
 
@@ -81,8 +83,19 @@ function LiveScanner({ windowId }) {
     const unsub = subscribeToScanner((alert) => {
       alertsRef.current = [alert, ...alertsRef.current].slice(0, settings.maxResults)
       setAlerts([...alertsRef.current])
+      // Track new row for flash animation
+      setNewRowIds((prev) => {
+        const next = new Set(prev)
+        next.add(alert.id)
+        return next
+      })
+      clearTimeout(newRowTimerRef.current)
+      newRowTimerRef.current = setTimeout(() => setNewRowIds(new Set()), 800)
     })
-    return unsub
+    return () => {
+      unsub()
+      clearTimeout(newRowTimerRef.current)
+    }
   }, [paused, settings.maxResults])
 
   // Handle click on alert row — emit to linked windows
@@ -133,6 +146,7 @@ function LiveScanner({ windowId }) {
             <option value="bear">Bear</option>
             <option value="neutral">Neutral</option>
           </select>
+          <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} />
           <span className="ls-count">{sorted.length} alerts</span>
         </div>
         <div className="ls-toolbar-right">
@@ -229,10 +243,11 @@ function LiveScanner({ windowId }) {
           <tbody>
             {sorted.map((alert) => {
               const rowStyle = grid.getRowStyle(alert) || {}
+              const isNew = newRowIds.has(alert.id)
               return (
                 <tr
                   key={alert.id}
-                  className="ls-row"
+                  className={`ls-row${isNew ? ' ls-row--new' : ''}`}
                   onClick={() => handleRowClick(alert.ticker)}
                   style={{ ...rowStyle, height: grid.rowHeight }}
                 >

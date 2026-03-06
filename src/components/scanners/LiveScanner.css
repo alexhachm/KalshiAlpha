@@ -5,6 +5,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Toolbar */
@@ -69,6 +70,15 @@
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-color);
+}
+
+.ls-toolbar-btn:active {
+  background: var(--bg-active);
+}
+
+.ls-toolbar-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 .ls-toolbar-btn--active {
@@ -261,6 +271,7 @@
 
 .ls-cell-conviction {
   width: 70px;
+  text-align: right;
 }
 
 /* Conviction bars */
@@ -311,7 +322,7 @@
 }
 
 @keyframes ls-flash-new {
-  0% { background: rgba(212, 168, 83, 0.18); }
+  0% { background: color-mix(in srgb, var(--accent-warning) 18%, transparent); }
   100% { background: transparent; }
 }
 
