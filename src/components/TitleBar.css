@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   height: 32px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   -webkit-app-region: drag;
   user-select: none;
@@ -13,8 +13,8 @@
 .titlebar-title {
   padding-left: 12px;
   font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.5px;
 }
