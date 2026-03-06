@@ -5,7 +5,7 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -37,7 +37,7 @@
 
 .window-color-chip:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-chip);
 }
 
 .window-color-chip-wrap {
@@ -55,7 +55,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
   min-width: 104px;
 }
 
@@ -77,12 +77,12 @@
 
 .window-color-swatch:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-chip);
 }
 
 .window-color-swatch--active {
-  border: 2px solid #fff;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+  border: 2px solid var(--text-heading);
+  box-shadow: var(--shadow-chip);
 }
 
 .window-color-unlink {
@@ -241,7 +241,7 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
   z-index: 100000;
   padding: var(--spacing-xs) 0;
   font-size: var(--font-size-md);

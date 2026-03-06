@@ -48,11 +48,11 @@
 }
 
 .titlebar-btn--close:hover {
-  background: #e81123;
-  color: #ffffff;
+  background: var(--titlebar-close-hover);
+  color: var(--text-heading);
 }
 
 .titlebar-btn--close:active {
-  background: #bf0f1d;
-  color: #ffffff;
+  background: var(--titlebar-close-active);
+  color: var(--text-heading);
 }
