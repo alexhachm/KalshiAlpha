@@ -99,7 +99,7 @@
 .pos-td {
   padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
   white-space: nowrap;
-  border-bottom: 1px solid var(--border-subtle, rgba(51, 51, 51, 0.4));
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .pos-align-left { text-align: left; }
@@ -113,11 +113,11 @@
 }
 
 .pos-row:nth-child(even) .pos-td {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .pos-row:hover .pos-td {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 .pos-row-selected .pos-td {
@@ -148,7 +148,7 @@
 /* Type badges */
 .pos-type-badge {
   display: inline-block;
-  padding: 1px var(--spacing-sm, 8px);
+  padding: 1px var(--spacing-xs, 4px);
   border-radius: var(--radius-sm, 3px);
   font-size: var(--font-size-xs, 10.5px);
   font-weight: 700;

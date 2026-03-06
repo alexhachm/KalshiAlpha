@@ -78,7 +78,7 @@
 }
 
 .mt-search-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
 }
 
 .mt-search-ticker {
@@ -155,7 +155,7 @@
 }
 
 .mt-book-row:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 .mt-book-size {
@@ -276,12 +276,12 @@
 
 .mt-btn-buy-yes {
   background: var(--accent-buy, #26a69a);
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .mt-btn-buy-no {
   background: var(--accent-sell, #ef5350);
-  color: #fff;
+  color: var(--text-heading);
 }
 
 .mt-btn-cancel {
@@ -316,7 +316,7 @@
 }
 
 .mt-wo-row:nth-child(even) {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .mt-wo-cancel {

@@ -55,7 +55,7 @@
 
 .ob-tab-badge {
   background: var(--accent-highlight);
-  color: #000;
+  color: var(--bg-primary);
   font-size: 9px;
   font-weight: 700;
   padding: 1px 5px;
@@ -109,7 +109,7 @@
 .ob-th {
   position: sticky;
   top: 0;
-  background: var(--bg-secondary, #1e1e2e);
+  background: var(--bg-secondary);
   font-size: var(--font-size-xs, 10.5px);
   font-weight: 700;
   text-transform: uppercase;
@@ -127,16 +127,16 @@
 }
 
 .ob-row {
-  height: 22px;
+  height: 20px;
   transition: background 150ms ease;
 }
 
 .ob-row:nth-child(even) {
-  background: var(--bg-row-alt, rgba(255, 255, 255, 0.02));
+  background: var(--bg-row-alt);
 }
 
 .ob-row:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  background: var(--bg-hover);
 }
 
 .ob-td {
@@ -225,7 +225,7 @@
 
 .ob-cancel-btn:hover {
   background: var(--accent-sell, #ef5350);
-  color: #000;
+  color: var(--bg-primary);
 }
 
 .ob-cancel-btn:disabled {

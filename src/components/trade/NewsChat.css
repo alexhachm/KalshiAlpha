@@ -79,7 +79,7 @@
 }
 
 .nc-search-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-hover);
 }
 
 .nc-search-ticker {
@@ -120,13 +120,13 @@
   align-items: baseline;
   gap: 6px;
   padding: 3px 2px;
-  border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.04));
+  border-bottom: 1px solid var(--border-subtle);
   font-size: 11px;
   line-height: 1.4;
 }
 
 .nc-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-hover);
 }
 
 .nc-time {
