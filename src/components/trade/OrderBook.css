@@ -3,20 +3,20 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   color: var(--text-primary);
 }
 
-.ob--font-small { font-size: var(--font-size-xs, 10.5px); }
-.ob--font-medium { font-size: var(--font-size-sm, 11.5px); }
-.ob--font-large { font-size: var(--font-size-md, 13px); }
+.ob--font-small { font-size: var(--font-size-xs); }
+.ob--font-medium { font-size: var(--font-size-sm); }
+.ob--font-large { font-size: var(--font-size-md); }
 
 /* Tab bar */
 .ob-tab-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--spacing-sm, 8px);
+  padding: 0 var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   height: 28px;
@@ -34,9 +34,9 @@
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  padding: 0 var(--spacing-sm, 8px);
+  padding: 0 var(--spacing-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -66,11 +66,11 @@
 .ob-tab-actions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 .ob-linked-ticker {
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   color: var(--accent-highlight);
   font-weight: 600;
 }
@@ -79,11 +79,11 @@
   background: none;
   border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 2px var(--spacing-sm, 8px);
+  padding: 2px var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-lg, 14.5px);
+  font-size: var(--font-size-lg);
   line-height: 1;
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-sm);
   transition: color 150ms ease, border-color 150ms ease;
 }
 
@@ -110,12 +110,12 @@
   position: sticky;
   top: 0;
   background: var(--bg-secondary);
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  padding: 4px var(--spacing-sm, 8px);
+  padding: 4px var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
   user-select: none;
@@ -140,7 +140,7 @@
 }
 
 .ob-td {
-  padding: 2px var(--spacing-sm, 8px);
+  padding: 2px var(--spacing-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,12 +152,12 @@
 
 /* Side coloring */
 .ob-side-yes {
-  color: var(--accent-buy, var(--accent-win, #4caf50));
+  color: var(--accent-buy, var(--accent-win));
   font-weight: 600;
 }
 
 .ob-side-no {
-  color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
   font-weight: 600;
 }
 
@@ -173,23 +173,23 @@
 }
 
 .ob-status-pending {
-  background: color-mix(in srgb, var(--accent-warning, #ffa726) 20%, transparent);
-  color: var(--accent-warning, #ffa726);
+  background: color-mix(in srgb, var(--accent-warning) 20%, transparent);
+  color: var(--accent-warning);
 }
 
 .ob-status-submitted {
-  background: color-mix(in srgb, var(--accent-info, #4fc3f7) 20%, transparent);
-  color: var(--accent-info, #4fc3f7);
+  background: color-mix(in srgb, var(--accent-info) 20%, transparent);
+  color: var(--accent-info);
 }
 
 .ob-status-open {
-  background: color-mix(in srgb, var(--accent-win, #4caf50) 20%, transparent);
-  color: var(--accent-win, #4caf50);
+  background: color-mix(in srgb, var(--accent-win) 20%, transparent);
+  color: var(--accent-win);
 }
 
 .ob-status-partial {
-  background: color-mix(in srgb, var(--accent-warning, #ffa726) 20%, transparent);
-  color: var(--accent-warning, #ffa726);
+  background: color-mix(in srgb, var(--accent-warning) 20%, transparent);
+  color: var(--accent-warning);
 }
 
 .ob-status-filled {
@@ -204,15 +204,15 @@
 }
 
 .ob-status-rejected {
-  background: color-mix(in srgb, var(--accent-sell, #ef5350) 20%, transparent);
-  color: var(--accent-sell, #ef5350);
+  background: color-mix(in srgb, var(--accent-sell) 20%, transparent);
+  color: var(--accent-sell);
 }
 
 /* Cancel button */
 .ob-cancel-btn {
   background: none;
-  border: 1px solid var(--accent-sell, #ef5350);
-  color: var(--accent-sell, #ef5350);
+  border: 1px solid var(--accent-sell);
+  color: var(--accent-sell);
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
@@ -224,7 +224,7 @@
 }
 
 .ob-cancel-btn:hover {
-  background: var(--accent-sell, #ef5350);
+  background: var(--accent-sell);
   color: var(--bg-primary);
 }
 
@@ -235,17 +235,17 @@
 
 /* P&L coloring */
 .text-win {
-  color: var(--accent-win, #4caf50);
+  color: var(--accent-win);
 }
 
 .text-loss {
-  color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
 }
 
 /* Time column */
 .ob-time {
   color: var(--text-muted);
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
 }
 
 /* Empty state */
@@ -256,7 +256,7 @@
   height: 100%;
   min-height: 60px;
   color: var(--text-muted);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
 }
 
 /* Flash animation on new fills */
