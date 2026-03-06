@@ -5,6 +5,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Criteria bar */
@@ -44,6 +45,10 @@
   transition: border-color var(--transition-fast);
 }
 
+.hs-date-input:hover {
+  border-color: var(--border-color);
+}
+
 .hs-date-input:focus {
   outline: none;
   border-color: var(--border-focus);
@@ -67,6 +72,10 @@
   min-width: 0;
   cursor: pointer;
   transition: border-color var(--transition-fast);
+}
+
+.hs-pattern-select:hover {
+  border-color: var(--border-color);
 }
 
 .hs-pattern-select:focus {
@@ -96,9 +105,19 @@
   filter: brightness(1.15);
 }
 
+.hs-scan-btn:active {
+  filter: brightness(0.9);
+}
+
+.hs-scan-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
 .hs-scan-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  filter: none;
 }
 
 .hs-scan-btn--scanning {
@@ -146,6 +165,15 @@
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-color);
+}
+
+.hs-toolbar-btn:active {
+  background: var(--bg-active);
+}
+
+.hs-toolbar-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 .hs-toolbar-btn:disabled {

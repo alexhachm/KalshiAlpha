@@ -299,7 +299,7 @@ function AlertTrigger({ windowId }) {
                   </tr>
                 ) : (
                   rules.map((rule) => (
-                    <tr key={rule.id} className="at-row" style={{ height: rulesGrid.rowHeight }}>
+                    <tr key={rule.id} className={`at-row ${rule.enabled ? 'at-row--pending' : 'at-row--expired'}`} style={{ height: rulesGrid.rowHeight }}>
                       {rulesGrid.visibleColumns.map((col) => {
                         if (col.key === 'ticker') {
                           return (
@@ -401,7 +401,7 @@ function AlertTrigger({ windowId }) {
                     return (
                       <tr
                         key={alert.id}
-                        className={`at-row${isFlashed ? ' at-row-flash' : ''}`}
+                        className={`at-row at-row--triggered${isFlashed ? ' at-row-flash' : ''}`}
                         style={{ height: historyGrid.rowHeight }}
                       >
                         {historyGrid.visibleColumns.map((col) => {
