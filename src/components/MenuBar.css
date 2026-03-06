@@ -43,12 +43,12 @@
   border: 1px solid var(--border-color);
   border-radius: 0;
   z-index: 10002;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   padding: var(--spacing-xs) 0;
 }
 
 .menu-dropdown-item {
-  padding: 6px var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
   cursor: pointer;
   color: var(--text-secondary);
   white-space: nowrap;

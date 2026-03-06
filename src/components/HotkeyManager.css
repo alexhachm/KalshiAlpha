@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   color: var(--text-primary);
   overflow: hidden;
 }
@@ -12,8 +12,8 @@
 .hk-profile-bar {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs, 4px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
@@ -21,13 +21,13 @@
 .hk-profile-select {
   flex: 1;
   min-width: 0;
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   cursor: pointer;
 }
 
@@ -35,19 +35,19 @@
   background: var(--bg-tertiary);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   cursor: pointer;
   white-space: nowrap;
-  transition: color var(--transition-fast, 150ms ease),
-              background var(--transition-fast, 150ms ease);
+  transition: color var(--transition-fast),
+              background var(--transition-fast);
 }
 
 .hk-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-hover, var(--bg-secondary));
+  background: var(--bg-hover);
 }
 
 .hk-btn--accent {
@@ -68,10 +68,10 @@
 }
 
 .hk-error {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
   color: var(--accent-sell);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   flex-shrink: 0;
 }
 
@@ -97,14 +97,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
 }
 
 .hk-bindings-title {
   font-weight: 600;
-  font-size: var(--font-size-sm, 11.5px);
-  color: var(--text-heading, var(--text-primary));
+  font-size: var(--font-size-sm);
+  color: var(--text-heading);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -117,11 +117,11 @@
 .hk-binding-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs, 4px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background var(--transition-fast, 150ms ease);
+  transition: background var(--transition-fast);
 }
 
 .hk-binding-row:hover {
@@ -138,7 +138,7 @@
 }
 
 .hk-binding-key {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--accent-highlight);
   white-space: nowrap;
@@ -151,8 +151,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-secondary, var(--text-muted));
-  font-size: var(--font-size-sm, 11.5px);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .hk-binding-delete {
@@ -160,12 +160,12 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-xl);
   line-height: 1;
-  padding: 0 2px;
+  padding: 0 var(--spacing-xs);
   opacity: 0;
-  transition: opacity var(--transition-fast, 150ms ease),
-              color var(--transition-fast, 150ms ease);
+  transition: opacity var(--transition-fast),
+              color var(--transition-fast);
 }
 
 .hk-binding-row:hover .hk-binding-delete {
@@ -177,10 +177,10 @@
 }
 
 .hk-empty {
-  padding: var(--spacing-lg, 16px) var(--spacing-sm, 8px);
+  padding: var(--spacing-lg) var(--spacing-sm);
   color: var(--text-muted);
   text-align: center;
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
 }
 
 /* Script editor (right) */
@@ -189,35 +189,35 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-sm, 8px);
-  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-sm);
+  gap: var(--spacing-xs);
   overflow-y: auto;
 }
 
 .hk-editor-title {
   font-weight: 600;
-  font-size: var(--font-size-sm, 11.5px);
-  color: var(--text-heading, var(--text-primary));
+  font-size: var(--font-size-sm);
+  color: var(--text-heading);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: var(--spacing-xs, 4px);
+  margin-bottom: var(--spacing-xs);
 }
 
 .hk-field-label {
-  font-size: var(--font-size-xs, 10px);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .hk-key-input {
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   font-weight: 600;
   cursor: pointer;
   outline: none;
@@ -231,13 +231,13 @@
 }
 
 .hk-text-input {
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
 }
 
 .hk-text-input:focus {
@@ -246,13 +246,13 @@
 }
 
 .hk-script-input {
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   min-height: 60px;
   resize: vertical;
   line-height: 1.4;
@@ -264,8 +264,8 @@
 }
 
 .hk-validation {
-  font-size: var(--font-size-sm, 11.5px);
-  padding: var(--spacing-xs, 4px) 0;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) 0;
 }
 
 .hk-validation--ok {
@@ -277,26 +277,26 @@
 }
 
 .hk-warning {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   color: var(--accent-warning);
-  padding: 2px 0;
+  padding: var(--spacing-xs) 0;
 }
 
 .hk-category-select {
-  background: var(--bg-input, var(--bg-tertiary));
+  background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   cursor: pointer;
 }
 
 .hk-save-btn {
-  margin-top: var(--spacing-sm, 8px);
-  padding: var(--spacing-sm, 8px);
-  font-size: var(--font-size-md, 13px);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-md);
 }
 
 /* Help Panel (bottom, collapsible) */
@@ -309,15 +309,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--text-heading, var(--text-primary));
+  color: var(--text-heading);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   user-select: none;
-  transition: background var(--transition-fast, 150ms ease);
+  transition: background var(--transition-fast);
 }
 
 .hk-help-header:hover {
@@ -325,15 +325,15 @@
 }
 
 .hk-help-toggle {
-  font-size: var(--font-size-xs, 10px);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
 .hk-help-body {
   max-height: 260px;
   overflow-y: auto;
-  padding: var(--spacing-sm, 8px);
-  animation: hk-slideDown 150ms ease;
+  padding: var(--spacing-sm);
+  animation: hk-slideDown var(--transition-normal);
 }
 
 @keyframes hk-slideDown {
@@ -342,12 +342,12 @@
 }
 
 .hk-help-section-title {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--text-heading, var(--text-primary));
+  color: var(--text-heading);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin: var(--spacing-sm, 8px) 0 var(--spacing-xs, 4px);
+  margin: var(--spacing-sm) 0 var(--spacing-xs);
 }
 
 .hk-help-section-title:first-child {
@@ -355,65 +355,65 @@
 }
 
 .hk-help-cmd {
-  margin-bottom: var(--spacing-sm, 8px);
-  padding-left: var(--spacing-sm, 8px);
+  margin-bottom: var(--spacing-sm);
+  padding-left: var(--spacing-sm);
   border-left: 2px solid var(--border-color);
 }
 
 .hk-help-cmd-name {
   font-weight: 600;
   color: var(--accent-highlight);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
 }
 
 .hk-help-cmd-syntax {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
   font-family: var(--font-mono);
-  margin: 2px 0;
+  margin: var(--spacing-xs) 0;
 }
 
 .hk-help-cmd-desc {
-  font-size: var(--font-size-sm, 11.5px);
-  color: var(--text-secondary, var(--text-muted));
-  margin-bottom: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .hk-help-cmd-examples {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xs);
 }
 
 .hk-help-example {
-  font-size: var(--font-size-xs, 10px);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   background: var(--bg-tertiary);
-  padding: 2px var(--spacing-xs, 4px);
-  border-radius: var(--radius-sm, 3px);
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
 }
 
 .hk-help-vars {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 .hk-help-var {
   display: flex;
   align-items: baseline;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .hk-help-var-name {
   font-weight: 600;
   color: var(--accent-highlight);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   min-width: 50px;
 }
 
 .hk-help-var-desc {
-  font-size: var(--font-size-sm, 11.5px);
-  color: var(--text-secondary, var(--text-muted));
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
