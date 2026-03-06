@@ -101,10 +101,27 @@
   --settings-width: 500px;
   --settings-height: 450px;
 
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-chip: 0 0 4px rgba(0, 0, 0, 0.4);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+
+  /* Titlebar close button */
+  --titlebar-close-hover: #e81123;
+  --titlebar-close-active: #bf0f1d;
+
+  /* Flash animations */
+  --flash-win-bg: rgba(74, 158, 125, 0.3);
+  --flash-loss-bg: rgba(196, 81, 81, 0.3);
+
+  /* Scrollbar */
+  --scrollbar-thumb-hover: #3a4a60;
+
   /* Context menu */
   --context-menu-bg: var(--bg-secondary);
   --context-menu-border: var(--border-color);
-  --context-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --context-menu-shadow: var(--shadow-lg);
 }
 
 body {
@@ -126,11 +143,11 @@ body {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a3446;
+  background: var(--bg-active);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a4a60;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .mono {
@@ -143,12 +160,12 @@ body {
 
 /* Animation Utility */
 @keyframes flash-green {
-  0% { background-color: rgba(74, 158, 125, 0.3); }
+  0% { background-color: var(--flash-win-bg); }
   100% { background-color: transparent; }
 }
 
 @keyframes flash-red {
-  0% { background-color: rgba(196, 81, 81, 0.3); }
+  0% { background-color: var(--flash-loss-bg); }
   100% { background-color: transparent; }
 }
 
