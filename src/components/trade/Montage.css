@@ -3,20 +3,20 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   color: var(--text-primary);
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
-.montage--font-small { font-size: var(--font-size-sm, 11.5px); }
-.montage--font-medium { font-size: var(--font-size-md, 13px); }
-.montage--font-large { font-size: var(--font-size-lg, 14.5px); }
+.montage--font-small { font-size: var(--font-size-sm); }
+.montage--font-medium { font-size: var(--font-size-md); }
+.montage--font-large { font-size: var(--font-size-lg); }
 
 /* Ticker selector bar */
 .mt-ticker-bar {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs, 4px);
+  gap: var(--spacing-xs);
 }
 
 /* Current ticker badge */
@@ -43,8 +43,8 @@
   background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
   font-size: 11px;
   box-sizing: border-box;
@@ -110,10 +110,10 @@
   background: var(--bg-tertiary);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-lg, 14.5px);
+  font-size: var(--font-size-lg);
   line-height: 1;
   transition: color var(--transition-fast, 150ms ease);
 }
@@ -138,8 +138,8 @@
 .mt-book-header {
   display: flex;
   justify-content: space-between;
-  padding: 2px var(--spacing-sm, 8px);
-  font-size: var(--font-size-xs, 10.5px);
+  padding: 2px var(--spacing-sm);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-heading, var(--text-secondary));
@@ -149,7 +149,7 @@
 .mt-book-row {
   display: flex;
   justify-content: space-between;
-  padding: 2px var(--spacing-sm, 8px);
+  padding: 2px var(--spacing-sm);
   cursor: pointer;
   transition: background var(--transition-fast, 150ms ease);
 }
@@ -176,11 +176,11 @@
 }
 
 .mt-bid-price {
-  color: var(--accent-buy, #26a69a);
+  color: var(--accent-buy);
 }
 
 .mt-ask-price {
-  color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
 }
 
 /* Info strip */
@@ -188,10 +188,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--bg-tertiary);
-  border-radius: var(--radius-sm, 3px);
-  font-size: var(--font-size-sm, 11.5px);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
@@ -199,19 +199,19 @@
 .mt-order-entry {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs, 4px);
-  padding: var(--spacing-xs, 4px) 0;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) 0;
   border-top: 1px solid var(--border-color);
 }
 
 .mt-order-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .mt-label {
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
@@ -223,8 +223,8 @@
   background: var(--bg-input, var(--bg-tertiary));
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
   font-size: inherit;
 }
@@ -250,17 +250,17 @@
 /* Buy/Sell buttons */
 .mt-buttons {
   display: flex;
-  gap: var(--spacing-sm, 8px);
-  padding-top: var(--spacing-xs, 4px);
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-xs);
 }
 
 .mt-btn {
   flex: 1;
-  padding: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm);
   border: none;
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   font-weight: 700;
   cursor: pointer;
   transition: opacity var(--transition-fast, 150ms ease), transform 100ms ease;
@@ -275,12 +275,12 @@
 }
 
 .mt-btn-buy-yes {
-  background: var(--accent-buy, #26a69a);
+  background: var(--accent-buy);
   color: var(--text-heading);
 }
 
 .mt-btn-buy-no {
-  background: var(--accent-sell, #ef5350);
+  background: var(--accent-sell);
   color: var(--text-heading);
 }
 
@@ -296,15 +296,15 @@
   min-height: 0;
   overflow-y: auto;
   border-top: 1px solid var(--border-color);
-  padding-top: var(--spacing-xs, 4px);
+  padding-top: var(--spacing-xs);
 }
 
 .mt-wo-header {
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-heading, var(--text-secondary));
-  padding: 2px 0 var(--spacing-xs, 4px);
+  padding: 2px 0 var(--spacing-xs);
 }
 
 .mt-wo-row {
@@ -312,7 +312,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 2px 0;
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
 }
 
 .mt-wo-row:nth-child(even) {
@@ -323,16 +323,16 @@
   background: none;
   border: 1px solid var(--border-color);
   color: var(--text-muted);
-  border-radius: var(--radius-sm, 3px);
-  padding: 1px var(--spacing-sm, 8px);
-  font-size: var(--font-size-xs, 10.5px);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-sm);
+  font-size: var(--font-size-xs);
   cursor: pointer;
   transition: color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
 }
 
 .mt-wo-cancel:hover {
-  color: var(--accent-sell, #ef5350);
-  border-color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
+  border-color: var(--accent-sell);
 }
 
 /* Loading state */
@@ -342,7 +342,7 @@
   justify-content: center;
   flex: 1;
   color: var(--text-muted);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
 }
 
 /* Confirm dialog */
@@ -359,42 +359,42 @@
 .mt-confirm-dialog {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md, 6px);
-  padding: var(--spacing-lg, 16px);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
   min-width: 220px;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--bg-primary) 50%, transparent);
 }
 
 .mt-confirm-title {
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--text-heading, var(--text-primary));
-  margin-bottom: var(--spacing-sm, 8px);
+  margin-bottom: var(--spacing-sm);
 }
 
 .mt-confirm-body {
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
-  margin-bottom: var(--spacing-md, 12px);
+  margin-bottom: var(--spacing-md);
   line-height: 1.5;
 }
 
 .mt-confirm-buttons {
   display: flex;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 /* P&L colors — use trading-standard accent-buy/sell within montage */
-.montage .text-win { color: var(--accent-buy, #26a69a); }
-.montage .text-loss { color: var(--accent-sell, #ef5350); }
+.montage .text-win { color: var(--accent-buy); }
+.montage .text-loss { color: var(--accent-sell); }
 
 /* Error state */
 .mt-error {
   display: flex;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  color: var(--accent-sell, #ef5350);
-  font-size: var(--font-size-sm, 11.5px);
-  background: color-mix(in srgb, var(--accent-sell, #ef5350) 8%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent-sell, #ef5350) 20%, transparent);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--accent-sell);
+  font-size: var(--font-size-sm);
+  background: color-mix(in srgb, var(--accent-sell) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-sell) 20%, transparent);
 }

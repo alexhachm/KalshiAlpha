@@ -3,26 +3,26 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   color: var(--text-primary);
 }
 
-.tradelog--font-small  { font-size: var(--font-size-sm, 11.5px); }
-.tradelog--font-medium { font-size: var(--font-size-md, 13px); }
-.tradelog--font-large  { font-size: var(--font-size-lg, 14.5px); }
+.tradelog--font-small  { font-size: var(--font-size-sm); }
+.tradelog--font-medium { font-size: var(--font-size-md); }
+.tradelog--font-large  { font-size: var(--font-size-lg); }
 
 /* Header bar */
 .tl-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .tl-title {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -32,11 +32,11 @@
 .tl-header-right {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .tl-count {
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -44,10 +44,10 @@
   background: var(--bg-tertiary);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: 2px var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   font-family: var(--font-mono);
   font-weight: 600;
   transition: color var(--transition-fast, 150ms ease);
@@ -61,10 +61,10 @@
   background: var(--bg-tertiary);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-lg, 14.5px);
+  font-size: var(--font-size-lg);
   line-height: 1;
   transition: color var(--transition-fast, 150ms ease);
 }
@@ -77,20 +77,20 @@
 .tl-filter-bar {
   display: flex;
   gap: 2px;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .tl-filter-btn {
-  padding: 2px var(--spacing-sm, 8px);
+  padding: 2px var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
   color: var(--text-muted);
   cursor: pointer;
@@ -110,9 +110,9 @@
 /* Loading state */
 .tl-loading {
   text-align: center;
-  padding: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm);
   color: var(--text-muted);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-style: italic;
 }
 
@@ -133,8 +133,8 @@
   position: sticky;
   top: 0;
   background: var(--bg-tertiary);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  font-size: var(--font-size-xs, 10.5px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -155,7 +155,7 @@
 }
 
 .tl-td {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   white-space: nowrap;
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -187,44 +187,44 @@
 }
 
 @keyframes tl-flash {
-  0%   { background: color-mix(in srgb, var(--accent-warning, #ffa726) 25%, transparent); }
+  0%   { background: color-mix(in srgb, var(--accent-warning) 25%, transparent); }
   100% { background: transparent; }
 }
 
 /* Market name color */
-.tl-market-long  { color: var(--accent-buy, #26a69a); font-weight: 600; }
-.tl-market-short { color: var(--accent-sell, #ef5350); font-weight: 600; }
+.tl-market-long  { color: var(--accent-buy); font-weight: 600; }
+.tl-market-short { color: var(--accent-sell); font-weight: 600; }
 
 /* Badges */
 .tl-badge {
   display: inline-block;
-  padding: 1px var(--spacing-sm, 8px);
-  border-radius: var(--radius-sm, 3px);
-  font-size: var(--font-size-xs, 10.5px);
+  padding: 1px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.tl-badge-long   { background: color-mix(in srgb, var(--accent-buy, #26a69a) 15%, transparent); color: var(--accent-buy, #26a69a); }
-.tl-badge-short  { background: color-mix(in srgb, var(--accent-sell, #ef5350) 15%, transparent); color: var(--accent-sell, #ef5350); }
-.tl-badge-open   { background: color-mix(in srgb, var(--accent-info, #4fc3f7) 15%, transparent); color: var(--accent-info, #4fc3f7); }
-.tl-badge-closed { background: color-mix(in srgb, var(--accent-neutral, #78909c) 15%, transparent); color: var(--accent-neutral, #78909c); }
+.tl-badge-long   { background: color-mix(in srgb, var(--accent-buy) 15%, transparent); color: var(--accent-buy); }
+.tl-badge-short  { background: color-mix(in srgb, var(--accent-sell) 15%, transparent); color: var(--accent-sell); }
+.tl-badge-open   { background: color-mix(in srgb, var(--accent-info) 15%, transparent); color: var(--accent-info); }
+.tl-badge-closed { background: color-mix(in srgb, var(--accent-neutral) 15%, transparent); color: var(--accent-neutral); }
 
 /* Date column */
 .tl-row .tl-td:last-child {
   color: var(--text-muted);
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
 }
 
 /* P&L colors — use trading-standard accent-buy/sell within trade log */
-.tradelog .text-win { color: var(--accent-buy, #26a69a); }
-.tradelog .text-loss { color: var(--accent-sell, #ef5350); }
+.tradelog .text-win { color: var(--accent-buy); }
+.tradelog .text-loss { color: var(--accent-sell); }
 
 /* Empty state */
 .tl-empty {
   text-align: center;
-  padding: var(--spacing-xl, 24px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xl) var(--spacing-sm);
   color: var(--text-muted);
   font-style: italic;
 }

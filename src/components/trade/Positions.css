@@ -3,26 +3,26 @@
   flex-direction: column;
   height: 100%;
   font-family: var(--font-mono);
-  font-size: var(--font-size-md, 13px);
+  font-size: var(--font-size-md);
   color: var(--text-primary);
 }
 
-.pos--font-small { font-size: var(--font-size-sm, 11.5px); }
-.pos--font-medium { font-size: var(--font-size-md, 13px); }
-.pos--font-large { font-size: var(--font-size-lg, 14.5px); }
+.pos--font-small { font-size: var(--font-size-sm); }
+.pos--font-medium { font-size: var(--font-size-md); }
+.pos--font-large { font-size: var(--font-size-lg); }
 
 /* Header bar */
 .pos-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .pos-title {
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -32,11 +32,11 @@
 .pos-header-right {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm);
 }
 
 .pos-count {
-  font-size: var(--font-size-xs, 10.5px);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -44,10 +44,10 @@
   background: var(--bg-tertiary);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm, 3px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
-  font-size: var(--font-size-lg, 14.5px);
+  font-size: var(--font-size-lg);
   line-height: 1;
   transition: color var(--transition-fast, 150ms ease);
 }
@@ -74,8 +74,8 @@
   position: sticky;
   top: 0;
   background: var(--bg-tertiary);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  font-size: var(--font-size-xs, 10.5px);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -97,7 +97,7 @@
 
 /* Table cells */
 .pos-td {
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xs) var(--spacing-sm);
   white-space: nowrap;
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -130,59 +130,59 @@
 }
 
 @keyframes pos-flash {
-  0% { background: color-mix(in srgb, var(--accent-warning, #ffa726) 25%, transparent); }
+  0% { background: color-mix(in srgb, var(--accent-warning) 25%, transparent); }
   100% { background: transparent; }
 }
 
 /* Market name color coding */
 .pos-market-long {
-  color: var(--accent-buy, #26a69a);
+  color: var(--accent-buy);
   font-weight: 600;
 }
 
 .pos-market-short {
-  color: var(--accent-sell, #ef5350);
+  color: var(--accent-sell);
   font-weight: 600;
 }
 
 /* Type badges */
 .pos-type-badge {
   display: inline-block;
-  padding: 1px var(--spacing-xs, 4px);
-  border-radius: var(--radius-sm, 3px);
-  font-size: var(--font-size-xs, 10.5px);
+  padding: 1px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .pos-type-long {
-  background: color-mix(in srgb, var(--accent-buy, #26a69a) 15%, transparent);
-  color: var(--accent-buy, #26a69a);
+  background: color-mix(in srgb, var(--accent-buy) 15%, transparent);
+  color: var(--accent-buy);
 }
 
 .pos-type-short {
-  background: color-mix(in srgb, var(--accent-sell, #ef5350) 15%, transparent);
-  color: var(--accent-sell, #ef5350);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+  color: var(--accent-sell);
 }
 
 /* Loading state */
 .pos-loading {
   text-align: center;
-  padding: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm);
   color: var(--text-muted);
-  font-size: var(--font-size-sm, 11.5px);
+  font-size: var(--font-size-sm);
   font-style: italic;
 }
 
 /* P&L colors — use trading-standard accent-buy/sell within positions */
-.positions .text-win { color: var(--accent-buy, #26a69a); }
-.positions .text-loss { color: var(--accent-sell, #ef5350); }
+.positions .text-win { color: var(--accent-buy); }
+.positions .text-loss { color: var(--accent-sell); }
 
 /* Empty state */
 .pos-empty {
   text-align: center;
-  padding: var(--spacing-xl, 24px) var(--spacing-sm, 8px);
+  padding: var(--spacing-xl) var(--spacing-sm);
   color: var(--text-muted);
   font-style: italic;
 }
