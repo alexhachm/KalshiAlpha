@@ -60,3 +60,84 @@
   background: var(--bg-hover);
   color: var(--text-primary);
 }
+
+/* ── Status indicators (right-aligned in menu bar) ── */
+.menu-status-area {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-left: auto;
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Order count badge */
+.menu-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 1px var(--spacing-sm);
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.menu-status-badge--orders {
+  background: color-mix(in srgb, var(--accent-warning) 18%, transparent);
+  color: var(--accent-warning);
+}
+
+.menu-status-badge--orders:empty {
+  display: none;
+}
+
+.menu-status-badge--fills {
+  background: color-mix(in srgb, var(--accent-win) 18%, transparent);
+  color: var(--accent-win);
+}
+
+.menu-status-badge--alert {
+  background: color-mix(in srgb, var(--accent-sell) 18%, transparent);
+  color: var(--accent-sell);
+}
+
+/* Pulse animation for active orders */
+.menu-status-pulse {
+  animation: menu-pulse 2s ease-in-out infinite;
+}
+
+@keyframes menu-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Connection indicator in menu bar */
+.menu-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.menu-status-dot--live {
+  background: var(--accent-win);
+  box-shadow: 0 0 4px var(--accent-win);
+}
+
+.menu-status-dot--paper {
+  background: var(--accent-info);
+}
+
+.menu-status-dot--offline {
+  background: var(--text-muted);
+}
+
+/* Clock display in menu bar */
+.menu-clock {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
