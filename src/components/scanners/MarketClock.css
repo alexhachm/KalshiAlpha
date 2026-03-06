@@ -16,7 +16,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   min-height: 0;
 }
@@ -79,7 +79,7 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 2px;
+  padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
   opacity: 0;
   transition: opacity var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
@@ -161,4 +161,31 @@
   font-size: var(--font-size-xs);
   min-width: 28px;
   text-align: right;
+}
+
+/* Market status glow indicators */
+.mc-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: var(--spacing-xs);
+  vertical-align: middle;
+}
+
+.mc-status--open .mc-status-dot {
+  background: var(--accent-win);
+  box-shadow: var(--shadow-glow-win);
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+.mc-status--closed .mc-status-dot {
+  background: var(--accent-sell);
+  box-shadow: var(--shadow-glow-loss);
+}
+
+.mc-status--pre .mc-status-dot,
+.mc-status--post .mc-status-dot {
+  background: var(--accent-warning);
+  animation: glow-pulse 2s ease-in-out infinite;
 }
