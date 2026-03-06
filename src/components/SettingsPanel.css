@@ -16,7 +16,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .settings-header {
@@ -100,7 +100,7 @@
 
 .settings-tab--active {
   background: var(--bg-active);
-  color: var(--accent-info);
+  color: var(--accent-highlight);
   font-weight: 500;
 }
 
@@ -113,7 +113,7 @@
 .settings-section-title {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--accent-info);
+  color: var(--accent-highlight);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 var(--spacing-md);
@@ -161,9 +161,9 @@
 
 /* Toggle switch */
 .settings-toggle {
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
   border: none;
   background: var(--bg-tertiary);
   cursor: pointer;
@@ -173,22 +173,22 @@
 }
 
 .settings-toggle--on {
-  background: var(--accent-buy);
+  background: var(--accent-highlight);
 }
 
 .settings-toggle-knob {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--text-primary);
   transition: transform var(--transition-normal);
 }
 
 .settings-toggle--on .settings-toggle-knob {
-  transform: translateX(16px);
+  transform: translateX(14px);
 }
 
 /* Number input */
@@ -285,7 +285,7 @@
 
 .settings-slider {
   width: 100px;
-  accent-color: var(--accent-info);
+  accent-color: var(--accent-highlight);
 }
 
 .settings-slider-value {
@@ -304,7 +304,7 @@
   width: 16px;
   height: 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--border-subtle);
 }
 
 .settings-muted {

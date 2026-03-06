@@ -20,7 +20,7 @@
 .gs-section-title {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--accent-info);
+  color: var(--accent-highlight);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -55,7 +55,7 @@
 }
 
 .gs-column-over {
-  border-top: 2px solid var(--accent-info);
+  border-top: 2px solid var(--accent-highlight);
 }
 
 .gs-drag-handle {
@@ -76,7 +76,7 @@
 }
 
 .gs-checkbox {
-  accent-color: var(--accent-info);
+  accent-color: var(--accent-highlight);
   width: 14px;
   height: 14px;
   cursor: pointer;
@@ -121,7 +121,7 @@
 
 .gs-slider {
   width: 100px;
-  accent-color: var(--accent-info);
+  accent-color: var(--accent-highlight);
 }
 
 .gs-slider-value {
@@ -187,7 +187,7 @@
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  color: var(--accent-info);
+  color: var(--accent-highlight);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: background var(--transition-fast);
