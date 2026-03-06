@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 32px;
+  height: var(--titlebar-height);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   -webkit-app-region: drag;
@@ -35,7 +35,7 @@
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background var(--transition-normal), color var(--transition-normal);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .titlebar-btn:hover {

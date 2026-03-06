@@ -391,10 +391,10 @@ function Window({
       >
         <div className="window-color-chip-wrap">
           <div
-            className="window-color-chip"
+            className={`window-color-chip${colorIndex >= 0 ? ' window-color-chip--linked' : ''}`}
             style={{
               backgroundColor:
-                colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : '#555',
+                colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : 'var(--color-chip-unlinked)',
             }}
             onClick={handleChipClick}
             title={
