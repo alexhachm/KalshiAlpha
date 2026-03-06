@@ -58,7 +58,7 @@
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 3px 5px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
   line-height: 1;
@@ -190,7 +190,7 @@
 }
 
 .ls-sort-arrow {
-  font-size: 9px;
+  font-size: var(--font-size-xs);
 }
 
 .ls-row {
@@ -266,7 +266,7 @@
 /* Conviction bars */
 .ls-conviction {
   display: inline-flex;
-  gap: 2px;
+  gap: var(--spacing-xs);
   align-items: center;
 }
 
@@ -276,7 +276,7 @@
   height: 8px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -294,6 +294,40 @@
 
 .ls-conviction-bar--active:nth-child(3) {
   background: var(--accent-info);
+}
+
+/* Streaming data: recently updated row highlight */
+.ls-row--updated {
+  animation: ls-flash-update 0.6s ease-out;
+}
+
+@keyframes ls-flash-update {
+  0% { background: var(--flash-win-bg); }
+  100% { background: transparent; }
+}
+
+.ls-row--new {
+  animation: ls-flash-new 0.8s ease-out;
+}
+
+@keyframes ls-flash-new {
+  0% { background: rgba(212, 168, 83, 0.18); }
+  100% { background: transparent; }
+}
+
+/* Pulsing live indicator */
+.ls-live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-win);
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+.ls-live-dot--paused {
+  background: var(--accent-neutral);
+  animation: none;
 }
 
 .ls-empty {
