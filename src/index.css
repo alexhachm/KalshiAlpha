@@ -410,3 +410,281 @@ body {
 .latency--good { color: var(--accent-win); }
 .latency--fair { color: var(--accent-warning); }
 .latency--poor { color: var(--accent-loss); }
+
+/* ═══════════════════════════════════════════════════════════════
+   Tooltips — hover tooltip with arrow, positioned variants
+   ═══════════════════════════════════════════════════════════════ */
+
+.tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  z-index: 1000;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.tooltip .tooltip-text::after {
+  content: '';
+  position: absolute;
+  border: 4px solid transparent;
+}
+
+/* Top (default) — tooltip above, arrow points down */
+.tooltip .tooltip-text,
+.tooltip--top .tooltip-text {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip .tooltip-text::after,
+.tooltip--top .tooltip-text::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: var(--border-color);
+}
+
+/* Bottom — tooltip below, arrow points up */
+.tooltip--bottom .tooltip-text {
+  top: calc(100% + 6px);
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip--bottom .tooltip-text::after {
+  bottom: 100%;
+  top: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: transparent;
+  border-bottom-color: var(--border-color);
+}
+
+/* Left — tooltip to the left, arrow points right */
+.tooltip--left .tooltip-text {
+  right: calc(100% + 6px);
+  bottom: auto;
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip--left .tooltip-text::after {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-left-color: var(--border-color);
+}
+
+/* Right — tooltip to the right, arrow points left */
+.tooltip--right .tooltip-text {
+  left: calc(100% + 6px);
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip--right .tooltip-text::after {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top-color: transparent;
+  border-right-color: var(--border-color);
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Multi-line tooltip */
+.tooltip-text--wrap {
+  white-space: normal;
+  max-width: 220px;
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Numeric Data Formatting — tabular-nums for aligned columns
+   ═══════════════════════════════════════════════════════════════ */
+
+.data-numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Ensure all tables within data-heavy components use tabular-nums */
+.positions,
+.tradelog,
+.order-book,
+.event-log,
+.montage,
+.price-ladder,
+.live-scanner,
+.historical-scanner,
+.time-sale,
+.accounts {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   P&L Formatting — positive/negative/zero with color and prefix
+   ═══════════════════════════════════════════════════════════════ */
+
+.pnl-positive {
+  color: var(--accent-win);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pnl-negative {
+  color: var(--accent-loss);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pnl-zero {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tinted background variants for emphasis (e.g., summary rows) */
+.pnl-positive--tinted {
+  color: var(--accent-win);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent-win) 8%, transparent);
+  padding: 1px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+}
+
+.pnl-negative--tinted {
+  color: var(--accent-loss);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent-loss) 8%, transparent);
+  padding: 1px var(--spacing-xs);
+  border-radius: var(--radius-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Keyboard Shortcut Badges — kbd-style key indicators
+   ═══════════════════════════════════════════════════════════════ */
+
+.kbd {
+  display: inline-block;
+  padding: 1px var(--spacing-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Smaller variant for inline menu hints */
+.kbd--sm {
+  padding: 0 var(--spacing-xs);
+  font-size: 8px;
+  border-bottom-width: 1px;
+}
+
+/* Muted variant for secondary shortcuts */
+.kbd--muted {
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Status Bar — persistent bottom bar for connection/clock/session
+   ═══════════════════════════════════════════════════════════════ */
+
+.shell-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+  padding: 0 var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.shell-status-bar-left,
+.shell-status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.shell-status-bar-center {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.shell-status-bar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+}
+
+.shell-status-bar-separator {
+  width: 1px;
+  height: 10px;
+  background: var(--border-color);
+}
+
+.shell-status-bar-clock {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.shell-status-bar-session {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.shell-status-bar-session--open {
+  color: var(--accent-win);
+}
+
+.shell-status-bar-session--closed {
+  color: var(--text-muted);
+}
+
+.shell-status-bar-session--pre {
+  color: var(--accent-warning);
+}
