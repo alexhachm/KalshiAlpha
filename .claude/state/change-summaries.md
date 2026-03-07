@@ -13,4 +13,9 @@
 **Files changed:** src/services/auditStateService.js, src/services/kalshiApi.js, src/services/kalshiWebSocket.js, src/services/dataFeed.js, src/services/omsEngine.js, src/services/alertService.js, src/services/analyticsService.js, src/services/omsService.js, src/services/settingsStore.js
 **What changed:** Built auditStateService with full audit tracking API (reviews, changes, export). Added retry with backoff for 429/5xx in kalshiApi.request(). Added jitter to WS reconnect. Added error backoff to market race polling and debounced portfolio WS refreshes in dataFeed. Added position overflow guard in omsEngine. Added worker crash recovery in alertService. Added section validation in settingsStore.
 **PR:** https://github.com/alexhachm/KalshiAlpha/pull/86
+
+## 2026-03-07T20:23:57Z worker-5 | domain: frontend/changes | task: "Changes Tab UI Component"
+**Files changed:** src/components/trade/ChangesTab.jsx, src/components/trade/ChangesTab.css, src/services/changeTrackingService.js, src/components/WindowManager.jsx, src/components/MenuBar.jsx
+**What changed:** Added new ChangesTab component under Trade menu that shows a live feed of iteration engine changes with status badges, filter/sort controls, diff view toggle, and hover tooltips. Created changeTrackingService.js mock service with getChanges/subscribeToChanges/getChangeById API. Registered as "changes" type in COMPONENT_REGISTRY.
+**PR:** https://github.com/alexhachm/KalshiAlpha/pull/85
 ---

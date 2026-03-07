@@ -17,6 +17,7 @@ const MENU_CONFIG = [
       { label: 'Trade Log', type: 'trade-log' },
       { label: 'Event Log', type: 'event-log' },
       { label: 'Order Book', type: 'order-book' },
+      { label: 'Changes', type: 'changes' },
     ],
   },
   {

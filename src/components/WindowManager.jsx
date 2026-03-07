@@ -11,6 +11,7 @@ import Positions from './trade/Positions'
 import TradeLog from './trade/TradeLog'
 import EventLog from './trade/EventLog'
 import OrderBook from './trade/OrderBook'
+import ChangesTab from './trade/ChangesTab'
 // Quotes
 import Chart from './quotes/Chart'
 import TimeSale from './quotes/TimeSale'
@@ -42,6 +43,7 @@ const COMPONENT_REGISTRY = {
   'trade-log': TradeLog,
   'event-log': EventLog,
   'order-book': OrderBook,
+  changes: ChangesTab,
   // Quotes
   chart: Chart,
   'time-sale': TimeSale,

@@ -32,5 +32,13 @@
     "last_heartbeat": "2026-03-06T22:59:03Z",
     "current_task": "Fix merge conflict: agent-4 CRLF unstaged changes (PR #71)",
     "domain": "frontend"
+  },
+  "worker-5": {
+    "status": "idle",
+    "last_heartbeat": "2026-03-07T20:23:43Z",
+    "domain": "frontend/changes",
+    "current_task": null,
+    "tasks_completed": 1,
+    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/85"
   }
 }
