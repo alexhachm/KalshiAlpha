@@ -116,7 +116,7 @@ function MarketViewer({ windowId }) {
           value={ticker}
           onChange={handleTickerChange}
         >
-          {TICKERS.map((t) => (
+          {(TICKERS.includes(ticker) ? TICKERS : [ticker, ...TICKERS]).map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
