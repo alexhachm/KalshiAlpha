@@ -7,7 +7,7 @@
   color: var(--text-primary);
 }
 
-/* Header bar — Bloomberg-style section header */
+/* Header bar */
 .ct-header-bar {
   display: flex;
   justify-content: space-between;
@@ -25,12 +25,64 @@
   letter-spacing: 0.5px;
 }
 
+.ct-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .ct-count {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
-/* Toolbar — filter/sort controls */
+.ct-refresh-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0 var(--spacing-xs);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ct-refresh-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-highlight);
+}
+
+/* Search bar */
+.ct-search-bar {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.ct-search-input {
+  width: 100%;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  box-sizing: border-box;
+}
+
+.ct-search-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.ct-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Toolbar */
 .ct-toolbar {
   display: flex;
   justify-content: space-between;
@@ -127,6 +179,13 @@
   line-height: 20px;
 }
 
+.ct-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
 /* Status badges — pill-shaped */
 .ct-badge {
   display: inline-block;
@@ -145,6 +204,11 @@
 }
 
 .ct-badge--stub {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-secondary) 15%, transparent);
+}
+
+.ct-badge--pending {
   color: var(--accent-warning);
   background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
 }
@@ -170,9 +234,13 @@
 .ct-source {
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Diff toggle button */
+/* Expand / diff toggle buttons */
+.ct-expand-btn,
 .ct-diff-toggle {
   background: none;
   border: 1px solid var(--border-color);
@@ -183,12 +251,53 @@
   font-size: var(--font-size-xs);
   border-radius: var(--radius-sm);
   line-height: 1.6;
+  white-space: nowrap;
   transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
+.ct-expand-btn:hover,
 .ct-diff-toggle:hover {
   color: var(--text-primary);
   border-color: var(--accent-highlight);
+}
+
+/* Detail panel (expanded card info) */
+.ct-detail-panel {
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+}
+
+.ct-detail-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  line-height: 1.6;
+}
+
+.ct-detail-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.ct-detail-value {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.ct-detail-file {
+  font-family: var(--font-mono);
+  color: var(--accent-info);
+  word-break: break-all;
+}
+
+.ct-detail-id {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 /* Diff view */
@@ -238,6 +347,8 @@
   white-space: pre-wrap;
   word-break: break-all;
   line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .ct-diff-code--before {
@@ -246,41 +357,4 @@
 
 .ct-diff-code--after {
   color: color-mix(in srgb, var(--accent-win) 70%, var(--text-secondary));
-}
-
-/* Tooltip */
-.ct-tooltip {
-  position: absolute;
-  z-index: 1000;
-  top: 100%;
-  left: var(--spacing-sm);
-  right: var(--spacing-sm);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  font-size: var(--font-size-xs);
-}
-
-.ct-tooltip-row {
-  display: flex;
-  gap: var(--spacing-sm);
-  line-height: 1.6;
-}
-
-.ct-tooltip-label {
-  color: var(--text-muted);
-  flex-shrink: 0;
-  min-width: 70px;
-}
-
-.ct-tooltip-value {
-  color: var(--text-primary);
-}
-
-.ct-tooltip-files {
-  font-family: var(--font-mono);
-  color: var(--accent-info);
-  word-break: break-all;
 }
