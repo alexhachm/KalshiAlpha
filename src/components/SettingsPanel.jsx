@@ -8,6 +8,7 @@ import {
 import './SettingsPanel.css'
 
 const LS_KEY = 'kalshi_settings'
+const SETTINGS_VERSION = 1
 
 const DEFAULTS = {
   connection: {
@@ -54,6 +55,7 @@ function loadSettings() {
       for (const section of Object.keys(DEFAULTS)) {
         result[section] = { ...DEFAULTS[section], ...(parsed[section] || {}) }
       }
+      result._version = parsed._version || 0
       return result
     }
   } catch { /* ignore */ }
@@ -61,8 +63,19 @@ function loadSettings() {
 }
 
 function saveSettings(settings) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(settings)) } catch { /* ignore */ }
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ ...settings, _version: SETTINGS_VERSION }))
+  } catch { /* ignore */ }
 }
+
+// STUB: Import/export settings — allow users to backup and share configurations
+// SOURCE: Internal — serialize/deserialize DEFAULTS structure
+// IMPLEMENT WHEN: Users request settings portability
+// STEPS:
+//   1. Add "Export" button to settings header — JSON.stringify(settings) → Blob download
+//   2. Add "Import" button — FileReader → JSON.parse → validate shape → merge with DEFAULTS
+//   3. Validate imported version against SETTINGS_VERSION, run migration if needed
+//   4. Show confirmation dialog before overwriting current settings
 
 const TABS = [
   { id: 'connection', label: 'Connection', icon: Wifi },
@@ -95,6 +108,12 @@ function Toggle({ value, onChange }) {
 }
 
 function NumberInput({ value, onChange, min, max, step = 1 }) {
+  const handleChange = (e) => {
+    let v = Number(e.target.value)
+    if (min != null && v < min) v = min
+    if (max != null && v > max) v = max
+    onChange(v)
+  }
   return (
     <input
       type="number"
@@ -103,7 +122,7 @@ function NumberInput({ value, onChange, min, max, step = 1 }) {
       min={min}
       max={max}
       step={step}
-      onChange={(e) => onChange(Number(e.target.value))}
+      onChange={handleChange}
     />
   )
 }

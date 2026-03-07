@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useHistoricalScan } from '../../hooks/useKalshiData'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
@@ -46,8 +46,18 @@ function sortResults(results, column, asc) {
     } else {
       cmp = String(a[column] || '').localeCompare(String(b[column] || ''))
     }
+    // Stable sort: use id as tie-breaker to prevent row flickering
+    if (cmp === 0) cmp = (a.id || 0) - (b.id || 0)
     return asc ? cmp : -cmp
   })
+}
+
+function escapeCSVField(val) {
+  const str = String(val ?? '')
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
 }
 
 function ConfidenceBars({ level }) {
@@ -82,7 +92,7 @@ function exportToCSV(results) {
   const headers = ['Date', 'Ticker', 'Pattern', 'Signal', 'ROI %', 'Confidence']
   const rows = results.map((r) => [
     r.date, r.ticker, r.pattern, r.signal, r.roi.toFixed(2), r.confidence,
-  ])
+  ].map(escapeCSVField))
   const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -122,7 +132,10 @@ function HistoricalScanner({ windowId }) {
     })
   }, [windowId])
 
+  const dateRangeValid = !startDate || !endDate || startDate <= endDate
+
   const handleScan = useCallback(async () => {
+    if (startDate && endDate && startDate > endDate) return
     setHasScanned(true)
     await scan({
       startDate,
@@ -151,7 +164,10 @@ function HistoricalScanner({ windowId }) {
     })
   }, [windowId])
 
-  const sorted = sortResults(results, settings.sortColumn, settings.sortAsc)
+  const sorted = useMemo(
+    () => sortResults(results, settings.sortColumn, settings.sortAsc),
+    [results, settings.sortColumn, settings.sortAsc]
+  )
 
   return (
     <div className="historical-scanner">
@@ -187,7 +203,8 @@ function HistoricalScanner({ windowId }) {
           <button
             className={`hs-scan-btn${scanning ? ' hs-scan-btn--scanning' : ''}`}
             onClick={handleScan}
-            disabled={scanning}
+            disabled={scanning || !dateRangeValid}
+            title={!dateRangeValid ? 'Start date must be before end date' : ''}
           >
             <Search size={12} />
             {scanning ? 'Scanning...' : 'Scan'}

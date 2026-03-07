@@ -57,7 +57,7 @@ function HotkeyManager() {
       setValidation(validateScript(b.script))
       setKeyConflict(null)
     }
-  }, [selectedId])
+  }, [selectedId, bindings])
 
   // Real-time validation
   useEffect(() => {
@@ -196,6 +196,27 @@ function HotkeyManager() {
       clearEditor()
     }
   }
+
+  // Ctrl+S keyboard shortcut for save
+  useEffect(() => {
+    const handleGlobalKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+    }
+    document.addEventListener('keydown', handleGlobalKey)
+    return () => document.removeEventListener('keydown', handleGlobalKey)
+  })
+
+  // STUB: Hotkey documentation export — generate printable reference card
+  // SOURCE: Internal — getAllBindings() data
+  // IMPLEMENT WHEN: Users request printable hotkey reference
+  // STEPS:
+  //   1. Group bindings by category
+  //   2. Generate HTML table with key combo, label, script columns
+  //   3. Open in new window with print-friendly CSS
+  //   4. Add "Print" button that calls window.print()
 
   const handleSave = () => {
     if (!editorKey || !editorScript) {

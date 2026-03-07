@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Settings } from 'lucide-react'
 import MarketClockSettings from './MarketClockSettings'
 import './MarketClock.css'
@@ -10,17 +10,29 @@ const DEFAULT_SETTINGS = {
   fontSize: 32,
 }
 
-// Kalshi exchange hours: Mon-Fri roughly 00:00-23:00 ET
-// Simplified: weekday = open, weekend = closed
-function getMarketStatus(date) {
-  const etOffset = -5 // EST (simplified, ignores DST)
-  const utcH = date.getUTCHours()
-  const etH = (utcH + etOffset + 24) % 24
-  const day = date.getUTCDay() // 0=Sun, 6=Sat
-  if (day === 0 || day === 6) return 'closed'
-  if (etH >= 0 && etH < 23) return 'open'
-  return 'closed'
+// Kalshi markets are open Mon-Fri (limited hours vary by market type).
+// DST-aware via toLocaleString with America/New_York timezone.
+function getMarketSession(date) {
+  const etStr = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false, weekday: 'short' })
+  const parts = etStr.split(' ')
+  const day = parts[0]?.replace(',', '')
+  const hour = parseInt(parts[1] || date.getHours(), 10)
+
+  if (day === 'Sat' || day === 'Sun') return { label: 'CLOSED', status: 'closed' }
+  if (hour >= 4 && hour < 9) return { label: 'PRE-MKT', status: 'pre' }
+  if (hour >= 9 && hour < 18) return { label: 'OPEN', status: 'open' }
+  if (hour >= 18 && hour < 20) return { label: 'POST-MKT', status: 'post' }
+  return { label: 'CLOSED', status: 'closed' }
 }
+
+// STUB: Exchange calendar — holidays, half-days, special sessions
+// SOURCE: Kalshi API /exchange/schedule endpoint
+// IMPLEMENT WHEN: Kalshi publishes an official calendar API or static schedule
+// STEPS:
+//   1. Fetch exchange schedule from Kalshi API on mount
+//   2. Cache schedule in localStorage with daily TTL
+//   3. Cross-reference current date against holidays/half-days
+//   4. Update getMarketSession to check calendar before time-based logic
 
 function formatTime(date, settings) {
   const h = settings.timezone === 'utc' ? date.getUTCHours() : date.getHours()
@@ -93,7 +105,9 @@ function MarketClock({ windowId }) {
   const timeStr = formatTime(now, settings)
   const dateStr = settings.showDate ? formatDate(now, settings) : null
   const tzLabel = settings.timezone === 'utc' ? 'UTC' : 'LOCAL'
-  const marketStatus = getMarketStatus(now)
+  const session = useMemo(() => getMarketSession(now), [
+    Math.floor(now.getTime() / 60000) // recalculate at most once per minute
+  ])
 
   return (
     <div className="market-clock">
@@ -108,9 +122,9 @@ function MarketClock({ windowId }) {
         </div>
         {dateStr && <div className="mc-date">{dateStr}</div>}
         <div className="mc-tz">{tzLabel}</div>
-        <div className={`mc-status mc-status--${marketStatus}`}>
+        <div className={`mc-status mc-status--${session.status}`}>
           <span className="mc-status-dot" />
-          {marketStatus === 'open' ? 'OPEN' : 'CLOSED'}
+          {session.label}
         </div>
       </div>
 

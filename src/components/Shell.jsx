@@ -290,6 +290,37 @@ function Shell() {
     return focused
   }, [state.windows])
 
+  // Keyboard navigation: Ctrl+Tab / Ctrl+Shift+Tab to cycle between windows
+  useEffect(() => {
+    const handleKeyNav = (e) => {
+      if (!e.ctrlKey || e.key !== 'Tab') return
+      e.preventDefault()
+      const windowList = Object.values(state.windows)
+        .filter((w) => !w.poppedOut)
+        .sort((a, b) => a.zIndex - b.zIndex)
+      if (windowList.length < 2) return
+
+      const focused = getFocusedWindow()
+      if (!focused) return
+      const idx = windowList.findIndex((w) => w.id === focused.id)
+      const nextIdx = e.shiftKey
+        ? (idx - 1 + windowList.length) % windowList.length
+        : (idx + 1) % windowList.length
+      focusWindow(windowList[nextIdx].id)
+    }
+    document.addEventListener('keydown', handleKeyNav)
+    return () => document.removeEventListener('keydown', handleKeyNav)
+  }, [state.windows, getFocusedWindow, focusWindow])
+
+  // STUB: Layout persistence — save/restore window arrangement
+  // SOURCE: Internal — serialize state.windows to localStorage
+  // IMPLEMENT WHEN: Users request persistent layouts
+  // STEPS:
+  //   1. On window change (open/close/move/resize), debounce-save state.windows to localStorage
+  //   2. On mount, check localStorage for saved layout and restore via OPEN_WINDOW dispatches
+  //   3. Add "Save Layout" / "Load Layout" menu items to MenuBar
+  //   4. Support named layouts (e.g. "Trading", "Analysis", "Monitoring")
+
   useHotkeyDispatch({ focusWindow, getFocusedWindow, windows: state.windows })
 
   return (

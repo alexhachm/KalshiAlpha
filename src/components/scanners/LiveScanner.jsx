@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { subscribeToScanner } from '../../services/mockData'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
@@ -35,6 +35,8 @@ function sortAlerts(alerts, column, asc) {
     } else {
       cmp = String(a[column] || '').localeCompare(String(b[column] || ''))
     }
+    // Stable sort: use id as tie-breaker to prevent row flickering
+    if (cmp === 0) cmp = a.id - b.id
     return asc ? cmp : -cmp
   })
 }
@@ -123,13 +125,24 @@ function LiveScanner({ windowId }) {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }, [])
 
-  // Filter and sort
-  const filtered = alerts.filter((a) => {
-    if (settings.filterType !== 'all' && a.type !== settings.filterType) return false
-    if (a.conviction < settings.minConviction) return false
-    return true
-  })
-  const sorted = sortAlerts(filtered, settings.sortColumn, settings.sortAsc)
+  // Filter and sort — memoized to avoid recalculation on unrelated re-renders
+  const sorted = useMemo(() => {
+    const filtered = alerts.filter((a) => {
+      if (settings.filterType !== 'all' && a.type !== settings.filterType) return false
+      if (a.conviction < settings.minConviction) return false
+      return true
+    })
+    return sortAlerts(filtered, settings.sortColumn, settings.sortAsc)
+  }, [alerts, settings.filterType, settings.minConviction, settings.sortColumn, settings.sortAsc])
+
+  // STUB: Row virtualization — render only visible rows for large datasets
+  // SOURCE: react-window or @tanstack/react-virtual
+  // IMPLEMENT WHEN: maxResults > 200 or user reports scroll performance issues
+  // STEPS:
+  //   1. npm install @tanstack/react-virtual
+  //   2. Replace tbody with useVirtualizer from @tanstack/react-virtual
+  //   3. Set overscan to ~5 rows for smooth scrolling
+  //   4. Keep table header sticky outside virtual container
 
   return (
     <div className="live-scanner">
