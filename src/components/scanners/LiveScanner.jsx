@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { subscribeToScanner } from '../../services/mockData'
+import { subscribeToScanner } from '../../services/dataFeed'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import GridSettingsPanel from '../GridSettingsPanel'
