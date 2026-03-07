@@ -1,12 +1,12 @@
 {
   "worker-1": {
-    "status": "running",
-    "domain": "shell",
-    "current_task": "Fix linkBus windowGroups leak on window close",
+    "status": "busy",
+    "domain": "services",
+    "current_task": "Fix omsService.js cancelOrder failing on PENDING orders",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T23:37:04Z"
+    "last_heartbeat": "2026-03-07T23:39:42Z"
   },
   "worker-2": {
     "status": "busy",

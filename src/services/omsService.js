@@ -249,6 +249,13 @@ async function cancelOrder(orderId) {
   const order = engine.findOrder(orderId);
   if (!order) throw new Error(`Order not found: ${orderId}`);
 
+  // PENDING orders have no exchange ID yet — cancel locally without API call
+  if (order.status === engine.ORDER_STATUS.PENDING) {
+    engine.markCancelled(order.clientOrderId);
+    emit('order:cancel_sent', order);
+    return order;
+  }
+
   const exchangeId = order.id || orderId;
 
   try {
