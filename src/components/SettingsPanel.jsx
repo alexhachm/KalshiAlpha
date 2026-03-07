@@ -124,7 +124,7 @@ function Row({ label, children, description }) {
   return (
     <div className="settings-row">
       <div className="settings-row-left">
-        <span className="settings-label">{label}</span>
+        <span className="settings-label" title={description || undefined}>{label}</span>
         {description && <span className="settings-desc">{description}</span>}
       </div>
       <div className="settings-row-right">{children}</div>

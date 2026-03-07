@@ -29,6 +29,16 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
   cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.hk-profile-select:hover {
+  border-color: var(--border-active);
+}
+
+.hk-profile-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
 }
 
 .hk-btn {
@@ -42,12 +52,19 @@
   cursor: pointer;
   white-space: nowrap;
   transition: color var(--transition-fast),
-              background var(--transition-fast);
+              background var(--transition-fast),
+              border-color var(--transition-fast);
 }
 
 .hk-btn:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
+  border-color: var(--border-active);
+}
+
+.hk-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 .hk-btn--accent {
@@ -62,6 +79,10 @@
   color: var(--bg-primary);
 }
 
+.hk-btn--accent:active {
+  opacity: 0.75;
+}
+
 .hk-btn--accent:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -73,6 +94,7 @@
   color: var(--accent-sell);
   font-size: var(--font-size-sm);
   flex-shrink: 0;
+  border-radius: var(--radius-sm);
 }
 
 /* Two-column body */
@@ -135,14 +157,28 @@
 .hk-binding-check {
   flex-shrink: 0;
   cursor: pointer;
+  accent-color: var(--accent-highlight);
 }
 
+.hk-binding-check:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* Keyboard shortcut badge styling */
 .hk-binding-key {
-  font-size: var(--font-size-sm);
+  display: inline-block;
+  font-size: var(--font-size-xs);
   font-weight: 600;
+  font-family: var(--font-mono);
   color: var(--accent-highlight);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-sm);
   white-space: nowrap;
-  min-width: 60px;
+  min-width: 0;
+  line-height: 1.5;
 }
 
 .hk-binding-label {
@@ -208,6 +244,7 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-top: var(--spacing-xs);
 }
 
 .hk-key-input {
@@ -222,6 +259,11 @@
   cursor: pointer;
   outline: none;
   user-select: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.hk-key-input:hover {
+  border-color: var(--border-active);
 }
 
 .hk-key-input:focus,
@@ -238,6 +280,11 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
+  transition: border-color var(--transition-fast);
+}
+
+.hk-text-input:hover {
+  border-color: var(--border-active);
 }
 
 .hk-text-input:focus {
@@ -256,6 +303,11 @@
   min-height: 60px;
   resize: vertical;
   line-height: 1.4;
+  transition: border-color var(--transition-fast);
+}
+
+.hk-script-input:hover {
+  border-color: var(--border-active);
 }
 
 .hk-script-input:focus {
@@ -291,6 +343,16 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
   cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.hk-category-select:hover {
+  border-color: var(--border-active);
+}
+
+.hk-category-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
 }
 
 .hk-save-btn {
@@ -327,6 +389,11 @@
 .hk-help-toggle {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.hk-help--open .hk-help-toggle {
+  transform: rotate(90deg);
 }
 
 .hk-help-body {
