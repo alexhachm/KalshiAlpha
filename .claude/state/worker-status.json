@@ -1,12 +1,12 @@
 {
   "worker-1": {
-    "status": "busy",
+    "status": "running",
     "domain": "services",
     "current_task": "Fix omsService.js cancelOrder failing on PENDING orders",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T23:39:42Z"
+    "last_heartbeat": "2026-03-07T23:44:18Z"
   },
   "worker-2": {
     "status": "busy",
