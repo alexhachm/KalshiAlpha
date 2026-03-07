@@ -150,6 +150,7 @@
 .pl-cell {
   position: relative;
   overflow: hidden;
+  font-variant-numeric: tabular-nums;
 }
 
 .pl-cell-bid {
@@ -268,6 +269,7 @@
   gap: var(--spacing-lg);
   font-size: var(--font-size-md);
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .pl-footer-totals {

@@ -110,6 +110,7 @@
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-ohlc-val {
@@ -270,4 +271,20 @@
 .chart-type-btn:disabled:hover {
   background: transparent;
   color: var(--text-secondary);
+}
+
+/* P&L colors within chart */
+.chart-component .text-win { color: var(--accent-win); }
+.chart-component .text-loss { color: var(--accent-loss); }
+
+/* Focus states for chart controls */
+.chart-ticker-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.chart-tf-btn:focus-visible,
+.chart-type-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
 }

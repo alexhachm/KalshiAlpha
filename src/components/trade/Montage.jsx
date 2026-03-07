@@ -234,6 +234,15 @@ function Montage({ windowId }) {
       }))
     : []
 
+  // Max sizes for depth bar widths
+  const maxBidSize = Math.max(1, ...bidLevels.map((l) => l.size))
+  const maxAskSize = Math.max(1, ...askLevels.map((l) => l.size))
+
+  // Spread display
+  const spread = bidLevels.length > 0 && askLevels.length > 0
+    ? askLevels[0].price - bidLevels[0].price
+    : null
+
   return (
     <div ref={containerRef} className={`montage ${fontClass}`}>
       {/* Ticker search bar */}
@@ -294,6 +303,7 @@ function Montage({ windowId }) {
                   className={`mt-book-row mt-bid-row ${i === 0 && bidFlash ? `flash-${bidFlash}` : ''}`}
                   onClick={() => handlePriceClick(level.price)}
                 >
+                  <div className="mt-depth-bar" style={{ width: `${(level.size / maxBidSize) * 100}%` }} />
                   <span className="mt-book-size">{level.size}</span>
                   <span className="mt-book-price mt-bid-price">{level.price}c</span>
                 </div>
@@ -310,6 +320,7 @@ function Montage({ windowId }) {
                   className={`mt-book-row mt-ask-row ${i === 0 && askFlash ? `flash-${askFlash}` : ''}`}
                   onClick={() => handlePriceClick(level.price)}
                 >
+                  <div className="mt-depth-bar" style={{ width: `${(level.size / maxAskSize) * 100}%` }} />
                   <span className="mt-book-price mt-ask-price">{level.price}c</span>
                   <span className="mt-book-size">{level.size}</span>
                 </div>
@@ -320,6 +331,7 @@ function Montage({ windowId }) {
           {/* Market info strip */}
           <div className="mt-info-strip">
             <span>Last: <strong>{data.yes.price}c</strong></span>
+            {spread !== null && <span>Spread: <strong>{spread}</strong></span>}
             <span>Vol: <strong>{data.lastTrade.size}</strong></span>
             <span className={data.lastTrade.side === 'YES' ? 'text-win' : 'text-loss'}>
               {data.lastTrade.side}

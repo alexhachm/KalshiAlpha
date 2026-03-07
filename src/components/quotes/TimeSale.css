@@ -28,6 +28,11 @@
   cursor: pointer;
 }
 
+.ts-ticker-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
 .ts-trade-count {
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
@@ -89,6 +94,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Trade row */
@@ -118,6 +124,11 @@
 
 .ts-row--large .ts-col-size {
   /* dense quant-desk style — no glow effects */
+}
+
+/* Alternating row stripes for tape readability */
+.ts-row:nth-child(even) {
+  background: var(--bg-row-alt);
 }
 
 /* Column widths */

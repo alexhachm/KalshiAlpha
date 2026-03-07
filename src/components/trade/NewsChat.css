@@ -161,3 +161,19 @@
   font-style: italic;
   padding: var(--spacing-xl);
 }
+
+/* Alternating rows for news feed */
+.nc-item:nth-child(even) {
+  background: var(--bg-row-alt);
+}
+
+/* Tabular nums for timestamps */
+.nc-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus state for filter badge */
+.nc-filter-badge:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: 1px;
+}

@@ -78,6 +78,7 @@ function TimeSale({ windowId }) {
   const [trades, setTrades] = useState([])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
+  const [flashedIds, setFlashedIds] = useState(new Set())
   const listRef = useRef(null)
   const containerRef = useRef(null)
   const autoScrollRef = useRef(true)
@@ -109,10 +110,18 @@ function TimeSale({ windowId }) {
     const unsub = subscribeToTimeSales(ticker, (trade) => {
       setTrades((prev) => {
         const next = [...prev, trade]
-        // Trim to maxRows (read from latest settings via closure)
         if (next.length > 500) return next.slice(-500)
         return next
       })
+      // Flash new entry
+      setFlashedIds((prev) => new Set(prev).add(trade.id))
+      setTimeout(() => {
+        setFlashedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(trade.id)
+          return next
+        })
+      }, 500)
     })
     return unsub
   }, [ticker])
@@ -232,7 +241,7 @@ function TimeSale({ windowId }) {
               key={trade.id}
               className={`ts-row ${trade.side === 'BUY' ? 'ts-row--buy' : 'ts-row--sell'}${
                 trade.size >= (settings.largeSizeThreshold || 500) ? ' ts-row--large' : ''
-              }`}
+              }${flashedIds.has(trade.id) ? ` ts-row--flash-${trade.side === 'BUY' ? 'buy' : 'sell'}` : ''}`}
               style={{ ...rowStyle, height: grid.rowHeight }}
             >
               {grid.visibleColumns.map((col) => (

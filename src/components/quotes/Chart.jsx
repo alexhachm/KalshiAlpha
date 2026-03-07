@@ -47,6 +47,22 @@ const DEFAULT_SETTINGS = {
   overlayTickers: [],
 }
 
+// Read CSS custom property values for chart canvas theming
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement)
+  const v = (name) => s.getPropertyValue(name).trim()
+  return {
+    bgPrimary: v('--bg-primary') || '#060910',
+    textSecondary: v('--text-secondary') || '#7c8698',
+    borderSubtle: v('--border-subtle') || '#111827',
+    borderColor: v('--border-color') || '#1a2233',
+    textMuted: v('--text-muted') || '#4e5869',
+    bgSecondary: v('--bg-secondary') || '#0d1119',
+    accentWin: v('--accent-win') || '#3ecf8e',
+    accentLoss: v('--accent-loss') || '#e05c5c',
+  }
+}
+
 function normalizeToPercent(candles) {
   if (!candles.length) return []
   const base = candles[0].close
@@ -81,6 +97,7 @@ function Chart({ windowId }) {
   const mainSeriesRef = useRef(null)
   const volumeSeriesRef = useRef(null)
   const overlaySeriesRef = useRef([])
+  const themeRef = useRef(null)
   const basePricesRef = useRef({})
 
   const [ticker, setTicker] = useState(TICKERS[0])
@@ -123,22 +140,24 @@ function Chart({ windowId }) {
 
     const isOverlay = settings.overlayMode
     const showVol = settings.showVolume && !isOverlay
+    const theme = getThemeColors()
+    themeRef.current = theme
 
     const chart = createChart(chartContainerRef.current, {
       autoSize: true,
       layout: {
-        background: { type: ColorType.Solid, color: '#121212' },
-        textColor: '#a0a0a0',
-        fontFamily: "'Roboto Mono', 'SF Mono', Consolas, monospace",
+        background: { type: ColorType.Solid, color: theme.bgPrimary },
+        textColor: theme.textSecondary,
+        fontFamily: "'JetBrains Mono', 'SF Mono', Consolas, monospace",
         fontSize: 11,
       },
       grid: {
         vertLines: {
-          color: settings.showGrid ? '#1e1e1e' : 'transparent',
+          color: settings.showGrid ? theme.borderSubtle : 'transparent',
           style: LineStyle.Dotted,
         },
         horzLines: {
-          color: settings.showGrid ? '#1e1e1e' : 'transparent',
+          color: settings.showGrid ? theme.borderSubtle : 'transparent',
           style: LineStyle.Dotted,
         },
       },
@@ -146,15 +165,15 @@ function Chart({ windowId }) {
         mode: settings.crosshairStyle === 'normal'
           ? CrosshairMode.Normal
           : CrosshairMode.Magnet,
-        vertLine: { color: '#555', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#2a2a2a' },
-        horzLine: { color: '#555', width: 1, style: LineStyle.Dashed, labelBackgroundColor: '#2a2a2a' },
+        vertLine: { color: theme.textMuted, width: 1, style: LineStyle.Dashed, labelBackgroundColor: theme.bgSecondary },
+        horzLine: { color: theme.textMuted, width: 1, style: LineStyle.Dashed, labelBackgroundColor: theme.bgSecondary },
       },
       rightPriceScale: {
-        borderColor: '#333',
+        borderColor: theme.borderColor,
         scaleMargins: { top: 0.1, bottom: showVol ? 0.25 : 0.05 },
       },
       timeScale: {
-        borderColor: '#333',
+        borderColor: theme.borderColor,
         timeVisible: true,
         secondsVisible: false,
         rightOffset: 5,
@@ -226,15 +245,15 @@ function Chart({ windowId }) {
         })
       } else if (settings.chartType === 'line') {
         mainSeries = chart.addSeries(LineSeries, {
-          color: '#00d2ff',
+          color: theme.accentWin,
           lineWidth: 2,
           crosshairMarkerRadius: 4,
         })
       } else {
         mainSeries = chart.addSeries(AreaSeries, {
-          topColor: 'rgba(0, 210, 255, 0.4)',
-          bottomColor: 'rgba(0, 210, 255, 0.0)',
-          lineColor: '#00d2ff',
+          topColor: theme.accentWin + '66',
+          bottomColor: theme.accentWin + '00',
+          lineColor: theme.accentWin,
           lineWidth: 2,
         })
       }
@@ -268,7 +287,7 @@ function Chart({ windowId }) {
           candles.map((c) => ({
             time: c.time,
             value: c.volume,
-            color: c.close >= c.open ? 'rgba(0, 200, 83, 0.3)' : 'rgba(255, 23, 68, 0.3)',
+            color: c.close >= c.open ? theme.accentWin + '4D' : theme.accentLoss + '4D',
           }))
         )
       }
@@ -330,10 +349,11 @@ function Chart({ windowId }) {
         mainSeriesRef.current.update({ time: bar.time, value: bar.close })
       }
       if (volumeSeriesRef.current) {
+        const t = themeRef.current || {}
         volumeSeriesRef.current.update({
           time: bar.time,
           value: bar.volume,
-          color: bar.close >= bar.open ? 'rgba(0, 200, 83, 0.3)' : 'rgba(255, 23, 68, 0.3)',
+          color: bar.close >= bar.open ? (t.accentWin || '#3ecf8e') + '4D' : (t.accentLoss || '#e05c5c') + '4D',
         })
       }
     })
