@@ -1,12 +1,12 @@
 {
   "worker-1": {
     "status": "busy",
-    "domain": "shell",
-    "current_task": "Fix WindowManager.jsx tab merge settings loss",
+    "domain": "trade",
+    "current_task": "Fix Positions.jsx flash setTimeout leak",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T23:22:15Z"
+    "last_heartbeat": "2026-03-07T23:25:07Z"
   },
   "worker-2": {
     "status": "busy",

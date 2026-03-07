@@ -82,6 +82,7 @@ function Positions({ windowId }) {
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const intervalRef = useRef(null)
+  const flashTimeoutRef = useRef(null)
 
   // Persist settings
   useEffect(() => {
@@ -107,7 +108,8 @@ function Positions({ windowId }) {
 
         if (flashed.size > 0) {
           setFlashedRows(flashed)
-          setTimeout(() => setFlashedRows(new Set()), 600)
+          clearTimeout(flashTimeoutRef.current)
+          flashTimeoutRef.current = setTimeout(() => setFlashedRows(new Set()), 600)
         }
       }
 
@@ -119,6 +121,11 @@ function Positions({ windowId }) {
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
   }, [settings.refreshInterval, refreshData])
+
+  // Cleanup flash timeout on unmount
+  useEffect(() => {
+    return () => clearTimeout(flashTimeoutRef.current)
+  }, [])
 
   // Color link subscription
   useEffect(() => {
