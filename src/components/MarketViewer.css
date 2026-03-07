@@ -6,6 +6,8 @@
   font-size: var(--font-size-xs);
   color: var(--text-primary);
   gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  box-sizing: border-box;
   font-variant-numeric: tabular-nums;
 }
 
@@ -129,7 +131,8 @@
 }
 
 .mv-depth-table td {
-  padding: var(--spacing-xs);
+  height: 22px;
+  padding: 0 var(--spacing-xs);
   color: var(--text-secondary);
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -145,6 +148,7 @@
 
 .mv-bid-price {
   color: var(--accent-buy);
+  text-align: right;
 }
 
 .mv-loading {
@@ -166,10 +170,10 @@
   background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-family: var(--font-mono);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   box-sizing: border-box;
   transition: border-color var(--transition-fast);
 }
@@ -192,7 +196,7 @@
   overflow-y: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   box-shadow: var(--shadow-md);
   z-index: 100;
 }

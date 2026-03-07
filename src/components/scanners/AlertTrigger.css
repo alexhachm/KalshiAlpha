@@ -130,7 +130,8 @@
 }
 
 .at-td {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  height: 22px;
+  padding: 0 var(--spacing-sm);
   white-space: nowrap;
   border-bottom: 1px solid var(--border-subtle);
 }

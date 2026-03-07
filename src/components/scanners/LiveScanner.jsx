@@ -136,6 +136,8 @@ function LiveScanner({ windowId }) {
       {/* Toolbar */}
       <div className="ls-toolbar">
         <div className="ls-toolbar-left">
+          <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} title={paused ? 'Paused' : 'Live'} />
+          <span className={`ls-live-label${paused ? ' ls-live-label--paused' : ''}`}>{paused ? 'PAUSED' : 'LIVE'}</span>
           <select
             className="ls-filter-select"
             value={settings.filterType}
@@ -146,7 +148,6 @@ function LiveScanner({ windowId }) {
             <option value="bear">Bear</option>
             <option value="neutral">Neutral</option>
           </select>
-          <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} />
           <span className="ls-count">{sorted.length} alerts</span>
         </div>
         <div className="ls-toolbar-right">

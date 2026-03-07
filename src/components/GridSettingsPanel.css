@@ -28,6 +28,8 @@
   color: var(--accent-highlight);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* --- Column list (drag-reorder) --- */
@@ -106,7 +108,7 @@
 }
 
 .gs-label {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
