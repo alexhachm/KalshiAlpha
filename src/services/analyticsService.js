@@ -15,13 +15,16 @@ import * as calc from './analyticsCalc';
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const LS_FILLS_KEY = 'kalshi_analytics_fills';
 const LS_SETTLEMENTS_KEY = 'kalshi_analytics_settlements';
-const LS_TIMESTAMP_KEY = 'kalshi_analytics_cache_ts';
 
 // --- localStorage Cache ---
 
+function tsKey(key) {
+  return key + '_ts';
+}
+
 function getCachedData(key) {
   try {
-    const tsRaw = localStorage.getItem(LS_TIMESTAMP_KEY);
+    const tsRaw = localStorage.getItem(tsKey(key));
     if (!tsRaw) return null;
 
     const ts = parseInt(tsRaw, 10);
@@ -37,15 +40,16 @@ function getCachedData(key) {
 function setCachedData(key, data) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
-    localStorage.setItem(LS_TIMESTAMP_KEY, String(Date.now()));
+    localStorage.setItem(tsKey(key), String(Date.now()));
   } catch { /* quota exceeded */ }
 }
 
 function clearCache() {
   try {
     localStorage.removeItem(LS_FILLS_KEY);
+    localStorage.removeItem(tsKey(LS_FILLS_KEY));
     localStorage.removeItem(LS_SETTLEMENTS_KEY);
-    localStorage.removeItem(LS_TIMESTAMP_KEY);
+    localStorage.removeItem(tsKey(LS_SETTLEMENTS_KEY));
   } catch { /* ignore */ }
 }
 
