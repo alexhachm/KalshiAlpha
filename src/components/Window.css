@@ -25,8 +25,8 @@
 }
 
 .window-color-chip {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   margin-right: var(--spacing-sm);
   flex-shrink: 0;
   border-radius: var(--radius-sm);
@@ -101,7 +101,7 @@
 
 .window-title {
   flex: 1;
-  font-size: var(--font-size-xs);
+  font-size: 8.5px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;

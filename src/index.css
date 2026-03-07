@@ -71,12 +71,12 @@
   /* Layout */
   --menu-bar-height: 24px;
   --titlebar-height: 32px;
-  --window-titlebar-height: 20px;
+  --window-titlebar-height: 16px;
   --window-min-width: 200px;
   --window-min-height: 150px;
   --window-default-width: 400px;
   --window-default-height: 300px;
-  --resize-handle-size: 4px;
+  --resize-handle-size: 3px;
   --cascade-offset: 30px;
 
   /* Component-specific defaults */
