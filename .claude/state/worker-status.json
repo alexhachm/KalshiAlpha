@@ -1,12 +1,12 @@
 {
   "worker-1": {
     "status": "busy",
-    "domain": "frontend",
-    "current_task": "Foundation: overhaul index.css design tokens",
+    "domain": "frontend/tokens",
+    "current_task": "Foundation: Design tokens + global utility classes in index.css",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-06T21:04:38Z"
+    "last_heartbeat": "2026-03-07T10:47:18Z"
   },
   "worker-2": {
     "status": "busy",

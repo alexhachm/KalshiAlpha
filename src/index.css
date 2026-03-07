@@ -1,34 +1,34 @@
 :root {
   /* Core backgrounds — deep blue-black palette for trading terminal density */
-  --bg-primary: #060910;
-  --bg-secondary: #0d1119;
-  --bg-tertiary: #151c28;
-  --bg-hover: #1c2538;
-  --bg-active: #243044;
-  --bg-input: #080c12;
-  --bg-row-alt: #0a0f17;
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2128;
+  --bg-hover: #21262d;
+  --bg-active: #2a3240;
+  --bg-input: #0d1117;
+  --bg-row-alt: #111820;
 
-  /* Surface & elevation layers (NEW) */
-  --bg-surface: #101520;
-  --bg-elevated: #1a2332;
-  --bg-overlay: rgba(2, 4, 8, 0.82);
+  /* Surface & elevation layers */
+  --bg-surface: #131920;
+  --bg-elevated: #1e2530;
+  --bg-overlay: rgba(1, 4, 9, 0.85);
 
-  /* Text — crisp contrast hierarchy, all pass WCAG AA on --bg-primary */
-  --text-primary: #cdd1da;
-  --text-heading: #e8ecf4;
-  --text-secondary: #7c8698;
-  --text-muted: #4e5869;
+  /* Text — wider contrast spread, all pass WCAG AA on --bg-primary */
+  --text-primary: #e1e4e8;
+  --text-heading: #f0f3f6;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
 
-  /* Text extras (NEW) */
-  --text-label: #5a657a;
-  --text-accent: #d4a853;
+  /* Text extras */
+  --text-label: #6e7681;
+  --text-accent: #d4a017;
 
-  /* Accents — refined, non-saturated trading palette */
-  --accent-win: #3ecf8e;
-  --accent-loss: #e05c5c;
-  --accent-highlight: #d4a853;
-  --accent-buy: #3ecf8e;
-  --accent-sell: #e05c5c;
+  /* Accents — amber/gold highlight, distinct buy/sell */
+  --accent-win: #00d084;
+  --accent-loss: #ff4757;
+  --accent-highlight: #d4a017;
+  --accent-buy: #4a9eff;
+  --accent-sell: #ff4757;
   --accent-warning: #e5952e;
   --accent-info: #5490d4;
   --accent-neutral: #656e80;
@@ -36,7 +36,7 @@
   /* Borders — subtle blue-tinted separators */
   --border-color: #1a2233;
   --border-subtle: #111827;
-  --border-focus: #d4a853;
+  --border-focus: #d4a017;
   --border-active: #2a3a55;
 
   /* Typography — tightened for data density */
@@ -48,12 +48,16 @@
   --font-size-lg: 12.5px;
   --font-size-xl: 14px;
 
-  /* Spacing — compact but breathable */
+  /* Data-specific font sizes */
+  --font-size-data: 12px;
+  --font-size-header: 10px;
+
+  /* Spacing — tightened ~20% for density */
   --spacing-xs: 2px;
-  --spacing-sm: 4px;
-  --spacing-md: 6px;
-  --spacing-lg: 10px;
-  --spacing-xl: 14px;
+  --spacing-sm: 3px;
+  --spacing-md: 5px;
+  --spacing-lg: 8px;
+  --spacing-xl: 12px;
 
   /* Radii — sharp, precise edges */
   --radius-sm: 2px;
@@ -65,9 +69,9 @@
   --transition-normal: 150ms ease;
 
   /* Layout */
-  --menu-bar-height: 26px;
+  --menu-bar-height: 24px;
   --titlebar-height: 32px;
-  --window-titlebar-height: 22px;
+  --window-titlebar-height: 20px;
   --window-min-width: 200px;
   --window-min-height: 150px;
   --window-default-width: 400px;
@@ -121,9 +125,9 @@
   --overlay-bg: rgba(2, 4, 8, 0.8);
 
   /* Glow effects (NEW) */
-  --shadow-glow-win: 0 0 12px rgba(62, 207, 142, 0.3);
-  --shadow-glow-loss: 0 0 12px rgba(224, 92, 92, 0.3);
-  --shadow-glow-highlight: 0 0 12px rgba(212, 168, 83, 0.25);
+  --shadow-glow-win: 0 0 12px rgba(0, 208, 132, 0.3);
+  --shadow-glow-loss: 0 0 12px rgba(255, 71, 87, 0.3);
+  --shadow-glow-highlight: 0 0 12px rgba(212, 160, 23, 0.25);
   --shadow-glow-info: 0 0 10px rgba(84, 144, 212, 0.2);
 
   /* Titlebar close button */
@@ -134,8 +138,8 @@
   --color-chip-unlinked: #555;
 
   /* Flash animations — vivid but not jarring */
-  --flash-win-bg: rgba(62, 207, 142, 0.22);
-  --flash-loss-bg: rgba(224, 92, 92, 0.22);
+  --flash-win-bg: rgba(0, 208, 132, 0.3);
+  --flash-loss-bg: rgba(255, 71, 87, 0.3);
 
   /* Scrollbar */
   --scrollbar-thumb: #1e2a3c;
@@ -210,10 +214,10 @@ body {
 }
 
 .flash-up {
-  animation: flash-green 0.4s ease-out;
+  animation: flash-green 0.8s ease-out;
 }
 .flash-down {
-  animation: flash-red 0.4s ease-out;
+  animation: flash-red 0.8s ease-out;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -387,12 +391,12 @@ body {
 
 .connection-dot--connected {
   background: var(--accent-win);
-  box-shadow: 0 0 4px rgba(62, 207, 142, 0.5);
+  box-shadow: 0 0 4px rgba(0, 208, 132, 0.5);
 }
 
 .connection-dot--disconnected {
   background: var(--accent-loss);
-  box-shadow: 0 0 4px rgba(224, 92, 92, 0.5);
+  box-shadow: 0 0 4px rgba(255, 71, 87, 0.5);
 }
 
 .connection-dot--reconnecting {
@@ -973,4 +977,185 @@ tr:focus-visible,
   box-shadow: 0 -4px 8px -2px rgba(0, 0, 0, 0.4);
   z-index: 3;
   pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Data Table — generic dense table for trading data
+   ═══════════════════════════════════════════════════════════════ */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th {
+  text-transform: uppercase;
+  font-size: var(--font-size-header);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.data-table .num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table tr {
+  height: 22px;
+}
+
+.data-table tr:nth-child(even) {
+  background: var(--bg-row-alt);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section Header — uppercase label divider
+   ═══════════════════════════════════════════════════════════════ */
+
+.section-header {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--font-size-header);
+  font-weight: 500;
+  color: var(--text-label);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Flash Animations — row-level flash for price/trade events
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes flash-amber {
+  0% { background-color: rgba(212, 160, 23, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.row-flash {
+  animation: flash-amber 0.8s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Status Dot — live/offline indicator with pulse
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.status-dot.live {
+  background: var(--accent-win);
+  box-shadow: 0 0 4px rgba(0, 208, 132, 0.5);
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Buttons — base + primary + danger variants
+   ═══════════════════════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  user-select: none;
+}
+
+.btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-active);
+}
+
+.btn:active {
+  background: var(--bg-active);
+}
+
+.btn-primary {
+  background: var(--accent-highlight);
+  border-color: var(--accent-highlight);
+  color: #0d1117;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent-highlight) 85%, white);
+  border-color: color-mix(in srgb, var(--accent-highlight) 85%, white);
+}
+
+.btn-danger {
+  background: var(--accent-loss);
+  border-color: var(--accent-loss);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--accent-loss) 85%, white);
+  border-color: color-mix(in srgb, var(--accent-loss) 85%, white);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Global Form Controls — input, select, textarea
+   ═══════════════════════════════════════════════════════════════ */
+
+input,
+select,
+textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: border-color var(--transition-fast);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--border-focus);
+  outline: none;
+}
+
+select {
+  cursor: pointer;
 }
