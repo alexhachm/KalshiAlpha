@@ -13,7 +13,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 2px var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   gap: var(--spacing-sm);
 }
@@ -29,7 +29,7 @@
   background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
@@ -58,8 +58,8 @@
   background: var(--bg-tertiary);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 2px;
+  padding: 2px var(--spacing-sm);
   cursor: pointer;
   font-size: var(--font-size-sm);
   line-height: 1;
@@ -89,7 +89,7 @@
 
 /* Settings panel */
 .ls-settings {
-  padding: var(--spacing-sm) var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -115,7 +115,7 @@
   background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
@@ -132,7 +132,7 @@
   background: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   padding: 2px var(--spacing-xs);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
@@ -172,10 +172,10 @@
   text-align: left;
   color: var(--text-muted);
   font-weight: 600;
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  letter-spacing: 0.06em;
+  padding: 2px var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   user-select: none;
@@ -200,11 +200,12 @@
 }
 
 .ls-sort-arrow {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
 }
 
 .ls-row {
   cursor: pointer;
+  height: 22px;
   transition: background var(--transition-fast);
 }
 
@@ -217,11 +218,12 @@
 }
 
 .ls-row td {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 1px var(--spacing-sm);
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 20px;
 }
 
 .ls-cell-time {
@@ -252,32 +254,46 @@
 }
 
 .ls-cell-type {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
+}
+
+/* Type badges — pill-shaped, color-coded */
+.ls-type-bull,
+.ls-type-bear,
+.ls-type-neutral {
+  display: inline-block;
+  padding: 0 var(--spacing-sm);
+  border-radius: 9px;
+  line-height: 16px;
 }
 
 .ls-type-bull {
   color: var(--accent-buy);
+  background: color-mix(in srgb, var(--accent-buy) 18%, transparent);
 }
 
 .ls-type-bear {
   color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 18%, transparent);
 }
 
 .ls-type-neutral {
   color: var(--accent-neutral);
+  background: color-mix(in srgb, var(--accent-neutral) 18%, transparent);
 }
 
 .ls-cell-conviction {
   width: 70px;
   text-align: right;
+  font-family: var(--font-mono);
 }
 
 /* Conviction bars */
 .ls-conviction {
   display: inline-flex;
-  gap: var(--spacing-xs);
+  gap: 2px;
   align-items: center;
 }
 
@@ -287,7 +303,7 @@
   height: 8px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 1px;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -322,7 +338,7 @@
 }
 
 @keyframes ls-flash-new {
-  0% { background: color-mix(in srgb, var(--accent-warning) 18%, transparent); }
+  0% { background: color-mix(in srgb, var(--accent-highlight) 25%, transparent); }
   100% { background: transparent; }
 }
 
@@ -339,6 +355,14 @@
 .ls-live-dot--paused {
   background: var(--accent-neutral);
   animation: none;
+}
+
+.ls-live-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-win);
+  text-transform: uppercase;
 }
 
 .ls-empty {
