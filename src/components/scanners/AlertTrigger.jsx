@@ -75,13 +75,19 @@ function AlertTrigger({ windowId }) {
   const [rules, setRules] = useState([])
   const [history, setHistory] = useState([])
   const [flashedIds, setFlashedIds] = useState(new Set())
-  const flashTimerRef = useRef(null)
+  const flashTimersRef = useRef(new Map())
+  const settingsRef = useRef(settings)
 
   // Add-rule form state
   const [newTicker, setNewTicker] = useState('')
   const [newType, setNewType] = useState('price_crosses')
   const [newParam1, setNewParam1] = useState('')
   const [newParam2, setNewParam2] = useState('')
+
+  // Keep settings ref current to avoid stale closure in alert callback
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
 
   // Persist settings
   useEffect(() => {
@@ -100,15 +106,23 @@ function AlertTrigger({ windowId }) {
 
     const unsubAlerts = alertService.onAlert((alert) => {
       setHistory(alertService.getHistory())
-      // Flash new alert
-      if (settings.flashOnAlert) {
+      // Flash new alert — uses ref to read current flashOnAlert setting
+      if (settingsRef.current.flashOnAlert) {
         setFlashedIds((prev) => {
           const next = new Set(prev)
           next.add(alert.id)
           return next
         })
-        clearTimeout(flashTimerRef.current)
-        flashTimerRef.current = setTimeout(() => setFlashedIds(new Set()), 1200)
+        // Per-alert flash timer — doesn't cancel flashes from other recent alerts
+        const timer = setTimeout(() => {
+          setFlashedIds((prev) => {
+            const next = new Set(prev)
+            next.delete(alert.id)
+            return next
+          })
+          flashTimersRef.current.delete(alert.id)
+        }, 1200)
+        flashTimersRef.current.set(alert.id, timer)
       }
     })
 
@@ -116,9 +130,30 @@ function AlertTrigger({ windowId }) {
       unsubRules()
       unsubAlerts()
       alertService.destroy()
-      clearTimeout(flashTimerRef.current)
+      for (const timer of flashTimersRef.current.values()) {
+        clearTimeout(timer)
+      }
+      flashTimersRef.current.clear()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // STUB: Desktop notification permission handling
+  // SOURCE: Notification API (window.Notification)
+  // IMPLEMENT WHEN: settings.notifications.desktopNotifications is wired up
+  // STEPS:
+  //   1. On alert trigger, check Notification.permission
+  //   2. If 'default', request permission with Notification.requestPermission()
+  //   3. If 'granted', show new Notification(alert.message)
+  //   4. If 'denied', show in-app toast instead
+
+  // STUB: Alert deduplication — prevent same alert firing repeatedly
+  // SOURCE: Internal — compare alert fingerprint (ticker + type + params hash)
+  // IMPLEMENT WHEN: Real market data feed is connected
+  // STEPS:
+  //   1. Generate fingerprint: `${alert.ticker}-${alert.type}-${JSON.stringify(alert.params)}`
+  //   2. Track last-fired timestamp per fingerprint
+  //   3. Skip alert if same fingerprint fired within cooldown window (e.g. 60s)
+  //   4. Make cooldown configurable per rule
 
   const handleAddRule = useCallback(() => {
     if (!newTicker.trim()) return

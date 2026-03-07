@@ -67,7 +67,8 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.menu-dropdown-item:hover {
+.menu-dropdown-item:hover,
+.menu-dropdown-item--focused {
   background: var(--bg-hover);
   color: var(--text-primary);
 }

@@ -53,22 +53,28 @@ function MarketViewer({ windowId }) {
     prevPricesRef.current = { yes: null, no: null }
   }, [ticker])
 
-  // Cleanup flash timers on unmount
+  // Cleanup flash timers and search timer on unmount
+  const searchTimerRef = useRef(null)
   useEffect(() => {
     return () => {
       clearTimeout(flashTimerRef.current.yes)
       clearTimeout(flashTimerRef.current.no)
+      clearTimeout(searchTimerRef.current)
     }
   }, [])
 
-  // Subscribe to link bus events
+  // Use ref for ticker to avoid re-subscribing to link bus on every ticker change
+  const tickerRef = useRef(ticker)
+  useEffect(() => { tickerRef.current = ticker }, [ticker])
+
+  // Subscribe to link bus events — stable callback via ref
   const handleLinkEvent = useCallback(
     ({ ticker: linkedTicker }) => {
-      if (linkedTicker && linkedTicker !== ticker) {
+      if (linkedTicker && linkedTicker !== tickerRef.current) {
         setTicker(linkedTicker)
       }
     },
-    [ticker]
+    []
   )
 
   useEffect(() => {
@@ -87,7 +93,6 @@ function MarketViewer({ windowId }) {
   }
 
   // Search handler with debounce
-  const searchTimerRef = useRef(null)
   const handleSearchChange = (e) => {
     const q = e.target.value
     setSearchQuery(q)

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import clsx from 'clsx'
 import './MenuBar.css'
 
@@ -50,10 +50,12 @@ const MENU_CONFIG = [
 
 function MenuBar({ onOpenWindow, onOpenSettings }) {
   const [activeMenu, setActiveMenu] = useState(null)
+  const [focusedItem, setFocusedItem] = useState(-1)
   const menuBarRef = useRef(null)
 
   useEffect(() => {
     if (activeMenu === null) return
+    setFocusedItem(-1)
     const handleClickOutside = (e) => {
       if (!menuBarRef.current?.contains(e.target)) {
         setActiveMenu(null)
@@ -62,6 +64,55 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [activeMenu])
+
+  // Escape to close dropdown + arrow key navigation
+  useEffect(() => {
+    if (activeMenu === null) return
+    const menu = MENU_CONFIG[activeMenu]
+    if (!menu?.items) return
+
+    const handleKey = (e) => {
+      switch (e.key) {
+        case 'Escape':
+          setActiveMenu(null)
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          setFocusedItem((prev) => Math.min(prev + 1, menu.items.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setFocusedItem((prev) => Math.max(prev - 1, 0))
+          break
+        case 'Enter':
+          if (focusedItem >= 0 && focusedItem < menu.items.length) {
+            onOpenWindow(menu.items[focusedItem].type, menu.items[focusedItem].label)
+            setActiveMenu(null)
+          }
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          setActiveMenu((prev) => {
+            let next = prev - 1
+            while (next >= 0 && MENU_CONFIG[next].action) next--
+            return next >= 0 ? next : prev
+          })
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          setActiveMenu((prev) => {
+            let next = prev + 1
+            while (next < MENU_CONFIG.length && MENU_CONFIG[next].action) next++
+            return next < MENU_CONFIG.length ? next : prev
+          })
+          break
+        default:
+          break
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [activeMenu, focusedItem, onOpenWindow])
 
   const handleMenuClick = (index) => {
     const menu = MENU_CONFIG[index]
@@ -101,15 +152,17 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
         >
           {menu.label}
           {activeMenu === index && menu.items && (
-            <div className="menu-dropdown">
-              {menu.items.map((item) => (
+            <div className="menu-dropdown" role="menu">
+              {menu.items.map((item, itemIdx) => (
                 <div
                   key={item.type}
-                  className="menu-dropdown-item"
+                  className={clsx('menu-dropdown-item', focusedItem === itemIdx && 'menu-dropdown-item--focused')}
+                  role="menuitem"
                   onClick={(e) => {
                     e.stopPropagation()
                     handleItemClick(item)
                   }}
+                  onMouseEnter={() => setFocusedItem(itemIdx)}
                 >
                   <span className="menu-dropdown-label">{item.label}</span>
                   {item.shortcut && (
