@@ -74,7 +74,9 @@
   font-family: var(--font-mono);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   flex-shrink: 0;
   user-select: none;
   overflow: hidden;
@@ -248,21 +250,13 @@
   margin: var(--spacing-sm) 0;
 }
 
-/* Flash animation on new trades */
-@keyframes ts-flash-buy {
-  0% { background: color-mix(in srgb, var(--accent-win) 22%, transparent); }
+/* Flash animation on new trades — yellow highlight fading out */
+@keyframes row-flash {
+  0% { background: color-mix(in srgb, var(--accent-highlight) 30%, transparent); }
   100% { background: transparent; }
 }
 
-@keyframes ts-flash-sell {
-  0% { background: color-mix(in srgb, var(--accent-loss) 22%, transparent); }
-  100% { background: transparent; }
-}
-
-.ts-row--flash-buy {
-  animation: ts-flash-buy 0.5s ease-out;
-}
-
+.ts-row--flash-buy,
 .ts-row--flash-sell {
-  animation: ts-flash-sell 0.5s ease-out;
+  animation: row-flash 0.8s ease-out;
 }

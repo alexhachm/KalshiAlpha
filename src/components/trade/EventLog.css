@@ -128,18 +128,24 @@
   font-size: var(--font-size-xs);
   min-width: 38px;
   text-align: center;
+  padding: 1px var(--spacing-sm);
+  border-radius: 8px;
+  line-height: 1.4;
 }
 
 .el-level--info {
   color: var(--accent-info);
+  background: color-mix(in srgb, var(--accent-info) 15%, transparent);
 }
 
 .el-level--warn {
   color: var(--accent-warning);
+  background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
 }
 
 .el-level--error {
   color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
 }
 
 .el-source {

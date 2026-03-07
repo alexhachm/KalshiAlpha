@@ -59,9 +59,9 @@
 .pl-header-row {
   display: flex;
   padding: var(--spacing-xs) 0;
-  font-size: var(--font-size-sm);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
@@ -112,7 +112,7 @@
 .pl-row {
   display: flex;
   align-items: center;
-  height: 18px;
+  height: 22px;
   border-bottom: 1px solid var(--border-subtle);
   transition: background var(--transition-fast);
 }

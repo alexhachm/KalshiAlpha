@@ -264,10 +264,21 @@ function Positions({ windowId }) {
                         )
                       }
 
-                      // Unrealized column: colored by positive/negative with +/- prefix
+                      // Unrealized column: colored by positive/negative/zero with +/- prefix
                       if (col.key === 'unrealized') {
-                        const pnlClass = val >= 0 ? 'text-win' : 'text-loss'
-                        const prefix = val >= 0 ? '+$' : '-$'
+                        const pnlClass = val > 0 ? 'pnl-positive' : val < 0 ? 'pnl-negative' : 'pnl-zero'
+                        const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
+                        return (
+                          <td key={col.key} className={`pos-td pos-align-${col.align} ${pnlClass}`}>
+                            {prefix}{Math.abs(val).toFixed(2)}
+                          </td>
+                        )
+                      }
+
+                      // Realized column: same P&L color coding
+                      if (col.key === 'realized') {
+                        const pnlClass = val > 0 ? 'pnl-positive' : val < 0 ? 'pnl-negative' : 'pnl-zero'
+                        const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
                         return (
                           <td key={col.key} className={`pos-td pos-align-${col.align} ${pnlClass}`}>
                             {prefix}{Math.abs(val).toFixed(2)}
