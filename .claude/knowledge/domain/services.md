@@ -1,28 +1,37 @@
 # Domain: services
-<!-- Updated 2026-02-25T07:30:00Z by worker-2. Max ~800 tokens. -->
+<!-- Updated 2026-03-07T20:26:00Z by worker-2. Max ~800 tokens. -->
 
 ## Key Files
-- `src/services/kalshiApi.js` — REST client for Kalshi API. RSA-PSS auth via Web Crypto API. All market data, portfolio, and trading endpoints.
-- `src/services/kalshiWebSocket.js` — WebSocket client. Auto-reconnect (exp backoff, max 5 attempts), 30s heartbeat, channel subscriptions (orderbook_delta, ticker, trade, lifecycle, user_orders, user_fills, market_positions).
-- `src/services/dataFeed.js` — Adapter bridging real Kalshi data and mockData.js behind same interface. Falls back to mock when not connected. Manages orderbook state machine (YES/NO hash maps → synthetic DOM).
-- `src/services/mockData.js` — Mock data generators. DO NOT modify — components still depend on it.
-- `src/services/linkBus.js` — Color link event bus for window market linking. DO NOT modify.
-- `src/hooks/useKalshiData.js` — React hooks: useTickerData, useMarketRace, useScannerAlerts, useOHLCV, useKalshiConnection, usePortfolio, useOrderEntry, useMarketSearch.
+- `kalshiApi.js` — REST client with RSA-PSS auth, retry logic (429/5xx), price utilities
+- `kalshiWebSocket.js` — WS client with auth, subscriptions, heartbeat, reconnect with jitter
+- `dataFeed.js` — Unified data adapter bridging real Kalshi data and mock data
+- `omsEngine.js` — Pure state: order FSM, position aggregation, P&L calculation
+- `omsService.js` — Bridges OMS engine to API/WS, localStorage persistence
+- `alertService.js` — Alert rules CRUD with Web Worker for evaluation, crash recovery
+- `analyticsService.js` — Trade data fetching, P&L computation (FIFO), mock fallback
+- `settingsStore.js` — localStorage-backed settings with deep merge defaults
+- `auditStateService.js` — Function-level audit tracking, change log, export reports
 
 ## Gotchas & Undocumented Behavior
-- Browser WebSocket API does NOT support custom headers on handshake. Kalshi auth is sent as a post-connect command message instead.
-- Kalshi uses centi-cents in WS market_positions channel (divide by 10,000 for dollars). REST uses cents. Always check which unit a field uses.
-- Query params are EXCLUDED from the RSA signing string — #1 cause of 401 errors.
-- Private key must be PKCS#8 format for Web Crypto API. PKCS#1 keys need conversion.
+- `omsService.js` calls `initialize()` on import — side effect at module load
+- `dataFeed.js` registers a WS state listener at module level (line 35-37)
+- `kalshiApi.request()` re-signs headers on each retry attempt (timestamp freshness)
+- `settingsStore.js` has no semicolons (different code style from other services)
+- Build artifacts in dist/ should NOT be committed
 
 ## Patterns That Work
-- Same-interface adapter pattern: dataFeed re-exports subscribeToTicker/subscribeToMarketRace/subscribeToScanner with same signatures as mockData. Components can switch imports without code changes.
-- Orderbook state machine: snapshot clears maps, deltas update individual levels, quantity==0 means delete.
+- All services use listener Set pattern for subscriptions (add/delete/forEach)
+- localStorage persistence with try/catch for quota exceeded
+- Mock data fallback when API not configured (dataFeed checks `connected`)
+- Export individual named functions, no default exports
 
 ## Testing Strategy
-- `npm run build` catches all import/module errors.
-- To test real connection: configure API key in settings, check Event Log for connection status.
-- Mock fallback: all components work without API key configured.
+- `npm run build` validates all imports/exports compile
+- `npm run dev` validates runtime module resolution
+- No test runner configured — manual verification only
 
 ## Recent State
-- All 4 service files committed and pushed. Build passes. No components have been migrated from mockData to dataFeed yet — that's the next step for domain workers building components.
+- Added retry logic to kalshiApi.request() (3 retries, exponential backoff)
+- Added jitter to WS reconnect, error backoff to polling, debounced portfolio refresh
+- Added position overflow guard, worker crash recovery, section validation
+- auditStateService.js is new — exports recordServicesAuditPass() for audit trail

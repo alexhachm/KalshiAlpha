@@ -9,14 +9,14 @@
     "last_heartbeat": "2026-03-07T10:47:18Z"
   },
   "worker-2": {
-    "status": "busy",
+    "status": "idle",
     "domain": "services",
-    "current_task": "Build auditStateService + function audit pass for services domain",
-    "tasks_completed": 1,
+    "current_task": null,
+    "tasks_completed": 2,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T20:22:57Z",
-    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
+    "last_heartbeat": "2026-03-07T20:25:27Z",
+    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/86"
   },
   "worker-3": {
     "status": "idle",
