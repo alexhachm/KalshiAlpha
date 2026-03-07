@@ -1,44 +1,37 @@
 # Domain: frontend/trade
-<!-- Updated 2026-03-07T11:05:00Z by worker-1. Max ~800 tokens. -->
+<!-- Updated 2026-03-07T20:30:00Z by worker-3. Max ~800 tokens. -->
 
 ## Key Files
-- `src/components/trade/OrderBook.jsx/css` — Tabbed panel (Orders/Fills/Positions) with omsService integration
-- `src/components/trade/PriceLadder.jsx/css` — Full 1-99 price ladder with click-to-trade, volume bars
-- `src/components/trade/Montage.jsx/css` — Level II book + order entry form with search
-- `src/components/trade/Positions.jsx/css` — Mock positions table with P&L coloring
-- `src/components/trade/TradeLog.jsx/css` — Filterable trade log with CSV export
-- `src/components/trade/EventLog.jsx/css` — System event log with level filtering
-- `src/components/trade/NewsChat.jsx/css` — Simulated news feed with ticker filter
-- `src/components/trade/Accounts.jsx/css` — Account overview table with totals row
-- `src/components/quotes/TimeSale.jsx/css` — Streaming time & sales tape
-- `src/components/quotes/Chart.jsx/css` — Candlestick chart with lightweight-charts
+- `src/components/trade/OrderBook.jsx` — OMS-connected order management with orders/fills/positions tabs
+- `src/components/trade/PriceLadder.jsx` — Full 1-99 price ladder with bid/ask depth, click-to-trade
+- `src/components/trade/Montage.jsx` — Level II book + order entry panel with search, confirm dialog
+- `src/components/trade/TradeLog.jsx` — Trade blotter with sort/filter, CSV export, date range filtering
+- `src/components/trade/Positions.jsx` — Open positions table with P&L, sorting, flash on change
+- `src/components/trade/EventLog.jsx` — System event log with auto-scroll, level filtering, export
+- `src/components/trade/NewsChat.jsx` — Mock news feed with market search filtering
+- `src/components/trade/Accounts.jsx` — Account overview with totals row, P&L coloring
+- `src/components/quotes/Chart.jsx` — lightweight-charts integration, overlay mode, OHLCV data
+- `src/components/quotes/TimeSale.jsx` — Time & sales tape with large trade highlighting
 
 ## Gotchas & Undocumented Behavior
-- Accounts.jsx had NO CSS file until this session — all `acct-*` classes were undefined
-- Chart canvas uses hardcoded hex colors (#121212, #00c853, #ff1744) NOT design tokens
-- TimeSale imports from `mockData` directly, not via hooks like other components
-- Settings panels inject styles via `document.createElement('style')` with hardcoded px values
-- PriceLadder JSX had `setData(null)` call that would error (data comes from hook not state)
-- `color-mix(in srgb, ...)` is used throughout — requires modern browser support
+- OrderBook sub-panels (OrdersPanel, FillsPanel, PositionsPanel) are plain functions, not React.memo — they re-render with parent
+- PriceLadder builds full 1-99 ladder every data update; no virtual scrolling
+- Montage stores settings globally (no windowId prefix) unlike other components
+- TimeSale uses mockData import while other trade components use useKalshiData hooks
+- `gh pr create` fails from worktree dirs — must cd to main repo
 
 ## Patterns That Work
-- Column headers: 10px, uppercase, letter-spacing 0.05em, --text-muted color
-- Row heights: 22px standard for compact tables
-- P&L: Use pnl-positive/pnl-negative/pnl-zero classes (scoped per component)
-- All price/number cells: font-family var(--font-mono), font-variant-numeric: tabular-nums
-- Flash animations: Use color-mix with accent colors at 20-30% opacity, 0.3-0.8s duration
-- Cell padding: var(--spacing-xs) var(--spacing-sm) = 2px 4px
+- useGridCustomization hook provides column drag, font size, row height, color overrides
+- linkBus (subscribeToLink/emitLinkedMarket) syncs tickers across components via color groups
+- Settings pattern: loadSettings/saveSettings to localStorage, DEFAULT_SETTINGS merge
+- All components wrapped in React.memo at export
 
 ## Testing Strategy
-- `npm run build` — must pass (vite production build)
-- `npm run dev` — dev server starts cleanly, no console errors
-- Visual check: verify row heights, header styling, P&L colors render correctly
+- `npm run build` catches all syntax/import errors
+- Components use mock data generators so they render standalone
+- No unit tests — verification is build + visual inspection
 
 ## Recent State
-- All table headers standardized to 10px/0.05em/--text-muted
-- Row heights normalized to 22px
-- P&L classes added (Positions, TradeLog)
-- EventLog has pill badges, TradeLog has row tinting
-- TimeSale uses yellow row-flash animation
-- Accounts.css created with full styling
-- NewsChat has bubble styling
+- All 10 components now have useMemo/useCallback optimizations
+- 30 improvement stubs added (3 per component)
+- Dead code cleaned (unused refs in TimeSale, Positions)
