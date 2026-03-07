@@ -101,7 +101,7 @@
 
 .window-title {
   flex: 1;
-  font-size: var(--font-size-xs);
+  font-size: 9px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
