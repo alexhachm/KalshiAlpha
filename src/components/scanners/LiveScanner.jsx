@@ -69,7 +69,7 @@ function LiveScanner({ windowId }) {
   const [newRowIds, setNewRowIds] = useState(new Set())
   const alertsRef = useRef([])
   const tableBodyRef = useRef(null)
-  const newRowTimerRef = useRef(null)
+  const newRowTimersRef = useRef(new Map())
   const grid = useGridCustomization(`liveScanner-${windowId}`, LS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 12
 
@@ -91,12 +91,21 @@ function LiveScanner({ windowId }) {
         next.add(alert.id)
         return next
       })
-      clearTimeout(newRowTimerRef.current)
-      newRowTimerRef.current = setTimeout(() => setNewRowIds(new Set()), 800)
+      const timers = newRowTimersRef.current
+      if (timers.has(alert.id)) clearTimeout(timers.get(alert.id))
+      timers.set(alert.id, setTimeout(() => {
+        timers.delete(alert.id)
+        setNewRowIds((prev) => {
+          const next = new Set(prev)
+          next.delete(alert.id)
+          return next
+        })
+      }, 800))
     })
     return () => {
       unsub()
-      clearTimeout(newRowTimerRef.current)
+      newRowTimersRef.current.forEach((t) => clearTimeout(t))
+      newRowTimersRef.current.clear()
     }
   }, [paused, settings.maxResults])
 
