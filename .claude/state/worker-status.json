@@ -34,5 +34,11 @@
     "domain": "frontend/scanners",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/89",
     "tasks_completed": 1
+  },
+  "worker-5": {
+    "status": "busy",
+    "last_heartbeat": "2026-03-07T23:22:29Z",
+    "domain": "trade",
+    "current_task": "Fix TICKERS dropdown"
   }
 }
