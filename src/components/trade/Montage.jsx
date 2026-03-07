@@ -14,19 +14,19 @@ const TICKERS = [
   'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
 ]
 
-const LS_KEY = 'kalshi_montage_settings'
+const LS_KEY_PREFIX = 'montage-settings-'
 
-function loadSettings() {
+function loadSettings(windowId) {
   try {
-    const raw = localStorage.getItem(LS_KEY)
+    const raw = localStorage.getItem(LS_KEY_PREFIX + windowId)
     if (raw) return JSON.parse(raw)
   } catch { /* ignore */ }
   return null
 }
 
-function saveSettings(settings) {
+function saveSettings(windowId, settings) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(settings))
+    localStorage.setItem(LS_KEY_PREFIX + windowId, JSON.stringify(settings))
   } catch { /* ignore */ }
 }
 
@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS = {
 
 function Montage({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [settings, setSettings] = useState(() => loadSettings() || DEFAULT_SETTINGS)
+  const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
 
   // Data hooks
@@ -81,8 +81,8 @@ function Montage({ windowId }) {
 
   // Persist settings
   useEffect(() => {
-    saveSettings(settings)
-  }, [settings])
+    saveSettings(windowId, settings)
+  }, [windowId, settings])
 
   // Flash detection on data changes
   useEffect(() => {
