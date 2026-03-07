@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
@@ -81,7 +81,6 @@ function Positions({ windowId }) {
   const [positions, setPositions] = useState(generateMockPositions)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
-  const prevUnrealizedRef = useRef({})
   const intervalRef = useRef(null)
 
   // Persist settings
@@ -134,33 +133,43 @@ function Positions({ windowId }) {
     return () => unsubscribeFromLink(colorId, handler)
   }, [windowId])
 
-  const handleRowClick = (market) => {
+  const handleRowClick = useCallback((market) => {
     setSelectedRow(market)
     emitLinkedMarket(windowId, market)
-  }
+  }, [windowId])
 
-  const handleSettingsChange = (newSettings) => {
+  const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
-  }
+  }, [])
 
-  // Sort positions
-  const sortedPositions = [...positions]
-  const sortKey = settings.sortBy
-  const sortDir = settings.sortDirection
-  if (sortKey) {
-    sortedPositions.sort((a, b) => {
-      const va = a[sortKey]
-      const vb = b[sortKey]
-      if (typeof va === 'number' && typeof vb === 'number') {
-        return sortDir === 'asc' ? va - vb : vb - va
-      }
-      const sa = String(va)
-      const sb = String(vb)
-      return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
-    })
-  }
+  // Sort positions — memoized
+  const sortedPositions = useMemo(() => {
+    const result = [...positions]
+    const sortKey = settings.sortBy
+    const sortDir = settings.sortDirection
+    if (sortKey) {
+      result.sort((a, b) => {
+        const va = a[sortKey]
+        const vb = b[sortKey]
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return sortDir === 'asc' ? va - vb : vb - va
+        }
+        const sa = String(va)
+        const sb = String(vb)
+        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
+      })
+    }
+    return result
+  }, [positions, settings.sortBy, settings.sortDirection])
 
-  const handleSort = (colKey) => {
+  // Total P&L summary — memoized
+  const totalPnl = useMemo(() => ({
+    unrealized: positions.reduce((sum, p) => sum + p.unrealized, 0),
+    realized: positions.reduce((sum, p) => sum + p.realized, 0),
+    totalShares: positions.reduce((sum, p) => sum + p.shares, 0),
+  }), [positions])
+
+  const handleSort = useCallback((colKey) => {
     setSettings((prev) => ({
       ...prev,
       sortBy: colKey,
@@ -168,14 +177,41 @@ function Positions({ windowId }) {
         ? (prev.sortDirection === 'asc' ? 'desc' : 'asc')
         : 'desc',
     }))
-  }
+  }, [])
 
   return (
     <div className={`positions pos--font-${grid.fontSize}`}>
       {/* Header bar */}
+      {/* STUB: Position Greeks — calculate delta, gamma, theta for event contract positions */}
+      {/* SOURCE: "Event contract pricing models", prediction market theory */}
+      {/* IMPLEMENT WHEN: Implied probability and time-to-expiry data available */}
+      {/* STEPS: 1. Model binary option delta = dP/dS (sensitivity to underlying) */}
+      {/*        2. Compute theta = daily time decay based on expiry date */}
+      {/*        3. Add delta and theta columns to position grid */}
+      {/*        4. Show portfolio-level aggregate Greeks in header */}
+
+      {/* STUB: Position risk heat map — visual risk concentration display */}
+      {/* SOURCE: "Portfolio risk visualization", Bloomberg PORT analytics */}
+      {/* IMPLEMENT WHEN: Multiple correlated positions exist */}
+      {/* STEPS: 1. Calculate position size as % of total portfolio value */}
+      {/*        2. Color-code rows by concentration risk (>20% = red) */}
+      {/*        3. Add correlation matrix between positions */}
+      {/*        4. Display max drawdown estimate per position */}
+
+      {/* STUB: Auto-flatten — one-click close all positions at market */}
+      {/* SOURCE: "Professional trading terminal emergency controls" */}
+      {/* IMPLEMENT WHEN: omsService supports market orders */}
+      {/* STEPS: 1. Add "Flatten All" button in header bar */}
+      {/*        2. Confirm dialog showing estimated slippage */}
+      {/*        3. Submit market orders for each position in parallel */}
+      {/*        4. Display progress and fill confirmations */}
+
       <div className="pos-header-bar">
         <span className="pos-title">Open Positions</span>
         <div className="pos-header-right">
+          <span className={`pos-total-pnl ${totalPnl.unrealized >= 0 ? 'pnl-positive' : 'pnl-negative'}`}>
+            P&L: {totalPnl.unrealized >= 0 ? '+' : '-'}${Math.abs(totalPnl.unrealized).toFixed(2)}
+          </span>
           <span className="pos-count">{positions.length} open</span>
           <button
             className="pos-settings-btn"

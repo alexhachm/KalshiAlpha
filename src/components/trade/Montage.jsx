@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTickerData, useOrderEntry, useMarketSearch } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
@@ -142,33 +142,40 @@ function Montage({ windowId }) {
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
   }, [windowId, handleLinkEvent])
 
+  // Cleanup search timer on unmount
+  useEffect(() => {
+    return () => clearTimeout(searchTimerRef.current)
+  }, [])
+
   // Search handlers
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     const q = e.target.value
     setSearchQuery(q)
     clearTimeout(searchTimerRef.current)
     if (q.trim().length >= 2) {
       searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
     }
-  }
+  }, [search])
 
-  const handleSearchSelect = (t) => {
+  const handleSearchSelect = useCallback((t) => {
     setTicker(t)
     setSearchQuery('')
     setLimitPrice('')
     emitLinkedMarket(windowId, t)
-  }
+  }, [windowId])
 
   // Set limit price when clicking a bid/ask level
-  const handlePriceClick = (price) => {
+  const handlePriceClick = useCallback((price) => {
     setLimitPrice(price.toString())
     setOrderType('limit')
-  }
+  }, [])
 
-  // Place order
+  // Place order — with size and price validation
   const placeOrder = (side) => {
+    if (orderSize <= 0 || orderSize > 10000) return
     const price = orderType === 'limit' ? Number(limitPrice) : (data ? data.yes.price : 0)
     if (orderType === 'limit' && (!limitPrice || price <= 0 || price >= 100)) return
+    if (orderType === 'market' && !data) return
 
     const order = {
       id: orderIdRef.current++,
@@ -222,26 +229,59 @@ function Montage({ windowId }) {
     setOrderSize(newSettings.defaultOrderSize)
   }
 
+  // STUB: Smart order routing — route orders through optimal execution path
+  // SOURCE: "Smart Order Routing in electronic markets", SEC best execution requirements
+  // IMPLEMENT WHEN: Multiple execution venues available (Kalshi API + dark pools)
+  // STEPS: 1. Check available liquidity at each venue for requested size
+  //        2. Split orders across venues to minimize market impact
+  //        3. Track execution quality (fill rate, slippage) per venue
+  //        4. Display routing decision in order confirmation dialog
+
+  // STUB: Order type expansion — add stop-loss, trailing stop, bracket orders
+  // SOURCE: "Professional trading order types", thinkorswim order entry
+  // IMPLEMENT WHEN: omsService supports conditional/linked orders
+  // STEPS: 1. Add stop price input field (shown when order type = 'stop' or 'stop-limit')
+  //        2. Add bracket order mode: entry + take-profit + stop-loss in one submission
+  //        3. Implement trailing stop with configurable trail amount
+  //        4. Display active conditional orders in working orders section
+
+  // STUB: Total cost preview — show max cost/risk before order submission
+  // SOURCE: "Kalshi API order requirements", risk management best practices
+  // IMPLEMENT WHEN: Data and order entry are functional
+  // STEPS: 1. Calculate max cost = price * size for buy orders
+  //        2. Calculate max profit = (100 - price) * size
+  //        3. Display cost/profit preview below order buttons
+  //        4. Warn if order cost exceeds available balance
+
   const fontClass = `montage--font-${settings.fontSize}`
 
-  // Derive ask levels from NO bids (ask price for YES = 100 - NO bid price)
-  const bidLevels = data ? data.yes.bids.slice(0, settings.depthLevels) : []
-  const askLevels = data
-    ? data.no.bids.slice(0, settings.depthLevels).map((level) => ({
-        price: 100 - level.price,
-        size: level.size,
-        orders: level.orders,
-      }))
-    : []
+  // Derive ask levels from NO bids (ask price for YES = 100 - NO bid price) — memoized
+  const bidLevels = useMemo(
+    () => data?.yes?.bids ? data.yes.bids.slice(0, settings.depthLevels) : [],
+    [data, settings.depthLevels]
+  )
+  const askLevels = useMemo(
+    () => data?.no?.bids
+      ? data.no.bids.slice(0, settings.depthLevels).map((level) => ({
+          price: 100 - level.price,
+          size: level.size,
+          orders: level.orders,
+        }))
+      : [],
+    [data, settings.depthLevels]
+  )
 
-  // Max sizes for depth bar widths
-  const maxBidSize = Math.max(1, ...bidLevels.map((l) => l.size))
-  const maxAskSize = Math.max(1, ...askLevels.map((l) => l.size))
+  // Max sizes for depth bar widths — memoized
+  const maxBidSize = useMemo(() => Math.max(1, ...bidLevels.map((l) => l.size)), [bidLevels])
+  const maxAskSize = useMemo(() => Math.max(1, ...askLevels.map((l) => l.size)), [askLevels])
 
-  // Spread display
-  const spread = bidLevels.length > 0 && askLevels.length > 0
-    ? askLevels[0].price - bidLevels[0].price
-    : null
+  // Spread display — memoized
+  const spread = useMemo(
+    () => bidLevels.length > 0 && askLevels.length > 0
+      ? askLevels[0].price - bidLevels[0].price
+      : null,
+    [bidLevels, askLevels]
+  )
 
   return (
     <div ref={containerRef} className={`montage ${fontClass}`}>

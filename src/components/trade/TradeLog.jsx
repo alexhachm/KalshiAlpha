@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import TradeLogSettings from './TradeLogSettings'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
@@ -88,17 +88,22 @@ function saveSettings(windowId, settings) {
   } catch { /* ignore */ }
 }
 
+function escapeCsvField(v) {
+  if (v == null) return ''
+  const str = String(v)
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
 function exportCsv(rows, columns) {
-  const headers = columns.map((c) => c.label).join(',')
+  const headers = columns.map((c) => escapeCsvField(c.label)).join(',')
   const lines = rows.map((row) =>
-    columns.map((c) => {
-      const v = row[c.key]
-      if (typeof v === 'string' && v.includes(',')) return `"${v}"`
-      return v ?? ''
-    }).join(',')
+    columns.map((c) => escapeCsvField(row[c.key])).join(',')
   )
   const csv = [headers, ...lines].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -177,42 +182,48 @@ function TradeLog({ windowId }) {
     return () => unsubscribeFromLink(colorId, handler)
   }, [windowId])
 
-  const handleRowClick = (market) => {
+  const handleRowClick = useCallback((market) => {
     setSelectedRow(market)
     emitLinkedMarket(windowId, market)
-  }
+  }, [windowId])
 
-  const handleSettingsChange = (newSettings) => {
+  const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
     setActiveFilter(newSettings.filter)
-  }
+  }, [])
 
-  // Filter
-  const filtered = applyDateFilter(
-    activeFilter === 'all'
-      ? allRows
-      : allRows.filter((r) => r.status.toLowerCase() === activeFilter),
-    settings.dateRange
+  // Filter — memoized
+  const filtered = useMemo(
+    () => applyDateFilter(
+      activeFilter === 'all'
+        ? allRows
+        : allRows.filter((r) => r.status.toLowerCase() === activeFilter),
+      settings.dateRange
+    ),
+    [allRows, activeFilter, settings.dateRange]
   )
 
-  // Sort
-  const sorted = [...filtered]
-  const sortKey = settings.sortBy
-  const sortDir = settings.sortDirection
-  if (sortKey) {
-    sorted.sort((a, b) => {
-      const va = a[sortKey]
-      const vb = b[sortKey]
-      if (typeof va === 'number' && typeof vb === 'number') {
-        return sortDir === 'asc' ? va - vb : vb - va
-      }
-      const sa = String(va ?? '')
-      const sb = String(vb ?? '')
-      return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
-    })
-  }
+  // Sort — memoized
+  const sorted = useMemo(() => {
+    const result = [...filtered]
+    const sortKey = settings.sortBy
+    const sortDir = settings.sortDirection
+    if (sortKey) {
+      result.sort((a, b) => {
+        const va = a[sortKey]
+        const vb = b[sortKey]
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return sortDir === 'asc' ? va - vb : vb - va
+        }
+        const sa = String(va ?? '')
+        const sb = String(vb ?? '')
+        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
+      })
+    }
+    return result
+  }, [filtered, settings.sortBy, settings.sortDirection])
 
-  const handleSort = (colKey) => {
+  const handleSort = useCallback((colKey) => {
     setSettings((prev) => ({
       ...prev,
       sortBy: colKey,
@@ -220,14 +231,41 @@ function TradeLog({ windowId }) {
         ? (prev.sortDirection === 'asc' ? 'desc' : 'asc')
         : 'desc',
     }))
-  }
+  }, [])
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     exportCsv(sorted, grid.visibleColumns)
-  }
+  }, [sorted, grid.visibleColumns])
 
-  const openCount = allRows.filter((r) => r.status === 'Open').length
-  const closedCount = allRows.filter((r) => r.status === 'Closed').length
+  // Counts — memoized
+  const { openCount, closedCount } = useMemo(() => ({
+    openCount: allRows.filter((r) => r.status === 'Open').length,
+    closedCount: allRows.filter((r) => r.status === 'Closed').length,
+  }), [allRows])
+
+  // STUB: Fill rate calculation — track and display fill rate for each trade
+  // SOURCE: "Algorithmic trading execution quality metrics", TCA best practices
+  // IMPLEMENT WHEN: Real fill data is available from omsService
+  // STEPS: 1. Track orderSize vs filledSize for each order
+  //        2. Compute fillRate = filledSize / orderSize * 100
+  //        3. Add fill rate column to grid
+  //        4. Color-code: green >= 90%, yellow 50-89%, red < 50%
+
+  // STUB: Slippage tracking — measure price improvement or slippage per fill
+  // SOURCE: "Transaction cost analysis", institutional trading metrics
+  // IMPLEMENT WHEN: Limit price and fill price are both available
+  // STEPS: 1. Record intended price (limit) vs execution price per fill
+  //        2. Compute slippage = (fillPrice - limitPrice) * direction
+  //        3. Display as bps or cents column with color coding
+  //        4. Show running average slippage in header
+
+  // STUB: Trade grouping — group related trades by event/strategy
+  // SOURCE: "Portfolio attribution analysis", trade blotter best practices
+  // IMPLEMENT WHEN: omsService supports strategy tags or order groups
+  // STEPS: 1. Add strategy/group tag to order entry
+  //        2. Group trades by tag in trade log view
+  //        3. Show aggregate P&L per group
+  //        4. Allow expanding/collapsing groups
 
   return (
     <div className={`tradelog tradelog--font-${grid.fontSize}`}>

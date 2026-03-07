@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { subscribeToTimeSales } from '../../services/mockData'
 import {
   subscribeToLink,
@@ -82,7 +82,6 @@ function TimeSale({ windowId }) {
   const listRef = useRef(null)
   const containerRef = useRef(null)
   const autoScrollRef = useRef(true)
-  const pausedRef = useRef(false)
   const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 11
 
@@ -104,13 +103,14 @@ function TimeSale({ windowId }) {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }, [])
 
-  // Subscribe to trade stream
+  // Subscribe to trade stream — uses maxRows * 2.5 as buffer to allow filtering headroom
   useEffect(() => {
     setTrades([])
+    const bufferSize = Math.max(500, Math.ceil(settings.maxRows * 2.5))
     const unsub = subscribeToTimeSales(ticker, (trade) => {
       setTrades((prev) => {
         const next = [...prev, trade]
-        if (next.length > 500) return next.slice(-500)
+        if (next.length > bufferSize) return next.slice(-bufferSize)
         return next
       })
       // Flash new entry
@@ -162,19 +162,49 @@ function TimeSale({ windowId }) {
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
   }, [windowId, handleLinkEvent])
 
-  const handleTickerChange = (e) => {
+  const handleTickerChange = useCallback((e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
     emitLinkedMarket(windowId, newTicker)
-  }
+  }, [windowId])
 
-  // Filter trades by size threshold
-  const visibleTrades = settings.sizeFilter > 0
-    ? trades.filter((t) => t.size >= settings.sizeFilter)
-    : trades
+  // Filter trades by size threshold — memoized
+  const visibleTrades = useMemo(
+    () => settings.sizeFilter > 0
+      ? trades.filter((t) => t.size >= settings.sizeFilter)
+      : trades,
+    [trades, settings.sizeFilter]
+  )
 
-  // Trim to maxRows for display
-  const displayTrades = visibleTrades.slice(-settings.maxRows)
+  // Trim to maxRows for display — memoized
+  const displayTrades = useMemo(
+    () => visibleTrades.slice(-settings.maxRows),
+    [visibleTrades, settings.maxRows]
+  )
+
+  // STUB: Large trade highlighting enhancement — categorize prints by relative size
+  // SOURCE: "Tape reading techniques", Level II/Time & Sales analysis
+  // IMPLEMENT WHEN: Historical trade distribution data is available
+  // STEPS: 1. Compute rolling average trade size over last N trades
+  //        2. Categorize: small (< 0.5x avg), normal, large (> 2x avg), block (> 5x avg)
+  //        3. Apply escalating highlight intensity by category
+  //        4. Add sound alerts for block trades (configurable)
+
+  // STUB: Print filter by trade type — filter buys, sells, or crosses
+  // SOURCE: "Time and sales tape reading", order flow analysis
+  // IMPLEMENT WHEN: Trade side data is reliable
+  // STEPS: 1. Add filter buttons (All | Buys | Sells) in toolbar
+  //        2. Filter displayTrades by side before rendering
+  //        3. Show buy/sell/total counts in toolbar
+  //        4. Add visual buy/sell pressure indicator bar
+
+  // STUB: Cumulative volume delta — running total of buy vs sell volume
+  // SOURCE: "Order flow trading with cumulative delta", Bookmap analysis
+  // IMPLEMENT WHEN: Accurate buy/sell classification exists
+  // STEPS: 1. Track running cumBuyVol and cumSellVol
+  //        2. Compute delta = cumBuyVol - cumSellVol
+  //        3. Display delta line/bar at bottom of time & sales
+  //        4. Flash on delta divergence (large positive or negative shift)
 
   return (
     <div ref={containerRef} className="ts-component">

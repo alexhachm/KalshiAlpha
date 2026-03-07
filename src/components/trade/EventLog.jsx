@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import EventLogSettings from './EventLogSettings'
 import './EventLog.css'
@@ -126,8 +126,11 @@ function EventLog({ windowId }) {
   const autoScrollRef = useRef(true)
   const nextIdRef = useRef(8) // startup entries use 1-7
 
-  // Build a set of visible column keys for fast lookup
-  const visibleKeys = new Set(grid.visibleColumns.map((c) => c.key))
+  // Build a set of visible column keys for fast lookup — memoized
+  const visibleKeys = useMemo(
+    () => new Set(grid.visibleColumns.map((c) => c.key)),
+    [grid.visibleColumns]
+  )
 
   // Persist settings
   useEffect(() => {
@@ -200,14 +203,50 @@ function EventLog({ windowId }) {
     URL.revokeObjectURL(url)
   }, [entries])
 
-  // Filter entries by log level
-  const filteredEntries = settings.logLevel === 'all'
-    ? entries
-    : entries.filter((e) => {
-        if (settings.logLevel === 'error') return e.level === 'error'
-        if (settings.logLevel === 'warn') return e.level === 'warn' || e.level === 'error'
-        return true // 'info' shows all
-      })
+  // Filter entries by log level — memoized
+  const filteredEntries = useMemo(
+    () => settings.logLevel === 'all'
+      ? entries
+      : entries.filter((e) => {
+          if (settings.logLevel === 'error') return e.level === 'error'
+          if (settings.logLevel === 'warn') return e.level === 'warn' || e.level === 'error'
+          return true // 'info' shows all
+        }),
+    [entries, settings.logLevel]
+  )
+
+  // Log level counters for status display — memoized
+  const levelCounts = useMemo(() => {
+    const counts = { info: 0, warn: 0, error: 0 }
+    for (const e of entries) {
+      if (counts[e.level] !== undefined) counts[e.level]++
+    }
+    return counts
+  }, [entries])
+
+  // STUB: Log search/filter — text search across log messages
+  // SOURCE: "Terminal log viewer UX patterns", Chrome DevTools console
+  // IMPLEMENT WHEN: Log volume warrants search functionality
+  // STEPS: 1. Add search input in toolbar with debounced filter
+  //        2. Highlight matching text in search results
+  //        3. Support regex search mode toggle
+  //        4. Add match count indicator and prev/next navigation
+
+  // STUB: Log persistence — persist logs across page reloads
+  // SOURCE: "Application logging best practices"
+  // IMPLEMENT WHEN: sessionStorage/IndexedDB available
+  // STEPS: 1. Write log entries to IndexedDB on append
+  //        2. Load previous session logs on startup
+  //        3. Add session separator marker
+  //        4. Implement log rotation (max 10k entries)
+
+  // STUB: Structured log output — JSON export with filtering
+  // SOURCE: "Structured logging standards (ELK, Datadog)"
+  // IMPLEMENT WHEN: Users need machine-parseable log exports
+  // STEPS: 1. Add JSON export button alongside text export
+  //        2. Include structured fields: timestamp, level, source, message, metadata
+  //        3. Support filtered export (only errors, only specific source)
+  //        4. Add copy-to-clipboard for individual entries
 
   return (
     <div
@@ -227,7 +266,11 @@ function EventLog({ windowId }) {
             <option value="warn">Warn+</option>
             <option value="error">Error Only</option>
           </select>
-          <span className="el-count">{filteredEntries.length} entries</span>
+          <span className="el-count">
+            {filteredEntries.length} entries
+            {levelCounts.error > 0 && <span className="el-level--error"> ({levelCounts.error} err)</span>}
+            {levelCounts.warn > 0 && <span className="el-level--warn"> ({levelCounts.warn} warn)</span>}
+          </span>
         </div>
         <div className="el-toolbar-right">
           <button className="el-tool-btn" onClick={handleClearLog} title="Clear Log">

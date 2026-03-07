@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useMarketSearch } from '../../hooks/useKalshiData'
 import './NewsChat.css'
 
@@ -62,27 +62,60 @@ function NewsChat({ windowId }) {
     return () => clearInterval(interval)
   }, [])
 
-  const handleSearchChange = (e) => {
+  // Cleanup search timer on unmount
+  useEffect(() => {
+    return () => clearTimeout(searchTimerRef.current)
+  }, [])
+
+  const handleSearchChange = useCallback((e) => {
     const q = e.target.value
     setSearchQuery(q)
     clearTimeout(searchTimerRef.current)
     if (q.trim().length >= 2) {
       searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
     }
-  }
+  }, [search])
 
-  const handleSearchSelect = (t) => {
+  const handleSearchSelect = useCallback((t) => {
     setFilterTicker(t)
     setSearchQuery('')
-  }
+  }, [])
 
-  const clearFilter = () => {
+  const clearFilter = useCallback(() => {
     setFilterTicker('')
-  }
+  }, [])
 
-  const filteredItems = filterTicker
-    ? items.filter((item) => item.ticker === filterTicker)
-    : items
+  // Memoize filtered items
+  const filteredItems = useMemo(
+    () => filterTicker
+      ? items.filter((item) => item.ticker === filterTicker)
+      : items,
+    [items, filterTicker]
+  )
+
+  // STUB: Real news feed integration — connect to live news APIs
+  // SOURCE: "Financial news APIs (Benzinga, NewsAPI, Alpha Vantage)"
+  // IMPLEMENT WHEN: API keys configured and news service available
+  // STEPS: 1. Add news provider selection in settings (Benzinga, NewsAPI, etc.)
+  //        2. Map Kalshi tickers to relevant news search terms
+  //        3. Poll API on configurable interval (30s-5m)
+  //        4. Deduplicate and merge with existing items, sort by timestamp
+
+  // STUB: Sentiment analysis — tag news items with bullish/bearish sentiment
+  // SOURCE: "NLP sentiment analysis for financial news", FinBERT model
+  // IMPLEMENT WHEN: AI/NLP service available (local or API)
+  // STEPS: 1. Run headline through sentiment classifier
+  //        2. Tag each item with sentiment score (-1 to +1)
+  //        3. Display colored indicator (green=bullish, red=bearish, gray=neutral)
+  //        4. Add aggregate sentiment bar for filtered ticker
+
+  // STUB: News alert notifications — sound/visual alert on breaking news
+  // SOURCE: "Trading terminal alert systems", Bloomberg Terminal alerts
+  // IMPLEMENT WHEN: Web Notifications API integrated
+  // STEPS: 1. Add alert keyword configuration in settings
+  //        2. Check incoming headlines against keyword patterns
+  //        3. Trigger browser notification + optional sound
+  //        4. Highlight matching items in feed with alert badge
 
   return (
     <div className="nc-container">

@@ -49,20 +49,24 @@ const DEFAULT_SETTINGS = {
 
 // Build a full price ladder from 1-99 with bid/ask sizes at each level
 function buildLadder(data) {
-  if (!data) return []
+  if (!data || !data.yes || !data.no) return []
 
   const bidMap = {}
   const askMap = {}
 
   // YES bids = our bids
-  for (const level of data.yes.bids) {
-    bidMap[level.price] = level.size
+  if (Array.isArray(data.yes.bids)) {
+    for (const level of data.yes.bids) {
+      bidMap[level.price] = (bidMap[level.price] || 0) + level.size
+    }
   }
 
   // NO bids → asks (ask price for YES = 100 - NO bid price)
-  for (const level of data.no.bids) {
-    const askPrice = 100 - level.price
-    askMap[askPrice] = level.size
+  if (Array.isArray(data.no.bids)) {
+    for (const level of data.no.bids) {
+      const askPrice = 100 - level.price
+      askMap[askPrice] = (askMap[askPrice] || 0) + level.size
+    }
   }
 
   const levels = []
@@ -160,15 +164,15 @@ function PriceLadder({ windowId }) {
   }, [windowId, handleLinkEvent])
 
   // Ticker change handler
-  const handleTickerChange = (e) => {
+  const handleTickerChange = useCallback((e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
     hasCenteredRef.current = false
     emitLinkedMarket(windowId, newTicker)
-  }
+  }, [windowId])
 
   // Click-to-trade: place limit order at clicked price
-  const handleLevelClick = (price, side) => {
+  const handleLevelClick = useCallback((price, side) => {
     if (settings.clickAction !== 'limit') return
     const order = {
       id: orderIdRef.current++,
@@ -180,23 +184,23 @@ function PriceLadder({ windowId }) {
       time: new Date().toLocaleTimeString(),
     }
     setWorkingOrders((prev) => [...prev, order])
-  }
+  }, [settings.clickAction, orderSize, ticker])
 
-  const cancelOrder = (orderId) => {
+  const cancelOrder = useCallback((orderId) => {
     setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
-  }
+  }, [])
 
-  const handleSettingsChange = (newSettings) => {
+  const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
     setOrderSize(newSettings.defaultSize)
-  }
+  }, [])
 
   // Re-center button
-  const handleRecenter = () => {
+  const handleRecenter = useCallback(() => {
     if (!ladderRef.current || !lastPriceRef.current) return
     const rowEl = ladderRef.current.querySelector(`[data-price="${lastPriceRef.current}"]`)
     if (rowEl) rowEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }
+  }, [])
 
   // Build ladder data
   const ladder = useMemo(() => buildLadder(data), [data])
@@ -225,14 +229,37 @@ function PriceLadder({ windowId }) {
     return map
   }, [workingOrders])
 
-  const lastPrice = data ? data.lastTrade.price : null
-  const spread = data
-    ? (() => {
-        const bestBid = data.yes.bids[0]?.price ?? 0
-        const bestAskPrice = data.no.bids[0] ? 100 - data.no.bids[0].price : 100
-        return bestAskPrice - bestBid
-      })()
-    : null
+  const lastPrice = data?.lastTrade?.price ?? null
+  const spread = useMemo(() => {
+    if (!data?.yes?.bids?.length || !data?.no?.bids?.length) return null
+    const bestBid = data.yes.bids[0]?.price ?? 0
+    const bestAskPrice = data.no.bids[0] ? 100 - data.no.bids[0].price : 100
+    return bestAskPrice - bestBid
+  }, [data])
+
+  // STUB: Price clustering/rounding logic — aggregate nearby price levels into groups
+  // SOURCE: "ThinkorSwim price ladder clustering", futures DOM best practices
+  // IMPLEMENT WHEN: User settings support cluster size configuration
+  // STEPS: 1. Add clusterSize setting (e.g., 2, 5, 10 cent increments)
+  //        2. Merge adjacent price levels into clusters, summing sizes
+  //        3. Display cluster midpoint as the price label
+  //        4. Adjust volume bar widths to reflect aggregated depth
+
+  // STUB: P&L per price level — show potential P&L at each rung for open positions
+  // SOURCE: "Sierra Chart DOM P&L column", professional trading tools
+  // IMPLEMENT WHEN: Position data is available from omsService
+  // STEPS: 1. Get current position for this ticker from omsService
+  //        2. For each price level, calculate P&L = (price - avgEntry) * position
+  //        3. Display as a new column with green/red coloring
+  //        4. Update in real-time as position changes
+
+  // STUB: Cumulative depth display — show cumulative bid/ask depth at each level
+  // SOURCE: "Order book depth visualization", market microstructure analysis
+  // IMPLEMENT WHEN: Settings panel supports depth display mode toggle
+  // STEPS: 1. Add cumulative mode toggle to settings
+  //        2. In cumulative mode, sum sizes from best bid/ask outward
+  //        3. Display cumulative bars alongside individual level sizes
+  //        4. Add depth imbalance indicator (cumBid / cumAsk ratio)
 
   const fontClass = `pl--font-${grid.fontSize}`
 
