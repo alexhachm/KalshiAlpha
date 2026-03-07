@@ -6,6 +6,7 @@
   font-size: var(--font-size-xs);
   color: var(--text-primary);
   gap: var(--spacing-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .mv-ticker-bar {
@@ -25,6 +26,10 @@
   font-size: var(--font-size-xs);
   cursor: pointer;
   transition: border-color var(--transition-fast);
+}
+
+.mv-ticker-select:hover {
+  border-color: var(--border-active);
 }
 
 .mv-ticker-select:focus {
@@ -79,6 +84,7 @@
   font-size: var(--font-size-xl);
   font-weight: 700;
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .mv-yes-price {
@@ -117,6 +123,7 @@
   font-weight: 400;
   font-size: var(--font-size-xs);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
   padding: var(--spacing-xs);
   border-bottom: 1px solid var(--border-color);
 }
@@ -125,6 +132,7 @@
   padding: var(--spacing-xs);
   color: var(--text-secondary);
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .mv-depth-table tbody tr:nth-child(even) {
@@ -164,6 +172,10 @@
   font-size: var(--font-size-md);
   box-sizing: border-box;
   transition: border-color var(--transition-fast);
+}
+
+.mv-search-input:hover {
+  border-color: var(--border-active);
 }
 
 .mv-search-input:focus {

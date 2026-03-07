@@ -158,11 +158,11 @@ function MarketViewer({ windowId }) {
           </div>
 
           <div className="mv-prices">
-            <div className={`mv-price-box mv-yes ${yesFlash === 'up' ? 'flash-up' : yesFlash === 'down' ? 'flash-down' : ''}`}>
+            <div className={`mv-price-box mv-yes ${yesFlash === 'up' ? 'mv-flash-up' : yesFlash === 'down' ? 'mv-flash-down' : ''}`}>
               <span className="mv-price-label">YES</span>
               <span className="mv-price-value mv-yes-price">{data.yes.price}c</span>
             </div>
-            <div className={`mv-price-box mv-no ${noFlash === 'up' ? 'flash-up' : noFlash === 'down' ? 'flash-down' : ''}`}>
+            <div className={`mv-price-box mv-no ${noFlash === 'up' ? 'mv-flash-up' : noFlash === 'down' ? 'mv-flash-down' : ''}`}>
               <span className="mv-price-label">NO</span>
               <span className="mv-price-value mv-no-price">{data.no.price}c</span>
             </div>
