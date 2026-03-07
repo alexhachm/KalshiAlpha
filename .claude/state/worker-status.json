@@ -1,12 +1,12 @@
 {
   "worker-1": {
     "status": "busy",
-    "domain": "trade",
-    "current_task": "Fix Positions.jsx flash setTimeout leak",
+    "domain": "analytics",
+    "current_task": "Fix analyticsService.js shared cache TTL timestamp bug",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T23:25:07Z"
+    "last_heartbeat": "2026-03-07T23:27:38Z"
   },
   "worker-2": {
     "status": "busy",
