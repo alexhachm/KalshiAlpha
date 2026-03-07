@@ -134,11 +134,11 @@
   top: 0;
   background: var(--bg-tertiary);
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-heading);
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   white-space: nowrap;
@@ -147,6 +147,15 @@
 
 .tl-th:hover {
   color: var(--text-primary);
+}
+
+/* Buy/Sell row tinting */
+.tl-row--long .tl-td {
+  background: color-mix(in srgb, var(--accent-buy) 4%, transparent);
+}
+
+.tl-row--short .tl-td {
+  background: color-mix(in srgb, var(--accent-sell) 4%, transparent);
 }
 
 .tl-sort-arrow {
@@ -221,6 +230,9 @@
 /* P&L colors — use trading-standard accent-buy/sell within trade log */
 .tradelog .text-win { color: var(--accent-buy); }
 .tradelog .text-loss { color: var(--accent-sell); }
+.tradelog .pnl-positive { color: var(--accent-buy); font-weight: 600; }
+.tradelog .pnl-negative { color: var(--accent-sell); font-weight: 600; }
+.tradelog .pnl-zero { color: var(--text-muted); }
 
 /* Empty state */
 .tl-empty {

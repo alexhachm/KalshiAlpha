@@ -308,6 +308,7 @@ function TradeLog({ windowId }) {
                 const isSelected = selectedRow === row.market
                 const rowClass = [
                   'tl-row',
+                  isLong ? 'tl-row--long' : 'tl-row--short',
                   isFlashed ? 'tl-row-flash' : '',
                   isSelected ? 'tl-row-selected' : '',
                 ].filter(Boolean).join(' ')
@@ -347,21 +348,27 @@ function TradeLog({ windowId }) {
                       }
 
                       if (col.key === 'unrealized') {
-                        const cls = val >= 0 ? 'text-win' : 'text-loss'
-                        const prefix = val >= 0 ? '+$' : '-$'
+                        if (!isOpen) {
+                          return <td key={col.key} className={`tl-td tl-align-${col.align}`}>{'\u2014'}</td>
+                        }
+                        const cls = val > 0 ? 'pnl-positive' : val < 0 ? 'pnl-negative' : 'pnl-zero'
+                        const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
                         return (
                           <td key={col.key} className={`tl-td tl-align-${col.align} ${cls}`}>
-                            {isOpen ? `${prefix}${Math.abs(val).toFixed(2)}` : '\u2014'}
+                            {prefix}{Math.abs(val).toFixed(2)}
                           </td>
                         )
                       }
 
                       if (col.key === 'realized') {
-                        const cls = val >= 0 ? 'text-win' : 'text-loss'
-                        const prefix = val >= 0 ? '+$' : '-$'
+                        if (isOpen) {
+                          return <td key={col.key} className={`tl-td tl-align-${col.align}`}>{'\u2014'}</td>
+                        }
+                        const cls = val > 0 ? 'pnl-positive' : val < 0 ? 'pnl-negative' : 'pnl-zero'
+                        const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
                         return (
-                          <td key={col.key} className={`tl-td tl-align-${col.align} ${val !== 0 ? cls : ''}`}>
-                            {!isOpen ? `${prefix}${Math.abs(val).toFixed(2)}` : '\u2014'}
+                          <td key={col.key} className={`tl-td tl-align-${col.align} ${cls}`}>
+                            {prefix}{Math.abs(val).toFixed(2)}
                           </td>
                         )
                       }

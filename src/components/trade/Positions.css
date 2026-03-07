@@ -75,15 +75,30 @@
   top: 0;
   background: var(--bg-tertiary);
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-heading);
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
+}
+
+/* P&L styling */
+.positions .pnl-positive {
+  color: var(--accent-buy);
+  font-weight: 600;
+}
+
+.positions .pnl-negative {
+  color: var(--accent-sell);
+  font-weight: 600;
+}
+
+.positions .pnl-zero {
+  color: var(--text-muted);
 }
 
 .pos-th:hover {

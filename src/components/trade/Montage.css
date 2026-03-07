@@ -139,10 +139,10 @@
   display: flex;
   justify-content: space-between;
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-heading);
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -301,10 +301,10 @@
 }
 
 .mt-wo-header {
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-heading);
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   padding: var(--spacing-xs) 0 var(--spacing-xs);
 }
 

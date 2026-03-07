@@ -119,8 +119,11 @@
   display: flex;
   align-items: baseline;
   gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-xs);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 1px var(--spacing-xs);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-md);
   line-height: 1.4;
 }
@@ -164,7 +167,7 @@
 
 /* Alternating rows for news feed */
 .nc-item:nth-child(even) {
-  background: var(--bg-row-alt);
+  background: var(--bg-tertiary);
 }
 
 /* Tabular nums for timestamps */

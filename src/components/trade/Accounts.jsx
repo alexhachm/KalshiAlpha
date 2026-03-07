@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import AccountsSettings from './AccountsSettings'
+import './Accounts.css'
 
 const LS_KEY_PREFIX = 'accounts-settings-'
 
@@ -173,14 +174,10 @@ function Accounts({ windowId }) {
               >
                 {grid.visibleColumns.map((col) => {
                   const val = acct[col.key]
-                  const displayVal = col.numeric
-                    ? formatValue(val, settings.decimalPrecision)
-                    : val
+                  const isPnl = col.key === 'realizedPnl' || col.key === 'unrealizedPnl'
                   const pnlClass =
-                    col.numeric && typeof val === 'number'
-                      ? val >= 0
-                        ? 'text-win'
-                        : 'text-loss'
+                    isPnl && typeof val === 'number'
+                      ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
                       : ''
                   const typeClass =
                     col.key === 'type'
@@ -188,14 +185,21 @@ function Accounts({ windowId }) {
                         ? 'acct-type-paper'
                         : 'acct-type-live'
                       : ''
+                  let content
+                  if (isPnl && typeof val === 'number') {
+                    const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
+                    content = `${prefix}${Math.abs(val).toFixed(settings.decimalPrecision)}`
+                  } else if (col.numeric && typeof val === 'number') {
+                    content = `$${formatValue(val, settings.decimalPrecision)}`
+                  } else {
+                    content = val
+                  }
                   return (
                     <td
                       key={col.key}
                       className={`acct-td acct-align-${col.align} ${pnlClass} ${typeClass}`}
                     >
-                      {col.numeric && typeof val === 'number'
-                        ? `$${displayVal}`
-                        : displayVal}
+                      {content}
                     </td>
                   )
                 })}
@@ -205,27 +209,28 @@ function Accounts({ windowId }) {
             <tr className="acct-row acct-totals-row" style={{ height: grid.rowHeight }}>
               {grid.visibleColumns.map((col) => {
                 const val = totals[col.key]
-                const displayVal = col.numeric
-                  ? formatValue(val, settings.decimalPrecision)
-                  : val
+                const isPnl = col.key === 'realizedPnl' || col.key === 'unrealizedPnl'
                 const pnlClass =
-                  col.numeric && typeof val === 'number'
-                    ? val >= 0
-                      ? 'text-win'
-                      : 'text-loss'
+                  isPnl && typeof val === 'number'
+                    ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
                     : ''
+                let content
+                if (col.key === 'account') {
+                  content = <strong>{val}</strong>
+                } else if (isPnl && typeof val === 'number') {
+                  const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
+                  content = <strong>{prefix}{Math.abs(val).toFixed(settings.decimalPrecision)}</strong>
+                } else if (col.numeric && typeof val === 'number') {
+                  content = <strong>${formatValue(val, settings.decimalPrecision)}</strong>
+                } else {
+                  content = val
+                }
                 return (
                   <td
                     key={col.key}
                     className={`acct-td acct-align-${col.align} ${pnlClass}`}
                   >
-                    {col.key === 'account' ? (
-                      <strong>{displayVal}</strong>
-                    ) : col.numeric && typeof val === 'number' ? (
-                      <strong>${displayVal}</strong>
-                    ) : (
-                      displayVal
-                    )}
+                    {content}
                   </td>
                 )
               })}

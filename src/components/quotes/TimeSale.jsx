@@ -121,7 +121,7 @@ function TimeSale({ windowId }) {
           next.delete(trade.id)
           return next
         })
-      }, 500)
+      }, 800)
     })
     return unsub
   }, [ticker])
