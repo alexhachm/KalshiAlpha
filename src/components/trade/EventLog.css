@@ -96,6 +96,7 @@
   padding: 1px var(--spacing-sm);
   white-space: nowrap;
   line-height: 1.6;
+  font-variant-numeric: tabular-nums;
 }
 
 .el-entry:nth-child(even) {

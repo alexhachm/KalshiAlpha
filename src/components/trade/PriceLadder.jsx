@@ -147,7 +147,6 @@ function PriceLadder({ windowId }) {
     ({ ticker: linkedTicker }) => {
       if (linkedTicker && linkedTicker !== ticker) {
         setTicker(linkedTicker)
-        setData(null)
       }
     },
     [ticker]
@@ -164,7 +163,6 @@ function PriceLadder({ windowId }) {
   const handleTickerChange = (e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
-    setData(null)
     hasCenteredRef.current = false
     emitLinkedMarket(windowId, newTicker)
   }

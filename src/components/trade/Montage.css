@@ -193,6 +193,7 @@
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Order entry */
@@ -397,4 +398,55 @@
   font-size: var(--font-size-sm);
   background: color-mix(in srgb, var(--accent-sell) 8%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--accent-sell) 20%, transparent);
+}
+
+/* Tabular numbers for book prices/sizes */
+.mt-book-price,
+.mt-book-size {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Depth visualization bars behind bid/ask rows */
+.mt-bid-row,
+.mt-ask-row {
+  position: relative;
+}
+
+.mt-bid-row .mt-depth-bar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  background: var(--accent-buy);
+  opacity: 0.10;
+  pointer-events: none;
+}
+
+.mt-ask-row .mt-depth-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--accent-sell);
+  opacity: 0.10;
+  pointer-events: none;
+}
+
+/* Flash animations for bid/ask price changes */
+.flash-up {
+  animation: mt-flash-up 0.3s ease-out;
+}
+
+.flash-down {
+  animation: mt-flash-down 0.3s ease-out;
+}
+
+@keyframes mt-flash-up {
+  0% { background: color-mix(in srgb, var(--accent-buy) 20%, transparent); }
+  100% { background: transparent; }
+}
+
+@keyframes mt-flash-down {
+  0% { background: color-mix(in srgb, var(--accent-sell) 20%, transparent); }
+  100% { background: transparent; }
 }

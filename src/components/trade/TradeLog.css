@@ -158,6 +158,7 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   white-space: nowrap;
   border-bottom: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
 }
 
 .tl-align-left   { text-align: left; }
