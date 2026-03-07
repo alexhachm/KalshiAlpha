@@ -19,13 +19,14 @@
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/86"
   },
   "worker-3": {
-    "status": "busy",
+    "status": "idle",
     "domain": "frontend/trade",
-    "current_task": "Function audit pass",
-    "tasks_completed": 0,
+    "current_task": null,
+    "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T20:27:59Z"
+    "last_heartbeat": "2026-03-07T20:29:48Z",
+    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/88"
   },
   "worker-4": {
     "status": "busy",
