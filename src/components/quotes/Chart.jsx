@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { createChart, ColorType, CrosshairMode, LineStyle, CandlestickSeries, LineSeries, AreaSeries, HistogramSeries } from 'lightweight-charts'
 import { generateOHLCV, subscribeToOHLCV } from '../../services/dataFeed'
 import {
@@ -64,9 +64,9 @@ function getThemeColors() {
 }
 
 function normalizeToPercent(candles) {
-  if (!candles.length) return []
-  const base = candles[0].close
-  if (base === 0) return candles.map((c) => ({ time: c.time, value: 0 }))
+  if (!candles || !candles.length) return []
+  const base = candles[0]?.close
+  if (base == null || base === 0) return candles.map((c) => ({ time: c.time, value: 0 }))
   return candles.map((c) => ({
     time: c.time,
     value: ((c.close - base) / base) * 100,
@@ -377,11 +377,11 @@ function Chart({ windowId }) {
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
   }, [windowId, handleLinkEvent])
 
-  const handleTickerChange = (e) => {
+  const handleTickerChange = useCallback((e) => {
     const newTicker = e.target.value
     setTicker(newTicker)
     emitLinkedMarket(windowId, newTicker)
-  }
+  }, [windowId])
 
   // Format crosshair data for OHLC display (normal mode only)
   const formatOHLC = (d) => {
@@ -395,7 +395,39 @@ function Chart({ windowId }) {
   }
 
   const ohlc = crosshairData && !crosshairData.overlay ? formatOHLC(crosshairData) : null
-  const availableTickers = TICKERS.filter((t) => t !== ticker)
+  const availableTickers = useMemo(() => TICKERS.filter((t) => t !== ticker), [ticker])
+
+  // STUB: VWAP indicator — Volume Weighted Average Price overlay
+  // SOURCE: "VWAP calculation for intraday trading", institutional benchmarks
+  // IMPLEMENT WHEN: Volume data is available per candle from dataFeed
+  // STEPS: 1. Compute cumulative (price * volume) / cumulative volume
+  //        2. Add LineSeries overlay in chart initialization effect
+  //        3. Update VWAP line on each new bar
+  //        4. Add VWAP toggle in chart toolbar, persist in settings
+
+  // STUB: EMA/SMA indicators — Exponential/Simple Moving Average overlays
+  // SOURCE: "Technical analysis moving averages", standard TA library
+  // IMPLEMENT WHEN: Chart settings support indicator configuration
+  // STEPS: 1. Compute EMA(period) = price * k + prev_ema * (1-k), where k = 2/(period+1)
+  //        2. Support multiple periods (9, 21, 50, 200) with distinct colors
+  //        3. Add/remove indicator LineSeries dynamically
+  //        4. Add indicator panel in settings with period/color picker
+
+  // STUB: Bollinger Bands — volatility band overlay
+  // SOURCE: "Bollinger Bands calculation", John Bollinger's technical analysis
+  // IMPLEMENT WHEN: EMA indicator is implemented (prerequisite)
+  // STEPS: 1. Compute SMA(20) as middle band
+  //        2. Upper = SMA + 2 * stddev(20), Lower = SMA - 2 * stddev(20)
+  //        3. Render as AreaSeries (shaded band) + LineSeries (middle)
+  //        4. Add squeeze detection (bandwidth < threshold) with visual indicator
+
+  // STUB: Data gap handling — detect and mark gaps in OHLCV data
+  // SOURCE: "Financial chart data gap visualization", TradingView gap handling
+  // IMPLEMENT WHEN: Real market data has trading hours / session breaks
+  // STEPS: 1. Detect time gaps > 2x expected interval between candles
+  //        2. Insert visual gap marker (dashed vertical line)
+  //        3. Optionally fill gaps with interpolated data (configurable)
+  //        4. Add gap statistics display in chart info bar
 
   return (
     <div ref={outerRef} className="chart-component">

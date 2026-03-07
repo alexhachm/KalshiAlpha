@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import OrderBookSettings from './OrderBookSettings'
 import {
@@ -95,8 +95,8 @@ function formatCents(cents) {
 
 function formatPnl(cents) {
   if (cents == null) return '--'
-  const val = (cents / 100).toFixed(2)
-  return cents >= 0 ? `+$${val}` : `-$${Math.abs(cents / 100).toFixed(2)}`
+  const abs = Math.abs(cents / 100).toFixed(2)
+  return cents >= 0 ? `+$${abs}` : `-$${abs}`
 }
 
 function OrderBook({ windowId }) {
@@ -202,25 +202,55 @@ function OrderBook({ windowId }) {
     setSettings(newSettings)
   }, [])
 
-  // Filter orders by linked ticker if set
-  const displayOrders = linkedTicker
-    ? orders.filter((o) => o.ticker === linkedTicker)
-    : orders
-
-  const openOrders = displayOrders.filter(
-    (o) =>
-      o.status !== ORDER_STATUS.FILLED &&
-      o.status !== ORDER_STATUS.CANCELLED &&
-      o.status !== ORDER_STATUS.REJECTED
+  // Filter orders by linked ticker if set — memoized to avoid re-filtering on every render
+  const displayOrders = useMemo(
+    () => linkedTicker ? orders.filter((o) => o.ticker === linkedTicker) : orders,
+    [orders, linkedTicker]
   )
 
-  const displayFills = linkedTicker
-    ? fills.filter((f) => f.ticker === linkedTicker)
-    : fills
+  const openOrders = useMemo(
+    () => displayOrders.filter(
+      (o) =>
+        o.status !== ORDER_STATUS.FILLED &&
+        o.status !== ORDER_STATUS.CANCELLED &&
+        o.status !== ORDER_STATUS.REJECTED
+    ),
+    [displayOrders]
+  )
 
-  const displayPositions = linkedTicker
-    ? positions.filter((p) => p.ticker === linkedTicker)
-    : positions
+  const displayFills = useMemo(
+    () => linkedTicker ? fills.filter((f) => f.ticker === linkedTicker) : fills,
+    [fills, linkedTicker]
+  )
+
+  const displayPositions = useMemo(
+    () => linkedTicker ? positions.filter((p) => p.ticker === linkedTicker) : positions,
+    [positions, linkedTicker]
+  )
+
+  // STUB: Order flow imbalance indicator — compute buy/sell volume ratio from recent fills
+  // SOURCE: "ThinkorSwim order flow tools", institutional trade analysis
+  // IMPLEMENT WHEN: Real-time fill data is available from Kalshi WebSocket
+  // STEPS: 1. Track rolling window of fills (last N seconds)
+  //        2. Compute buy_volume / sell_volume ratio
+  //        3. Display as colored bar in header (green = buy pressure, red = sell pressure)
+  //        4. Add configurable window size in settings
+
+  // STUB: Bid/ask aggregation by price level — group orders at same price into depth display
+  // SOURCE: "Professional order book depth visualization", Level II market data
+  // IMPLEMENT WHEN: omsService exposes aggregated depth data
+  // STEPS: 1. Group orders by price level in orders tab
+  //        2. Show aggregate size at each level
+  //        3. Add depth bars proportional to size
+  //        4. Color-code by bid/ask side
+
+  // STUB: Cancel-all button — batch cancel all open orders with single click
+  // SOURCE: "Trading terminal UX best practices"
+  // IMPLEMENT WHEN: omsService supports batch cancel
+  // STEPS: 1. Add "Cancel All" button in tab bar when orders tab active
+  //        2. Confirm dialog before executing
+  //        3. Call cancelOrder for each open order in parallel
+  //        4. Show progress/result toast
 
   return (
     <div className={`order-book ob--font-${activeGrid.fontSize}`}>
@@ -301,6 +331,11 @@ function OrderBook({ windowId }) {
 }
 
 function OrdersPanel({ orders, grid, cancellingIds, onCancel }) {
+  const visibleKeys = useMemo(
+    () => new Set(grid.visibleColumns.map((c) => c.key)),
+    [grid.visibleColumns]
+  )
+
   if (orders.length === 0) {
     return <div className="ob-empty">No orders</div>
   }
@@ -326,7 +361,6 @@ function OrdersPanel({ orders, grid, cancellingIds, onCancel }) {
       </thead>
       <tbody>
         {orders.map((order) => {
-          const visibleKeys = new Set(grid.visibleColumns.map((c) => c.key))
           const isCancelling = cancellingIds.has(order.clientOrderId)
           const statusClass = STATUS_CLASS[order.status] || ''
 
@@ -384,6 +418,11 @@ function OrdersPanel({ orders, grid, cancellingIds, onCancel }) {
 }
 
 function FillsPanel({ fills, grid, flashedFills }) {
+  const visibleKeys = useMemo(
+    () => new Set(grid.visibleColumns.map((c) => c.key)),
+    [grid.visibleColumns]
+  )
+
   if (fills.length === 0) {
     return <div className="ob-empty">No fills</div>
   }
@@ -409,7 +448,6 @@ function FillsPanel({ fills, grid, flashedFills }) {
       </thead>
       <tbody>
         {fills.map((fill, i) => {
-          const visibleKeys = new Set(grid.visibleColumns.map((c) => c.key))
           const isFlashed = flashedFills.has(fill.fillId)
           const rowClass = `ob-row ${isFlashed ? 'ob-row-flash' : ''}`
 
@@ -441,6 +479,11 @@ function FillsPanel({ fills, grid, flashedFills }) {
 }
 
 function PositionsPanel({ positions, grid }) {
+  const visibleKeys = useMemo(
+    () => new Set(grid.visibleColumns.map((c) => c.key)),
+    [grid.visibleColumns]
+  )
+
   if (positions.length === 0) {
     return <div className="ob-empty">No positions</div>
   }
@@ -466,7 +509,6 @@ function PositionsPanel({ positions, grid }) {
       </thead>
       <tbody>
         {positions.map((pos) => {
-          const visibleKeys = new Set(grid.visibleColumns.map((c) => c.key))
           const key = `${pos.ticker}:${pos.side}`
 
           return (

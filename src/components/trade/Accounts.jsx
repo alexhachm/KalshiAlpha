@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import AccountsSettings from './AccountsSettings'
 import './Accounts.css'
@@ -86,36 +86,41 @@ function Accounts({ windowId }) {
     return () => clearInterval(intervalRef.current)
   }, [settings.refreshInterval, refreshData])
 
-  const handleSettingsChange = (newSettings) => {
+  const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
-  }
+  }, [])
 
-  const handleSort = (colKey) => {
-    if (sortCol === colKey) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortCol(colKey)
-      setSortDir('asc')
-    }
-  }
-
-  // Sort accounts
-  const sortedAccounts = [...accounts]
-  if (sortCol) {
-    sortedAccounts.sort((a, b) => {
-      const va = a[sortCol]
-      const vb = b[sortCol]
-      if (typeof va === 'number' && typeof vb === 'number') {
-        return sortDir === 'asc' ? va - vb : vb - va
+  const handleSort = useCallback((colKey) => {
+    setSortCol((prev) => {
+      if (prev === colKey) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+        return prev
       }
-      const sa = String(va)
-      const sb = String(vb)
-      return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
+      setSortDir('asc')
+      return colKey
     })
-  }
+  }, [])
 
-  // Totals row
-  const totals = {
+  // Sort accounts — memoized
+  const sortedAccounts = useMemo(() => {
+    const result = [...accounts]
+    if (sortCol) {
+      result.sort((a, b) => {
+        const va = a[sortCol]
+        const vb = b[sortCol]
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return sortDir === 'asc' ? va - vb : vb - va
+        }
+        const sa = String(va)
+        const sb = String(vb)
+        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
+      })
+    }
+    return result
+  }, [accounts, sortCol, sortDir])
+
+  // Totals row — memoized
+  const totals = useMemo(() => ({
     account: 'Total',
     type: '',
     realizedPnl: accounts.reduce((s, a) => s + a.realizedPnl, 0),
@@ -123,7 +128,31 @@ function Accounts({ windowId }) {
     initEquity: accounts.reduce((s, a) => s + a.initEquity, 0),
     tickets: accounts.reduce((s, a) => s + a.tickets, 0),
     shares: accounts.reduce((s, a) => s + a.shares, 0),
-  }
+  }), [accounts])
+
+  // STUB: Return on equity (ROE) display — calculate and show ROE per account
+  // SOURCE: "Portfolio performance metrics", GIPS standards
+  // IMPLEMENT WHEN: initEquity and realized P&L are accurate
+  // STEPS: 1. Compute ROE = (realizedPnl + unrealizedPnl) / initEquity * 100
+  //        2. Add ROE column to account grid
+  //        3. Color-code: green > 0%, red < 0%
+  //        4. Show annualized ROE if account creation date available
+
+  // STUB: Account margin utilization — show buying power and margin usage
+  // SOURCE: "Kalshi API balance endpoints", margin trading best practices
+  // IMPLEMENT WHEN: Kalshi API balance/margin data is available
+  // STEPS: 1. Fetch available balance and margin data from API
+  //        2. Add "Available" and "Used Margin" columns
+  //        3. Show utilization bar (used/total margin)
+  //        4. Color-code: yellow > 70%, red > 90% utilization
+
+  // STUB: Account performance chart — mini sparkline showing equity curve
+  // SOURCE: "Bloomberg portfolio analytics", equity curve visualization
+  // IMPLEMENT WHEN: Historical P&L data is tracked over time
+  // STEPS: 1. Track daily P&L snapshots in localStorage/IndexedDB
+  //        2. Render mini sparkline in each account row
+  //        3. Show tooltip with detailed daily breakdown on hover
+  //        4. Add expanded chart view on click
 
   return (
     <div className={`accounts acct--font-${grid.fontSize}`}>
