@@ -1,12 +1,12 @@
 {
   "worker-1": {
     "status": "busy",
-    "domain": "trade",
-    "current_task": "Fix TimeSale.jsx and LiveScanner.jsx import issue",
+    "domain": "shell",
+    "current_task": "Fix linkBus windowGroups leak on window close",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T23:31:28Z"
+    "last_heartbeat": "2026-03-07T23:34:42Z"
   },
   "worker-2": {
     "status": "busy",

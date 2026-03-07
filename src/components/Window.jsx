@@ -77,7 +77,10 @@ function Window({
       width: sizeRef.current.width,
       height: sizeRef.current.height,
     })
-    return () => unregister(id)
+    return () => {
+      unregister(id)
+      removeFromGroup(id)
+    }
   }, [id])
 
   // Subscribe to drag sync for same-color group
