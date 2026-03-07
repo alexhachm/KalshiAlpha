@@ -61,12 +61,12 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
       w.document.head.appendChild(varStyle)
     }
 
-    // Body styles
+    // Body styles — use CSS variables for consistency with main window
     w.document.body.style.margin = '0'
     w.document.body.style.padding = '0'
-    w.document.body.style.backgroundColor = '#121212'
-    w.document.body.style.color = '#e0e0e0'
-    w.document.body.style.fontFamily = "'Inter', system-ui, sans-serif"
+    w.document.body.style.backgroundColor = 'var(--bg-primary)'
+    w.document.body.style.color = 'var(--text-primary)'
+    w.document.body.style.fontFamily = 'var(--font-sans)'
     w.document.body.style.overflow = 'hidden'
 
     // Create mount point

@@ -29,21 +29,21 @@ function TitleBar() {
           onClick={handleMinimize}
           aria-label="Minimize"
         >
-          <Minus size={14} />
+          <Minus size={12} />
         </button>
         <button
           className="titlebar-btn titlebar-btn--maximize"
           onClick={handleMaximize}
           aria-label={isMaximized ? 'Restore' : 'Maximize'}
         >
-          {isMaximized ? <Square size={12} /> : <Maximize2 size={14} />}
+          {isMaximized ? <Square size={10} /> : <Maximize2 size={12} />}
         </button>
         <button
           className="titlebar-btn titlebar-btn--close"
           onClick={handleClose}
           aria-label="Close"
         >
-          <X size={14} />
+          <X size={12} />
         </button>
       </div>
     </div>

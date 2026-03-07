@@ -2,38 +2,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--titlebar-height);
+  height: 28px;
   background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
   -webkit-app-region: drag;
   user-select: none;
   flex-shrink: 0;
 }
 
 .titlebar-title {
-  padding-left: var(--spacing-xl);
+  padding-left: var(--spacing-lg);
   font-family: var(--font-sans);
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--text-secondary);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .titlebar-controls {
   display: flex;
   height: 100%;
   -webkit-app-region: no-drag;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.titlebar:hover .titlebar-controls {
+  opacity: 1;
 }
 
 .titlebar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
+  width: 36px;
   height: 100%;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
 }

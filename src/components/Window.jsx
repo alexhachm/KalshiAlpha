@@ -440,7 +440,7 @@ function Window({
             onClick={() => onClose(id)}
             title="Close"
           >
-            <X size={14} />
+            <X size={12} />
           </button>
         </div>
       </div>
