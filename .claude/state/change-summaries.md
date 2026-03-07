@@ -8,3 +8,9 @@
 **What changed:** All 6 trade components now import exclusively from useKalshiData hooks — zero mockData imports remain. Montage & PriceLadder use useTickerData + useOrderEntry. Positions, TradeLog, Accounts use usePortfolio + useKalshiConnection with mock fallback when disconnected. EventLog uses useKalshiConnection to log real connection status changes. CSS and settings files normalized line endings.
 **PR:** https://github.com/alexhachm/KalshiAlpha/pull/19
 ---
+
+## 2026-03-07T20:23:57Z worker-5 | domain: frontend/changes | task: "Changes Tab UI Component"
+**Files changed:** src/components/trade/ChangesTab.jsx, src/components/trade/ChangesTab.css, src/services/changeTrackingService.js, src/components/WindowManager.jsx, src/components/MenuBar.jsx
+**What changed:** Added new ChangesTab component under Trade menu that shows a live feed of iteration engine changes with status badges, filter/sort controls, diff view toggle, and hover tooltips. Created changeTrackingService.js mock service with getChanges/subscribeToChanges/getChangeById API. Registered as "changes" type in COMPONENT_REGISTRY.
+**PR:** https://github.com/alexhachm/KalshiAlpha/pull/85
+---
