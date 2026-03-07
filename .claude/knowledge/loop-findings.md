@@ -1,0 +1,200 @@
+# Loop Findings
+
+## Successful Patterns
+- All 3 iteration-1 requests (req-bf9b39cb, req-5833eca7, req-f5a0cec9) decomposed successfully — specific file/line/scenario descriptions work well
+- All 3 iteration-2 requests (req-2e7b6ce0, req-bc09229c, req-49a685b9) decomposed successfully — consistent success with file/line/fix format
+- All 3 iteration-3 requests (req-87ccc1e8, req-bcaaa6be, req-89d779b5) decomposed successfully — 100% success rate continues
+- All 3 iteration-4 requests (req-224aa9ca, req-b9a2c7b6, req-c22f55d6) decomposed/executing — 100% success rate continues (15/15 total)
+
+## Failed Patterns
+- (none yet)
+
+## Codebase Gaps
+- WindowManager.jsx tab merge settings loss — when windows merge (Shell.jsx MERGE_WINDOWS line 82-113), WindowManager.jsx (line 77) passes windowId: win.id (merge target ID) to the rendered component, not tab.id (original window ID). Tab switching via SET_ACTIVE_TAB changes win.type but not win.id. The newly-rendered component calls loadSettings(mergeTargetId) instead of loadSettings(originalWindowId). All per-window settings saved under the original window ID are orphaned. Fix: use win.tabs[win.activeTabIndex].id as windowId when tabs exist. (FILED: req-bf9b39cb)
+- electron/main.js: mainWindow never set to null on close (GC leak), activate handler is dead code (window-all-closed always quits), no render-process-gone handler (blank screen on crash) (FILED: req-5833eca7)
+- omsEngine.js findOrder returns mutable reference to internal order object — root cause of amendOrder bypass bug (req-61c4e973). All query methods (getOrder, getAllOrders, getOpenOrders, getOrdersByTicker) expose mutable internal state (FILED: req-f5a0cec9)
+- MarketViewer.jsx search dropdown (lines 131-148) has no click-outside/blur dismiss handler — dropdown stays open until user clears input (req-62d2efa8)
+- useMarketSearch in useKalshiData.js (lines 280-295) has no AbortController — overlapping searches can show stale results from slower earlier request (req-79b124ab)
+- alertService.js onerror recovery setTimeout (lines 26-37) can resurrect a destroyed service — creates zombie worker + dataFeed subscriptions after destroy() call (req-2e2bca0f)
+- MarketViewer.jsx search dropdown lacks keyboard navigation (arrow keys + Enter) — feature gap, not bug
+- useGridCustomization.js loadState (line 17-19) preserves columns removed from defaults — saved state includes stale columns not in defaultColumns, renders empty cells
+- analyticsService.js computePnLFromFills: unmatched sells get pnlCents:0 but could be short positions with real P&L (known limitation, part of STUB at lines 4-9)
+- omsService.js processWsFillUpdate lacks fill deduplication — double-count risk on reconnect (req-b9ea0caa)
+- useKalshiData.js useTickerData: stale data between ticker switches — setData(null) only on falsy ticker, not on ticker change (req-cab47d51)
+- useKalshiData.js usePortfolio refresh: no try-catch on Promise.all — any API failure causes cascading unhandled rejections every 5s (req-b5d1c9f3)
+- omsEngine.js processFill: no terminal state guard — duplicate fills for completed orders update position incorrectly (req-5558334f, complements req-b9ea0caa)
+- useKalshiData.js useOHLCV: same stale data pattern as useTickerData — candles/currentCandle not reset on ticker/timeframe change
+- settingsStore.js: clean, no bugs found — proper deep merge, subscribe/unsubscribe, silent localStorage failure by design
+- dataFeed.js subscribeToTicker ticker callback doesn't trigger wrappedCallback — stale last trade data (req-dab88228)
+- kalshiWebSocket.js handleOpen sets CONNECTED before auth ack — subscription commands may be dropped (req-d1e197cc)
+- kalshiApi.js has no proactive rate limiter (STUB comment at line 139) — relies on 429 retry only
+- omsService.js syncWithExchange fill dedup only works for orders already known locally — fills for externally-created orders can be missed (STUB comment at line 4-8)
+- kalshiWebSocket.js lacks command acknowledgement tracking (STUB comment at line 4-7)
+- alertService.js worker crash recovery: stale closures in tickerUnsubs send ticks to terminated worker after restart — alerts silently stop (req-3d949ef3)
+- analyticsCalc.js sharpeRatio: uses absolute pnlCents not percentage returns, and rfPerTrade formula has factor-of-n error (req-621911c2)
+- changeTrackingService.js: _changes array grows unbounded in localStorage — no trimming/rotation (req-c6353b2c)
+- PriceLadder.jsx "Vol" column (line 388) shows depth (bidSize + askSize) not trade volume — misleading label (FILED: req-b9a2c7b6)
+- Montage.jsx: submitting state from useOrderEntry() imported but never used to disable buttons — duplicate order risk on rapid clicks (req-19e6cd40)
+- Montage.jsx: order confirm dialog captures ticker from closure — stale ticker if user changes market between dialog open and confirm click (req-b52436f0)
+- Montage.jsx: placeOrder()/executeOrder() not wrapped in useCallback despite React.memo wrapper — defeats memoization
+- Montage.jsx: price validation rejects valid 100c orders (price >= 100 should be price > 99)
+- Montage.jsx: order entry state (size, type) not reset on ticker change via handleSearchSelect (FILED: req-2e7b6ce0)
+- Montage.jsx: workingOrders rendered without filtering by current ticker — shows orders from all tickers (FILED: req-2e7b6ce0)
+- Montage.jsx executeOrder (line 204-209): sends raw user-entered price as yes_price for BOTH YES and NO orders — Kalshi API requires yes_price to always be the YES contract price. For NO orders, yes_price should be 100-price. All NO limit orders execute at inverse price (req-12f0b8a3)
+- Montage.jsx placeOrder market order (line 176): uses data.yes.price for both sides — NO market orders should use data.no.price or 100-data.yes.price. Also no guard for price=0 when no trades exist (req-3987f338)
+- hotkeyStore.js saveProfile: regenerates UUIDs for all bindings on every save — breaks HotkeyManager selectedId and any external ID references (req-3245489c)
+- NewsChat.jsx generateNewsItems: uses Date.now() in React keys — all 20 items get new keys on every 30s refresh, forcing full DOM teardown/rebuild (FILED: req-c22f55d6)
+- No @media responsive breakpoints in any CSS file — acceptable for Electron desktop app, not a bug
+- Positions.jsx: setInterval leak — interval recreated on every settings.flashOnChange toggle via refreshData dependency chain (req-f36ad831)
+- Positions.jsx: flash setTimeout (line 108-111) not stored/cancelled on unmount — React state-update-on-unmounted warning
+- Positions.jsx: linkBus subscription cleanup won't work if windowId changes (stale handler reference)
+- analyticsCalc.js: most functions are clean — winRate, totalPnL, expectedValue, kellyFraction, omegaRatio, categoryAttribution, profitFactor, markToMarket all have proper null/empty guards. kellyFraction returns 0 for all-wins (conservative, can't compute b ratio)
+- analyticsCalc.js maxDrawdownPct: returns 0 when peak is 0 (all-losing portfolio) — absolute drawdown is correct but pct is 0 (minor edge case)
+- analyticsService.js: shared cache TTL timestamp (LS_TIMESTAMP_KEY) used for both fills and settlements — can serve stale data (FILED: req-224aa9ca)
+- analyticsService.js: localStorage quota exceeded silently swallowed in setCachedData — no user notification
+- analyticsService.js: fetchSettlements() defined but never called — dead code
+- hotkeyStore.js: conflict detection only checks active bindings — toggling inactive binding back on can create undetected conflicts (FILED: req-bc09229c)
+- hotkeyStore.js: saveProfile() regenerates UUIDs for all bindings — breaks external references (e.g., HotkeyManager selectedId)
+- hotkeyStore.js: getAllBindings() returns shallow copy — callers can mutate store state directly
+- hotkeyStore.js: normalizeKeyCombo() returns bare modifier strings when no actual key pressed
+- TradeLog.jsx: linkBus subscription creates new handler function each render — unsubscribe cleanup silently fails, subscribers accumulate (req-4e8011b4)
+- TradeLog.jsx: flash setTimeout (line 161-163) not stored/cancelled on unmount — React state-update-on-unmounted warning (req-c4623af6)
+- TradeLog.jsx: date filter (line 119) uses local midnight vs ISO string comparison — both sides use Date objects so comparison is on internal timestamps, timezone-safe (FALSE POSITIVE, moved)
+- TradeLog.jsx: sort comparator (lines 213-220) — uses typeof guards for numbers and `??` for strings, NaN-safe (FALSE POSITIVE, confirmed iteration 5)
+- TradeLog.jsx: sort comparator (lines 213-220) handles null/undefined via `??` coalescing and typeof guards — previously suspected NaN risk is FALSE POSITIVE (confirmed iteration 5, second pass)
+- analyticsService.js fetchSettlements dead code — function defined (lines 89-109) but never exported or called (FILED: req-b01fdc0d)
+- Shell.jsx closeWindow/focusWindow not wrapped in useCallback — causes keyboard nav effect re-registration every render + defeats Window memoization (FILED: req-a211fe62)
+- Accounts.jsx totals reduce NaN risk — no null guards on 5 numeric fields, NaN if API data has missing fields (FILED: req-853c69f8)
+- Accounts.jsx: nested setSortDir inside setSortCol updater (lines 93-102) — non-atomic state updates, sort direction may not toggle correctly (req-9cc6d22d)
+- Accounts.jsx: totals reduce (lines 123-131) has no null/undefined guards — NaN if any account field is missing
+- EventLog.jsx: handleClearLog resets nextIdRef to 1 but startup entries use IDs 1-7 — ID collision after clear
+- EventLog.jsx: auto-scroll effect (line 142-144) doesn't guard autoScrollRef.current — may scroll user against their intent
+- ChangesTab.jsx: tooltipRef (line 44) declared but never read — dead code
+- ChangesTab.jsx: formatRelativeTime shows negative time ("−5s ago") if timestamp is in the future (clock skew)
+- ChangesTab.jsx: localStorage persist silently fails on quota exceeded — changes lost on refresh
+- changeTrackingService.js: _changes array unbounded growth + silent localStorage quota failure = data loss risk
+- TimeSale.jsx: flash setTimeout (lines 118-124) not stored/cancelled on unmount or ticker change — state-update-on-unmounted warning (req-b8c7f039)
+- TimeSale.jsx: column label "Exchange" (line 22) for the `side` field is misleading — shows BUY/SELL, not exchange name
+- AlertTrigger.jsx: useEffect cleanup (line 132) calls alertService.destroy() which terminates the shared module-level worker — if multiple AlertTrigger windows exist, first unmount kills alerts for all remaining windows (req-420f72bc)
+- LiveScanner.jsx: settings persist effect (line 78) lacks try-catch on localStorage.setItem — throws unhandled exception on quota exceeded, unlike all other components (req-bc599f4f)
+- LiveScanner.jsx: flash timer uses single ref (newRowTimerRef) cleared/reset on each alert — rapid alerts clobber timer, cutting short earlier flashes
+- MarketClock.jsx: settings persist effect (line 79) lacks try-catch on localStorage.setItem — same pattern as LiveScanner (req-b6426a21)
+- SnapManager.jsx findMergeTarget: iterates Map in insertion order, returns first overlapping window — merges with oldest window not topmost (highest zIndex). UX bug when windows overlap (req-0c0913c9)
+- SnapManager.jsx calculateSnap (line 38-39) and findOpenPosition (line 152-153) use window.innerHeight instead of workspace height — workspace is 24px shorter (MenuBar height). Bottom snap and new window placement overshoot visible area (req-466e05a8)
+- SnapManager.jsx calculateSnap snap priority: snaps to first window in Map insertion order, not closest edge. Minor UX, not filed.
+- Window.jsx handleTitleBarMouseDown drag handler: no horizontal boundary clamping — fast drag past 10px snap zone moves window off-screen with no recovery. Ctrl+Tab focuses but doesn't move back (req-03205518)
+- Shell.jsx DETACH_TAB: uses win.initialX/initialY (creation-time position) + 40px offset — detached tab appears at stale position, not near the tabbed window's current location (req-7a7975f6)
+- Shell.jsx MERGE_WINDOWS: tab objects created with only {id, type, title} — ticker field not preserved. However, no component currently uses the ticker prop (all manage ticker via internal state + linkBus), so this is dead feature code, not a functional bug.
+- Shell.jsx: focusWindow/closeWindow not wrapped in useCallback — causes keyboard nav effect (line 294) to re-register listener every render (perf issue, not bug)
+- Shell.jsx Ctrl+Tab keyboard nav: getFocusedWindow() can return a popped-out window — findIndex returns -1, next window selection starts from index 0 or N-2 (arbitrary but functional)
+- PopoutWindow.jsx: clean implementation — proper cleanup, style copying, beforeunload handling
+- useHotkeyDispatch.js FOCUS action (line 137): matches popped-out windows — focusWindow updates zIndex which has no effect on external browser window. Hotkey silently fails (req-8dd326cd)
+- useHotkeyDispatch.js resolveShares position_fraction: Math.floor(size * multiplier) returns 0 for small positions (e.g., 50% of 1 share = 0), silently skipping order. No user feedback. Minor edge case, not filed.
+- useHotkeyDispatch.js: resolveShares/getOpenPositions/getPortfolioBalance have internal try-catch — no unhandled rejection risk (confirmed false positive)
+- WindowManager.jsx: clean registry pattern, no bugs
+- MenuBar.jsx: clean implementation — proper keyboard nav, dropdown behavior
+- MarketClock.jsx: rAF clock at 60fps when showMilliseconds enabled — works correctly but high CPU for a clock widget (perf consideration, not bug)
+- Chart.jsx: well-structured, no major bugs found — proper cleanup on both main chart effect and subscription effect
+- NewsChat.jsx: no linkBus integration (doesn't sync ticker with linked windows) — feature gap, not a bug
+- HistoricalScanner.jsx: clean implementation, no bugs found — proper settings persistence, CSV export handles escaping
+- Window.jsx handleContextMenu (line 336) dispatches toggle-settings on right-click, then handleOpenSettings dispatches it again — double-toggle causes settings to open uninvited on right-click, then close when user clicks "Settings..." (req-638205e8)
+- useHotkeyDispatch.js CANCEL_BUY/CANCEL_SELL (lines 121-131) filters by o.side (yes/no) instead of o.action (buy/sell) — cancels wrong orders in Kalshi where you can buy/sell both YES and NO (req-e175303e)
+- useHotkeyDispatch.js resolvePrice (line 33) maps 'last' variable to bestBid instead of actual last trade price — Price=Last hotkey scripts get wrong price in illiquid markets (req-f093f8d1)
+- HotkeyManager.jsx Ctrl+S useEffect (line 201-210) has no dependency array — re-registers keydown listener on every render (perf issue)
+- MarketViewer.jsx: search-selected tickers not in hardcoded TICKERS array (line 11-14) won't display correctly in select dropdown — select shows wrong ticker after search (FILED: req-49a685b9)
+- SettingsPanel.jsx: clean implementation, well-structured with proper section pattern
+- Window.jsx: generally well-structured drag/resize/snap logic, proper cleanup
+- hotkeyLanguage.js parseHotkeyScript: Buy/Sell commands don't require Route, Share, or TIF — bare 'Buy' parses as valid with zero errors, passes validateScript(), saved as hotkey binding, then crashes at runtime in resolvePrice(undefined) (req-90be9b06)
+- hotkeyLanguage.js parsePriceExpr: fixed numeric price only checks num >= 0 — Price=0 and Price=500 pass parser, fail only at exchange (req-a59ec51c)
+- TitleBar.jsx: clean implementation — proper useCallback, memo, guard for missing electronAPI
+- GridSettingsPanel.jsx: clean presentational component — all state via props, no bugs
+- App.jsx / main.jsx: trivial wrappers, clean
+- auditStateService.js: _listeners Set has no subscribe/unsubscribe export — notification code in registerFunction/rateFunction/markImproved is dead (dev tool, low impact)
+- researchLoop.js: dev tool for loop agents, parseFunctionExports uses simple regex heuristics — fragile but adequate for dev use
+- mockData.js: clean mock data provider — seeded PRNG for candles, proper cleanup on subscriptions
+- useGridCustomization.js getRowStyle: correctly converts rule.value with Number() — no string comparison bug
+- Montage.css (lines 436-452) redefines global .flash-up/.flash-down from index.css with different duration/colors — CSS class name collision, unscoped, last-import-wins (req-1163bdb6)
+- alertEngine.worker.js evalPctChange: fires on every tick (modulo 30s cooldown) when price stays above threshold — no hysteresis/crossing logic, causes alert fatigue (req-0b4afd3e)
+- index.css --text-muted (#484f58) on --bg-primary (#0d1117) has ~2.4:1 contrast ratio — fails WCAG AA (4.5:1 minimum). --text-label (#6e7681) at ~4.45:1 barely fails AA for 10px text used in column headers (req-fc1374df)
+- alertEngine.worker.js: well-structured circular buffer implementation, clean message handler, no major bugs besides pct_change fatigue
+- CSS: all component CSS files use consistent var() token system, proper BEM-like naming (mt-, pl-, ob-, pos-, hk-, mv-), good density/spacing
+- SettingsPanel.css toggle knob arithmetic: correct — 14px knob in 32px content box with 1px border, translateX(16px) stays within bounds
+- useKalshiData.js: hooks are generally clean pattern but missing data resets on input changes and error handling in usePortfolio
+- settingsStore.js: clean implementation, deepMerge intentionally drops unknown keys, no bugs
+- omsEngine.js: FSM well-designed, position aggregation correct, but processFill lacks terminal guard
+- linkBus.js emitDragDelta (line 126-133) doesn't check linkingEnabled — emitLinkedMarket checks but drag sync doesn't, so disabling linking stops market changes but not group drag (req-0b37386e)
+- MarketClockSettings.jsx save button uses --accent-highlight (blue) + font-sans while all other settings panels use --accent-win (green) + font-mono — visual inconsistency (req-081ce354)
+- All *Settings.jsx inject CSS at module scope (outside component) — styles added to DOM on import even if panel never rendered. Not a bug but unnecessary DOM pollution (req-467e4209)
+- Settings components (TradeLog, Positions, Accounts, EventLog, PriceLadder, OrderBook, MarketClock, Montage): all follow consistent local-state-copy + save/cancel pattern, no bugs found
+- ChartSettings.jsx: unique pattern — no local state, no overlay, no save/cancel, direct onUpdate per field. Intentional design (live preview) but inconsistent with other settings panels
+- MontageSettings.jsx save button reuses mt-btn-buy-yes class from Montage.css — coupling but not a bug since settings only render within Montage
+- All remaining CSS files (NewsChat, Accounts, EventLog, TradeLog, ChangesTab, MenuBar, AlertTrigger, LiveScanner, MarketClock, Chart, TimeSale): clean, consistent design token usage, no contrast/spacing issues beyond index.css vars (req-fc1374df)
+- linkBus.js: clean pub/sub implementation, proper subscriber cleanup, subscribeToDrag deduplicates by windowId
+- kalshiWebSocket.js subscribe() ticker leak: tickers added to sub.tickers Set are never removed when individual callbacks unsubscribe. Only full channel deletion (last callback removed) cleans up. Over mount/unmount cycles, stale tickers accumulate and get re-subscribed on reconnect via resubscribeAll() (req-ef6247a1)
+- dataFeed.js subscribeToOHLCV (lines 364-417): currentCandle never resets on timeframe boundary — all trades accumulate into a single ever-growing candle. No logic to detect period elapsed and start new candle. Live Kalshi charts would show one infinitely-expanding bar (req-c9a5b9a6)
+- dataFeed.js subscribeToTicker wrappedCallback: already documented — ticker updates set lastTickerData but don't trigger wrappedCallback (req-dab88228)
+- dataFeed.js subscribeToMarketRace: first poll returns 0% delta for all markets (no previous prices in cache). Top movers list useless until second poll (minor UX, not filed)
+- dataFeed.js: proper cleanup in all subscription functions, running flag pattern prevents post-unsubscribe callbacks
+- OrderBook.jsx: fill flash setTimeout (lines 162-169) not stored/cancelled on unmount — same pattern as TimeSale and TradeLog (req-8a1ff8ac)
+- OrderBook.jsx: overall clean — proper memoization (useMemo for filtered lists), proper linkBus cleanup (handler created once in useEffect), proper interval cleanup via ref
+- kalshiApi.js: createOrder (line 296) mutates caller's object by adding client_order_id — minor side effect but not a bug since callers don't reuse the object
+- kalshiApi.js: Retry-After parsing (line 179) would fail on HTTP-date format (parseInt returns NaN → setTimeout(..., NaN) → immediate retry), but Kalshi likely sends integer seconds — not filed
+- omsService.js amendOrder (lines 271-292): directly mutates engine's internal order object (price, count, remainingCount, updatedAt) bypassing engine.transitionOrder(). Engine's 'order:updated' event never fires, saveState listener never triggers — amended values lost on refresh (req-61c4e973)
+- omsService.js onStateChange CONNECTED handler (lines 94-100): starts WS listeners on reconnect but never calls syncWithExchange() — orders that changed during disconnect remain stale until manual sync (req-0b4c6e9a)
+- PriceLadder.jsx lastPriceRef (line 95) not reset on ticker change — first data update for new ticker compared against old ticker's price, causing spurious flash animation on ticker switch (req-6ce69545)
+- PriceLadder.jsx click-to-trade (lines 175-187): handleLevelClick creates local-only working orders with incrementing ref counter, never sends to omsService — pure UI mock with no trading backend integration (feature gap)
+- PriceLadder.jsx TICKERS hardcoded (lines 20-23) — same issue as MarketViewer.jsx, search-selected tickers won't appear in dropdown
+- omsService.js cancelOrder (lines 248-264): PENDING orders can't be cancelled — order.id is null, falls back to clientOrderId (UUID), exchange returns 404. Should cancel locally without API call (req-ff1ec79d)
+- analyticsCalc.js dailyPnL (line 143) / equityCurve (line 124): crash on trades with undefined timestamp — new Date(undefined).toISOString() throws RangeError; sort with NaN comparator gives unpredictable results. sharpeRatio (line 175) correctly filters but these don't (req-b1d2b31b)
+- omsEngine.js getRecentFills (lines 377-384): O(n*m) — iterates all orders and all fills on every call, no fill index or cache. Performance degrades over session length (not filed, perf only)
+- omsEngine.js findOrder returns mutable reference — callers can mutate order state bypassing FSM (root cause of amendOrder bypass, req-61c4e973)
+- omsEngine.js importState (lines 405-423): no validation on imported data — corrupted localStorage could silently break engine state (not filed, defense-in-depth)
+- HotkeyManager.jsx Ctrl+S useEffect (line 201-210): missing dependency array — already documented, re-registers keydown listener on every render (perf)
+- HotkeyManager.jsx: overall clean — proper store subscription, real-time validation, key conflict detection, profile import/export with FileReader
+- electron/main.js: mainWindow never set to null on close — closed BrowserWindow not GC'd, IPC handlers hold stale reference
+- electron/main.js window-all-closed (line 61-63): always quits on ALL platforms — non-standard macOS behavior (should stay in dock). 'activate' handler (line 65-68) is dead code since app already quit before it fires
+- electron/main.js: no webContents error handling — no handler for render-process-gone or unresponsive, renderer crash shows blank window with no recovery
+- electron/preload.js: clean implementation — proper contextBridge, proper listener cleanup return
+
+- NewsChat.jsx: clean mock implementation — proper memoization, search debounce, interval cleanup. No linkBus integration (feature gap, previously noted)
+- useKalshiData.js useOrderEntry: clean hook — proper loading/error state, useCallback for stability. No issues found.
+- Montage.jsx placeOrder price validation: price >= 100 correctly rejects 100c (exchange doesn't accept it either). Previous finding "should be price > 99" is incorrect — these are numerically equivalent.
+- useKalshiData.js useOHLCV: stale candles/currentCandle not reset on ticker/timeframe change — old data visible until new subscription delivers (req-0cecce0d)
+- EventLog.jsx setInterval randomization (line 179): computes ONE random delay at effect mount — all ticks fire at same interval, not truly random (req-b3cea0a6)
+- GridSettingsPanel.css: hardcoded #ff4757 in .gs-clear-color:hover (line 188) and .gs-remove-rule:hover (line 304) — should use var() tokens (req-03a54fae)
+- HistoricalScanner.css: clean — proper design token usage, BEM naming, nth-child confidence coloring is correct
+- GridSettingsPanel.css: clean overall — proper drag-reorder styles, section layout, conditional formatting rules
+- Montage.jsx executeOrder: action hardcoded to 'buy' (line 204) — correct for current UI (only buy buttons exist), not a bug
+- Montage.jsx → dataFeed.placeOrder → kalshiApi.createOrder bypasses omsService, but omsService picks up orders retroactively via WS user_orders channel — architecture works but has latency gap between send and OMS awareness
+- ChangesTab.jsx sort (line 103-107): NaN-unsafe if timestamp is undefined — same pattern as TradeLog.jsx (line 56 finding). Dev tool, low impact.
+- ChangesTab.jsx tooltipRef (line 44): used as ref on entries container div but never read — dead code (previously noted)
+
+## Cross-Cutting Audit Results (Iteration 19)
+- linkBus subscription lifecycle: CLEAN in all components except TradeLog (req-4e8011b4). Montage, OrderBook, Positions, PriceLadder, TimeSale, Chart, MarketViewer all use proper useCallback + useEffect cleanup
+- addEventListener patterns: ALL components properly pair add/removeEventListener in useEffect cleanup
+- toggle-settings custom event: only 3 of 13 settings-capable components (Chart, TimeSale, Montage) listen — inconsistent but covered by req-638205e8
+- localStorage settings persistence: per-window keys use component-type prefix + windowId, no cross-type collision. Minor orphan on window close (keys never deleted)
+- Data subscription cleanup on window close: clean — React unmount triggers useEffect cleanup in useKalshiData hooks
+- Window ID generation: sequential integers from 1, reset per session — settings keys reused across sessions, no collision
+
+## False Positives
+- useGridCustomization.js getRowStyle: correctly converts rule.value with Number() — no string comparison bug (confirmed iteration 14)
+- useGridCustomization.js: overall clean hook — proper memoization, debounced save, correct drag-and-drop reorder logic
+- No @media responsive breakpoints in any CSS — acceptable for Electron desktop app (confirmed iteration 15)
+- NewsChat.jsx: mock news feed with random data generation — clean implementation, no bugs beyond known search dropdown pattern
+- analyticsService.js computePnLFromFills FIFO matching: works correctly for matched buy/sell pairs; unmatched position handling is a known limitation (STUB), not a bug to file
+- MarketViewer.jsx flash detection race on ticker change: prevPricesRef reset effect runs before next data arrives — no spurious flash (confirmed iteration 14)
+- kalshiApi.js btoa(String.fromCharCode(...new Uint8Array(signature))) — looks risky for large arrays but RSA-PSS 2048-bit = 256 bytes, safe for spread
+- omsEngine.js Object.assign(order, extra) after setting status — callers only pass safe fields (exchangeOrderId, reason), not a real overwrite risk currently
+- PriceLadder.jsx line 141 data.lastTrade.price crash — looks unguarded but dataFeed.js always provides lastTrade with default fallback (line 207)
+- linkBus.js subscriber accumulation — components properly cleanup via unsubscribeFromLink in useEffect cleanup (NOTE: this is FALSE for TradeLog.jsx — handler created inside useEffect is a new reference each render, so cleanup fails. See req-4e8011b4)
+- changeTrackingService.js _nextId counter with UUID IDs — _nextId is only a fallback when crypto.randomUUID unavailable
+- Positions.jsx linkBus cleanup on windowId change — handler created inside useEffect is properly captured by cleanup closure; windowId rarely changes for an existing component instance
+- EventLog.jsx handleClearLog resets nextIdRef to 1: NOT a collision — entries are cleared first, new IDs start fresh with no overlap (confirmed iteration 17)
+
+## Architecture Notes (First Scan)
+- React JSX app, no TypeScript
+- Services: kalshiApi (REST), kalshiWebSocket (WS), omsEngine (pure state FSM), omsService (bridge), dataFeed (unified adapter with mock fallback)
+- Components: trade/ (OrderBook, PriceLadder, Montage, Positions, Accounts, EventLog, TradeLog, ChangesTab, NewsChat), quotes/ (Chart, TimeSale), scanners/ (AlertTrigger, HistoricalScanner, LiveScanner, MarketClock)
+- Support services: alertEngine.worker.js, alertService.js, analyticsCalc.js, analyticsService.js, hotkeyStore.js, hotkeyLanguage.js, linkBus.js, mockData.js, researchLoop.js, changeTrackingService.js, auditStateService.js
+- Key UI: WindowManager, Shell, MenuBar, TitleBar, GridSettingsPanel, HotkeyManager, SnapManager, PopoutWindow, SettingsPanel, MarketViewer
