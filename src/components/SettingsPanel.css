@@ -11,7 +11,7 @@
 .settings-panel {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   width: 620px;
   max-height: 80vh;
   display: flex;

@@ -172,14 +172,15 @@
   text-align: left;
   color: var(--text-muted);
   font-weight: 600;
-  font-size: var(--font-size-xs);
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 2px var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  line-height: 18px;
   transition: color var(--transition-fast);
 }
 
@@ -205,6 +206,7 @@
 
 .ls-row {
   cursor: pointer;
+  height: 22px;
   transition: background var(--transition-fast);
 }
 
@@ -217,11 +219,12 @@
 }
 
 .ls-row td {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 1px var(--spacing-sm);
   border-bottom: 1px solid var(--border-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 20px;
 }
 
 .ls-cell-time {
@@ -258,20 +261,34 @@
 }
 
 .ls-type-bull {
+  display: inline-block;
+  padding: 0 var(--spacing-sm);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-buy) 15%, transparent);
   color: var(--accent-buy);
 }
 
 .ls-type-bear {
+  display: inline-block;
+  padding: 0 var(--spacing-sm);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
   color: var(--accent-sell);
 }
 
 .ls-type-neutral {
+  display: inline-block;
+  padding: 0 var(--spacing-sm);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-neutral) 15%, transparent);
   color: var(--accent-neutral);
 }
 
 .ls-cell-conviction {
   width: 70px;
   text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Conviction bars */
@@ -322,7 +339,7 @@
 }
 
 @keyframes ls-flash-new {
-  0% { background: color-mix(in srgb, var(--accent-warning) 18%, transparent); }
+  0% { background: color-mix(in srgb, var(--accent-highlight) 25%, transparent); }
   100% { background: transparent; }
 }
 
@@ -339,6 +356,33 @@
 .ls-live-dot--paused {
   background: var(--accent-neutral);
   animation: none;
+}
+
+/* Status badges */
+.ls-status-badge {
+  display: inline-block;
+  padding: 0 var(--spacing-sm);
+  border-radius: 9px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 16px;
+}
+
+.ls-status-badge--active {
+  background: color-mix(in srgb, var(--accent-buy) 15%, transparent);
+  color: var(--accent-buy);
+}
+
+.ls-status-badge--paused {
+  background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
+  color: var(--accent-warning);
+}
+
+.ls-status-badge--stopped {
+  background: color-mix(in srgb, var(--accent-neutral) 15%, transparent);
+  color: var(--accent-neutral);
 }
 
 .ls-empty {

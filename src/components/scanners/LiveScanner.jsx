@@ -147,6 +147,9 @@ function LiveScanner({ windowId }) {
             <option value="neutral">Neutral</option>
           </select>
           <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} />
+          <span className={`ls-status-badge${paused ? ' ls-status-badge--paused' : ' ls-status-badge--active'}`}>
+            {paused ? 'PAUSED' : 'LIVE'}
+          </span>
           <span className="ls-count">{sorted.length} alerts</span>
         </div>
         <div className="ls-toolbar-right">
