@@ -133,6 +133,18 @@ async function generateAuthHeaders(method, fullPath) {
 
 // --- HTTP Client ---
 
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 500;
+
+// STUB: Token-bucket rate limiter — requires a shared rate limit budget (e.g., 10 req/sec for Kalshi)
+// SOURCE: Kalshi API docs specify per-second rate limits; current code relies on 429 retry only
+// IMPLEMENT: Create a TokenBucket class with `consume()` that delays requests when bucket is empty,
+//   initialize with Kalshi's documented rate (10 req/s default), apply before each fetch() call
+
+function isRetryable(status) {
+  return status === 429 || (status >= 500 && status < 600);
+}
+
 async function request(method, path, body = null, params = null) {
   const base = getBaseUrl();
   let url = base + path;
@@ -146,29 +158,39 @@ async function request(method, path, body = null, params = null) {
     if (qsStr) url += '?' + qsStr;
   }
 
-  // Path for signing: /trade-api/v2 + path (no query)
   const signingPath = '/trade-api/v2' + path;
-  const headers = await generateAuthHeaders(method, signingPath);
 
-  const opts = { method, headers };
-  if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-    opts.body = JSON.stringify(body);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const headers = await generateAuthHeaders(method, signingPath);
+
+    const opts = { method, headers };
+    if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      opts.body = JSON.stringify(body);
+    }
+
+    const res = await fetch(url, opts);
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+
+      if (isRetryable(res.status) && attempt < MAX_RETRIES) {
+        const retryAfter = res.headers.get('Retry-After');
+        const delay = retryAfter
+          ? parseInt(retryAfter, 10) * 1000
+          : RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      const err = new Error(`Kalshi API ${method} ${path}: ${res.status} ${res.statusText}`);
+      err.status = res.status;
+      err.body = errBody;
+      throw err;
+    }
+
+    if (res.status === 204) return null;
+    return res.json();
   }
-
-  const res = await fetch(url, opts);
-
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '');
-    const err = new Error(`Kalshi API ${method} ${path}: ${res.status} ${res.statusText}`);
-    err.status = res.status;
-    err.body = errBody;
-    throw err;
-  }
-
-  // Some endpoints return 204 No Content
-  if (res.status === 204) return null;
-
-  return res.json();
 }
 
 // --- Market Data Endpoints ---

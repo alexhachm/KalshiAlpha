@@ -1,6 +1,11 @@
 // Kalshi WebSocket Client
 // Handles connection, authentication, channel subscriptions, heartbeat, and auto-reconnect.
 
+// STUB: Command acknowledgement tracking — requires mapping sent command IDs to pending promises
+// SOURCE: Kalshi WS returns { id, type: 'ack' } for subscribe/unsubscribe commands
+// IMPLEMENT: Track pending commands in a Map<id, {resolve, reject, timeout}>, resolve on ack,
+//   reject on error response or timeout (10s), surface failures to callers
+
 import { getWsUrl, generateAuthHeaders, isConfigured } from './kalshiApi';
 
 // --- Connection state ---
@@ -174,7 +179,8 @@ function scheduleReconnect() {
     return;
   }
 
-  const delay = BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempt);
+  const jitter = Math.random() * 0.3 + 0.85; // 0.85–1.15x
+  const delay = Math.round(BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempt) * jitter);
   reconnectAttempt++;
   setState(STATE.RECONNECTING);
 

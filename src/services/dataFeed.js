@@ -259,11 +259,13 @@ function subscribeToMarketRace(callback) {
   // and compute deltas from cached prices
   const marketCache = {};
   let running = true;
+  let consecutiveErrors = 0;
 
   async function pollMarkets() {
     if (!running) return;
     try {
       const res = await kalshiApi.getMarkets({ limit: 100, status: 'open' });
+      consecutiveErrors = 0;
       if (res && res.markets) {
         const racers = res.markets
           .filter((m) => m.volume > 0)
@@ -286,11 +288,14 @@ function subscribeToMarketRace(callback) {
         callback(racers);
       }
     } catch (err) {
+      consecutiveErrors++;
       console.error('[DataFeed] Market race poll error:', err);
     }
 
     if (running) {
-      setTimeout(pollMarkets, 5000);
+      // Back off on consecutive errors: 5s, 10s, 20s, cap at 30s
+      const delay = Math.min(5000 * Math.pow(2, consecutiveErrors), 30000);
+      setTimeout(pollMarkets, delay);
     }
   }
 
@@ -615,6 +620,7 @@ function subscribeToPortfolio(callback) {
   }
 
   let running = true;
+  let debounceTimer = null;
 
   async function fetchAll() {
     if (!running) return;
@@ -629,19 +635,26 @@ function subscribeToPortfolio(callback) {
     }
   }
 
+  // Debounced fetch — coalesces rapid WS events into a single REST call
+  function debouncedFetch() {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fetchAll, 300);
+  }
+
   // Initial fetch
   fetchAll();
 
   // Poll every 5 seconds
   const pollTimer = setInterval(fetchAll, 5000);
 
-  // Also listen for real-time WS updates to trigger immediate refresh
-  const unsubFills = kalshiWs.subscribeUserFills(() => fetchAll());
-  const unsubOrders = kalshiWs.subscribeUserOrders(() => fetchAll());
-  const unsubPositions = kalshiWs.subscribePositions(() => fetchAll());
+  // WS updates trigger debounced refresh (avoids rapid-fire REST calls)
+  const unsubFills = kalshiWs.subscribeUserFills(debouncedFetch);
+  const unsubOrders = kalshiWs.subscribeUserOrders(debouncedFetch);
+  const unsubPositions = kalshiWs.subscribePositions(debouncedFetch);
 
   return () => {
     running = false;
+    if (debounceTimer) clearTimeout(debounceTimer);
     clearInterval(pollTimer);
     unsubFills();
     unsubOrders();

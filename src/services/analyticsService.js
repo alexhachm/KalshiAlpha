@@ -1,6 +1,12 @@
 // Analytics Service — data fetching, caching, and mock fallback for analytics.
 // Bridges Kalshi fills/settlements API to analyticsCalc pure functions.
 
+// STUB: Settlement-aware P&L — requires Kalshi settlements/portfolio history endpoint
+// SOURCE: Current computePnLFromFills uses FIFO buy/sell pairing but doesn't account for binary
+//   settlement (contract settles at 100 or 0 cents). Settled markets are not detected.
+// IMPLEMENT: Fetch market status per ticker, if settled: P&L = (settlement_value - avg_cost) * contracts,
+//   where settlement_value is 100 (yes wins) or 0 (no wins). Cross-reference with getMarket(ticker).result
+
 import * as kalshiApi from './kalshiApi';
 import * as calc from './analyticsCalc';
 

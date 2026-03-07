@@ -91,6 +91,10 @@ function update(section, key, value) {
 
 function updateSection(section, partial) {
   const s = load()
+  if (!s[section]) {
+    console.warn(`[Settings] Unknown section "${section}" — ignoring updateSection`)
+    return
+  }
   s[section] = { ...s[section], ...partial }
   save({ ...s })
 }

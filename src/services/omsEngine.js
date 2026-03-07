@@ -285,12 +285,14 @@ function updatePosition(ticker, side, action, price, count) {
     pos.avgCost = pos.contracts > 0 ? pos.totalCost / pos.contracts : 0;
   } else {
     // Closing or reducing position (sell)
-    if (pos.contracts > 0) {
-      const closeCount = Math.min(count, pos.contracts);
-      // Realized P&L = (sell price - avg cost) * contracts closed
+    const closeCount = Math.min(count, pos.contracts);
+    if (closeCount > 0) {
       pos.realized += (price - pos.avgCost) * closeCount;
       pos.contracts -= closeCount;
       pos.totalCost = pos.contracts * pos.avgCost;
+    }
+    if (count > closeCount) {
+      console.warn(`[OMS] Sell count (${count}) exceeds position (${closeCount}) for ${ticker}:${side} — excess ignored`);
     }
   }
 

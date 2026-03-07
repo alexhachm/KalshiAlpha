@@ -1,6 +1,12 @@
 // OMS Service — bridges OMS engine to Kalshi API and WebSocket
 // Handles order submission, WS event processing, localStorage persistence, and UI events.
 
+// STUB: Order deduplication on sync — requires a persistent fill ID index
+// SOURCE: syncWithExchange currently checks fills by trade_id on a per-order basis, but if an order
+//   was created outside this session and fills arrived before the order was known, fills can be missed
+// IMPLEMENT: Maintain a Set of processed fill IDs in localStorage, check globally during sync,
+//   and reconcile any unmatched fills against new orders from the exchange
+
 import * as kalshiApi from './kalshiApi';
 import * as kalshiWs from './kalshiWebSocket';
 import * as engine from './omsEngine';

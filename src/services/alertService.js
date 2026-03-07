@@ -25,6 +25,16 @@ function ensureWorker() {
   worker.onmessage = handleWorkerMessage;
   worker.onerror = (err) => {
     console.error('[AlertService] Worker error:', err);
+    // Auto-recover: terminate crashed worker so next ensureWorker() restarts it
+    worker = null;
+    workerReady = false;
+    // Attempt restart after 2s
+    setTimeout(() => {
+      if (!worker && _loadRules().some((r) => r.enabled)) {
+        ensureWorker();
+        syncTickerSubscriptions();
+      }
+    }, 2000);
   };
   // Sync rules to worker
   worker.postMessage({ type: 'set_rules', payload: { rules: getRules() } });
