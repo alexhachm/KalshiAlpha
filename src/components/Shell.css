@@ -4,6 +4,8 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .shell-workspace {
@@ -11,6 +13,8 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-primary);
+  margin: 0;
+  padding: 0;
 }
 
 /* ── Account summary bar ── */
