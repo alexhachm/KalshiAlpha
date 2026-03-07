@@ -18,4 +18,9 @@
 **Files changed:** src/components/trade/ChangesTab.jsx, src/components/trade/ChangesTab.css, src/services/changeTrackingService.js, src/components/WindowManager.jsx, src/components/MenuBar.jsx
 **What changed:** Added new ChangesTab component under Trade menu that shows a live feed of iteration engine changes with status badges, filter/sort controls, diff view toggle, and hover tooltips. Created changeTrackingService.js mock service with getChanges/subscribeToChanges/getChangeById API. Registered as "changes" type in COMPONENT_REGISTRY.
 **PR:** https://github.com/alexhachm/KalshiAlpha/pull/85
+
+## 2026-03-07T20:36:50Z worker-4 | domain: frontend/scanners | task: "Function audit pass — frontend/scanners, settings, shell components"
+**Files changed:** LiveScanner.jsx, HistoricalScanner.jsx, MarketClock.jsx, AlertTrigger.jsx, SettingsPanel.jsx, GridSettingsPanel.jsx, HotkeyManager.jsx, Shell.jsx, MenuBar.jsx, MenuBar.css, MarketViewer.jsx
+**What changed:** Added useMemo optimizations to scanner sort/filter. Fixed stale closure bugs in AlertTrigger (settingsRef) and MarketViewer (tickerRef). Added keyboard navigation to MenuBar (arrow keys, Escape, Enter) and Shell (Ctrl+Tab window cycling). Upgraded MarketClock to DST-aware market sessions. Added CSV escaping, date range validation, per-alert flash timers, settings versioning, ARIA attributes. STUB comments added for row virtualization, exchange calendar, layout persistence, notification permissions, alert deduplication, settings import/export, hotkey docs.
+**PR:** https://github.com/alexhachm/KalshiAlpha/pull/89
 ---

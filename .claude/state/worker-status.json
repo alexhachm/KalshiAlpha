@@ -28,9 +28,11 @@
     "last_heartbeat": null
   },
   "worker-4": {
-    "status": "busy",
-    "last_heartbeat": "2026-03-07T20:27:26Z",
-    "current_task": "Function audit pass — frontend/scanners, settings, shell",
-    "domain": "frontend/scanners"
+    "status": "idle",
+    "last_heartbeat": "2026-03-07T20:37:50Z",
+    "current_task": null,
+    "domain": "frontend/scanners",
+    "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/89",
+    "tasks_completed": 1
   }
 }
