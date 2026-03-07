@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# mac10 worker sentinel — runs in a tmux window.
+# Waits for tasks via mac10 inbox, syncs git, launches claude, resets on exit.
+set -euo pipefail
+export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+
+WORKER_ID="${1:?Usage: worker-sentinel.sh <worker_id> <project_dir>}"
+PROJECT_DIR="${2:?Usage: worker-sentinel.sh <worker_id> <project_dir>}"
+WORKTREE="$PROJECT_DIR/.worktrees/wt-$WORKER_ID"
+
+if [ ! -d "$WORKTREE" ]; then
+  echo "[sentinel-$WORKER_ID] ERROR: Worktree not found: $WORKTREE" >&2
+  exit 1
+fi
+cd "$WORKTREE"
+
+# Ensure mac10 CLI is on PATH
+export PATH="$PROJECT_DIR/.claude/scripts:$PATH"
+
+cleanup() {
+  echo "[sentinel-$WORKER_ID] Cleaning up..."
+  mac10 reset-worker "$WORKER_ID" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+
+echo "[sentinel-$WORKER_ID] Ready in $WORKTREE"
+
+while true; do
+  # Wait for task assignment (blocks up to 5 minutes)
+  echo "[sentinel-$WORKER_ID] Waiting for task..."
+  MSGS=$(mac10 inbox "worker-$WORKER_ID" --block --timeout=300000 2>/dev/null || echo "")
+
+  # Check if we got a task_assigned message
+  if echo "$MSGS" | grep -q "task_assigned"; then
+    echo "[sentinel-$WORKER_ID] Task received, syncing..."
+
+    # Sync with latest main
+    git fetch origin 2>/dev/null || true
+    git rebase origin/main 2>/dev/null || {
+      git rebase --abort 2>/dev/null || true
+      git reset --hard origin/main 2>/dev/null || true
+    }
+
+    # Launch Claude worker (unset CLAUDECODE to allow nested session in tmux)
+    echo "[sentinel-$WORKER_ID] Launching claude..."
+    unset CLAUDECODE
+    claude --model opus --dangerously-skip-permissions -p "/worker-loop" 2>&1 || true
+
+    # Reset worker status to idle after Claude exits
+    echo "[sentinel-$WORKER_ID] Claude exited, resetting to idle..."
+    mac10 reset-worker "$WORKER_ID" 2>/dev/null || true
+  else
+    # No task received (timeout or empty response) — loop to wait again
+    echo "[sentinel-$WORKER_ID] No task received, retrying..."
+  fi
+done

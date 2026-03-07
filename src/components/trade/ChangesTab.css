@@ -1,0 +1,286 @@
+.changes-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+/* Header bar — Bloomberg-style section header */
+.ct-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.ct-title {
+  color: var(--accent-highlight);
+  font-size: var(--font-size-header);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ct-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Toolbar — filter/sort controls */
+.ct-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  gap: var(--spacing-sm);
+}
+
+.ct-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ct-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ct-select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.ct-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+/* Entries container */
+.ct-entries {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xs) 0;
+  min-height: 0;
+}
+
+.ct-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+}
+
+/* Change card */
+.ct-card {
+  position: relative;
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: default;
+}
+
+.ct-card:nth-child(even) {
+  background: var(--bg-row-alt);
+}
+
+.ct-card:hover {
+  background: var(--bg-hover);
+}
+
+.ct-card-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  line-height: 22px;
+}
+
+.ct-card-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  padding: 1px 0;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  line-height: 20px;
+}
+
+/* Status badges — pill-shaped */
+.ct-badge {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 1px var(--spacing-sm);
+  border-radius: 8px;
+  line-height: 1.4;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.ct-badge--implemented {
+  color: var(--accent-win);
+  background: color-mix(in srgb, var(--accent-win) 15%, transparent);
+}
+
+.ct-badge--stub {
+  color: var(--accent-warning);
+  background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
+}
+
+.ct-badge--needs-manual-intervention {
+  color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+}
+
+.ct-domain {
+  font-size: var(--font-size-xs);
+  color: var(--accent-info);
+  flex-shrink: 0;
+}
+
+.ct-timestamp {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-source {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* Diff toggle button */
+.ct-diff-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0 var(--spacing-sm);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ct-diff-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-highlight);
+}
+
+/* Diff view */
+.ct-diff {
+  margin-top: var(--spacing-xs);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.ct-diff-section {
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.ct-diff-section + .ct-diff-section {
+  border-top: 1px solid var(--border-color);
+}
+
+.ct-diff-label {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.6;
+}
+
+.ct-diff-label--before {
+  color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 10%, transparent);
+}
+
+.ct-diff-label--after {
+  color: var(--accent-win);
+  background: color-mix(in srgb, var(--accent-win) 10%, transparent);
+}
+
+.ct-diff-code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.ct-diff-code--before {
+  color: color-mix(in srgb, var(--accent-sell) 70%, var(--text-secondary));
+}
+
+.ct-diff-code--after {
+  color: color-mix(in srgb, var(--accent-win) 70%, var(--text-secondary));
+}
+
+/* Tooltip */
+.ct-tooltip {
+  position: absolute;
+  z-index: 1000;
+  top: 100%;
+  left: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-size: var(--font-size-xs);
+}
+
+.ct-tooltip-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  line-height: 1.6;
+}
+
+.ct-tooltip-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.ct-tooltip-value {
+  color: var(--text-primary);
+}
+
+.ct-tooltip-files {
+  font-family: var(--font-mono);
+  color: var(--accent-info);
+  word-break: break-all;
+}
