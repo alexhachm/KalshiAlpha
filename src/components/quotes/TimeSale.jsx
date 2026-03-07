@@ -113,7 +113,7 @@ function TimeSale({ windowId }) {
         if (next.length > 500) return next.slice(-500)
         return next
       })
-      // Flash new entry
+      // Flash new entry (800ms yellow highlight)
       setFlashedIds((prev) => new Set(prev).add(trade.id))
       setTimeout(() => {
         setFlashedIds((prev) => {
@@ -121,7 +121,7 @@ function TimeSale({ windowId }) {
           next.delete(trade.id)
           return next
         })
-      }, 500)
+      }, 800)
     })
     return unsub
   }, [ticker])
@@ -241,7 +241,7 @@ function TimeSale({ windowId }) {
               key={trade.id}
               className={`ts-row ${trade.side === 'BUY' ? 'ts-row--buy' : 'ts-row--sell'}${
                 trade.size >= (settings.largeSizeThreshold || 500) ? ' ts-row--large' : ''
-              }${flashedIds.has(trade.id) ? ` ts-row--flash-${trade.side === 'BUY' ? 'buy' : 'sell'}` : ''}`}
+              }${flashedIds.has(trade.id) ? ' ts-row--flash-new' : ''}`}
               style={{ ...rowStyle, height: grid.rowHeight }}
             >
               {grid.visibleColumns.map((col) => (

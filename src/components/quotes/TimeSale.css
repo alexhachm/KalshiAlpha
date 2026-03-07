@@ -259,10 +259,20 @@
   100% { background: transparent; }
 }
 
+/* New entry flash: yellow highlight fading over 800ms */
+@keyframes ts-flash-new {
+  0% { background: color-mix(in srgb, var(--accent-highlight) 30%, transparent); }
+  100% { background: transparent; }
+}
+
 .ts-row--flash-buy {
-  animation: ts-flash-buy 0.5s ease-out;
+  animation: ts-flash-buy 0.8s ease-out;
 }
 
 .ts-row--flash-sell {
-  animation: ts-flash-sell 0.5s ease-out;
+  animation: ts-flash-sell 0.8s ease-out;
+}
+
+.ts-row--flash-new {
+  animation: ts-flash-new 0.8s ease-out;
 }

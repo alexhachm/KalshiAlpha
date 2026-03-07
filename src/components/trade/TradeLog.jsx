@@ -308,6 +308,7 @@ function TradeLog({ windowId }) {
                 const isSelected = selectedRow === row.market
                 const rowClass = [
                   'tl-row',
+                  isLong ? 'tl-row-buy' : 'tl-row-sell',
                   isFlashed ? 'tl-row-flash' : '',
                   isSelected ? 'tl-row-selected' : '',
                 ].filter(Boolean).join(' ')

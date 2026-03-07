@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import AccountsSettings from './AccountsSettings'
+import './Accounts.css'
 
 const LS_KEY_PREFIX = 'accounts-settings-'
 

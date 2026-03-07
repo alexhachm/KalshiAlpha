@@ -180,6 +180,21 @@
 .positions .text-win { color: var(--accent-buy); }
 .positions .text-loss { color: var(--accent-sell); }
 
+/* Explicit P&L state classes with bold weight and prefix handling */
+.pnl-positive {
+  color: var(--accent-buy);
+  font-weight: 700;
+}
+
+.pnl-negative {
+  color: var(--accent-sell);
+  font-weight: 700;
+}
+
+.pnl-zero {
+  color: var(--text-muted);
+}
+
 /* Empty state */
 .pos-empty {
   text-align: center;

@@ -112,7 +112,7 @@
 .pl-row {
   display: flex;
   align-items: center;
-  height: 18px;
+  height: 22px;
   border-bottom: 1px solid var(--border-subtle);
   transition: background var(--transition-fast);
 }

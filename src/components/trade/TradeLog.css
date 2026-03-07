@@ -196,6 +196,20 @@
 .tl-market-long  { color: var(--accent-buy); font-weight: 600; }
 .tl-market-short { color: var(--accent-sell); font-weight: 600; }
 
+/* Fill row tinting: buy=green tint, sell=red tint */
+.tl-row-buy .tl-td {
+  background: color-mix(in srgb, var(--accent-buy) 4%, transparent);
+}
+
+.tl-row-sell .tl-td {
+  background: color-mix(in srgb, var(--accent-sell) 4%, transparent);
+}
+
+.tl-row-buy:hover .tl-td,
+.tl-row-sell:hover .tl-td {
+  background: var(--bg-hover);
+}
+
 /* Badges */
 .tl-badge {
   display: inline-block;
