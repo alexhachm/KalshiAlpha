@@ -245,13 +245,13 @@ function Shell() {
     return () => window.removeEventListener('open-window', handler)
   }, [openWindow])
 
-  const closeWindow = (id) => {
+  const closeWindow = useCallback((id) => {
     dispatch({ type: 'CLOSE_WINDOW', payload: { id } })
-  }
+  }, [])
 
-  const focusWindow = (id) => {
+  const focusWindow = useCallback((id) => {
     dispatch({ type: 'FOCUS_WINDOW', payload: { id } })
-  }
+  }, [])
 
   const mergeWindows = useCallback((sourceId, targetId) => {
     dispatch({ type: 'MERGE_WINDOWS', payload: { sourceId, targetId } })
