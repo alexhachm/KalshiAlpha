@@ -67,8 +67,7 @@ function Accounts({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const [accounts, setAccounts] = useState(generateMockAccounts)
-  const [sortCol, setSortCol] = useState(null)
-  const [sortDir, setSortDir] = useState('asc')
+  const [sort, setSort] = useState({ col: null, dir: 'asc' })
   const intervalRef = useRef(null)
 
   // Persist settings
@@ -91,33 +90,29 @@ function Accounts({ windowId }) {
   }, [])
 
   const handleSort = useCallback((colKey) => {
-    setSortCol((prev) => {
-      if (prev === colKey) {
-        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-        return prev
-      }
-      setSortDir('asc')
-      return colKey
-    })
+    setSort((prev) => prev.col === colKey
+      ? { col: colKey, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+      : { col: colKey, dir: 'asc' }
+    )
   }, [])
 
   // Sort accounts — memoized
   const sortedAccounts = useMemo(() => {
     const result = [...accounts]
-    if (sortCol) {
+    if (sort.col) {
       result.sort((a, b) => {
-        const va = a[sortCol]
-        const vb = b[sortCol]
+        const va = a[sort.col]
+        const vb = b[sort.col]
         if (typeof va === 'number' && typeof vb === 'number') {
-          return sortDir === 'asc' ? va - vb : vb - va
+          return sort.dir === 'asc' ? va - vb : vb - va
         }
         const sa = String(va)
         const sb = String(vb)
-        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
+        return sort.dir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa)
       })
     }
     return result
-  }, [accounts, sortCol, sortDir])
+  }, [accounts, sort])
 
   // Totals row — memoized
   const totals = useMemo(() => ({
@@ -185,9 +180,9 @@ function Accounts({ windowId }) {
                   style={{ width: col.width || 'auto', cursor: 'grab' }}
                 >
                   {col.label}
-                  {sortCol === col.key && (
+                  {sort.col === col.key && (
                     <span className="acct-sort-arrow">
-                      {sortDir === 'asc' ? ' \u25B2' : ' \u25BC'}
+                      {sort.dir === 'asc' ? ' \u25B2' : ' \u25BC'}
                     </span>
                   )}
                 </th>
