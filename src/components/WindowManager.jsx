@@ -74,7 +74,7 @@ function WindowManager({
         const Component = COMPONENT_REGISTRY[win.type] || Placeholder
         const componentProps = {
           title: win.title,
-          windowId: win.id,
+          windowId: win.tabs?.[win.activeTabIndex]?.id ?? win.id,
           type: win.type,
         }
         // Pass ticker context if the window was opened with one
