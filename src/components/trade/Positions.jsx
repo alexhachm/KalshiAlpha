@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
+import { getPositionSummaries, on } from '../../services/omsService'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './Positions.css'
 
@@ -23,41 +24,26 @@ const COLUMNS = [
   { key: 'type', label: 'Type', align: 'center' },
 ]
 
-const MOCK_TICKERS = [
-  'KXBTC-25FEB28', 'KXETH-25MAR15', 'KXSPY-25FEB28', 'KXNASDAQ-25MAR01',
-  'KXGOLD-25MAR10', 'KXTSLA-25FEB28', 'KXAAPL-25MAR05', 'KXAMZN-25MAR12',
-]
+/**
+ * Map OMS position summaries (cents-based) to display format (dollar-based).
+ * @param {Array} summaries - from omsService.getPositionSummaries()
+ * @returns {Array} Display-format positions
+ */
+function mapOmsPositions(summaries) {
+  return summaries.map((pos) => ({
+    market: pos.ticker,
+    account: 'KA-100482',
+    shares: pos.contracts,
+    avgCost: +(pos.avgCost / 100).toFixed(2),
+    realized: +(pos.realized / 100).toFixed(2),
+    unrealized: +(pos.unrealized / 100).toFixed(2),
+    type: pos.side === 'yes' ? 'Long' : 'Short',
+  }))
+}
 
-function generateMockPositions() {
-  const count = 3 + Math.floor(Math.random() * 4)
-  const used = new Set()
-  const positions = []
-
-  for (let i = 0; i < count; i++) {
-    let ticker
-    do {
-      ticker = MOCK_TICKERS[Math.floor(Math.random() * MOCK_TICKERS.length)]
-    } while (used.has(ticker))
-    used.add(ticker)
-
-    const isLong = Math.random() > 0.4
-    const shares = Math.floor(Math.random() * 400) + 50
-    const avgCost = +(Math.random() * 0.8 + 0.1).toFixed(2)
-    const currentPrice = avgCost + (Math.random() - 0.45) * 0.3
-    const unrealized = +((currentPrice - avgCost) * shares * (isLong ? 1 : -1)).toFixed(2)
-
-    positions.push({
-      market: ticker,
-      account: 'KA-100482',
-      shares,
-      avgCost,
-      realized: 0,
-      unrealized,
-      type: isLong ? 'Long' : 'Short',
-    })
-  }
-
-  return positions
+function fetchPositions() {
+  const summaries = getPositionSummaries({})
+  return mapOmsPositions(summaries)
 }
 
 function loadSettings(windowId) {
@@ -78,7 +64,7 @@ function Positions({ windowId }) {
   const grid = useGridCustomization('positions-' + windowId, COLUMNS)
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
-  const [positions, setPositions] = useState(generateMockPositions)
+  const [positions, setPositions] = useState(fetchPositions)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
   const intervalRef = useRef(null)
@@ -89,10 +75,10 @@ function Positions({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
-  // Refresh data on interval
+  // Refresh positions from OMS
   const refreshData = useCallback(() => {
     setPositions((prev) => {
-      const newPositions = generateMockPositions()
+      const newPositions = fetchPositions()
 
       // Check for P&L changes if flash is enabled
       if (settings.flashOnChange) {
@@ -117,10 +103,20 @@ function Positions({ windowId }) {
     })
   }, [settings.flashOnChange])
 
+  // Periodic refresh on interval
   useEffect(() => {
     intervalRef.current = setInterval(refreshData, settings.refreshInterval * 1000)
     return () => clearInterval(intervalRef.current)
   }, [settings.refreshInterval, refreshData])
+
+  // Subscribe to OMS events for real-time updates
+  useEffect(() => {
+    const unsubs = []
+    unsubs.push(on('order:filled', refreshData))
+    unsubs.push(on('position:updated', refreshData))
+    unsubs.push(on('sync:complete', refreshData))
+    return () => unsubs.forEach((unsub) => unsub())
+  }, [refreshData])
 
   // Cleanup flash timeout on unmount
   useEffect(() => {
