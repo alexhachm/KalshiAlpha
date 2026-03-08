@@ -286,16 +286,15 @@ async function amendOrder(orderId, amendments) {
 
   const response = await kalshiApi.amendOrder(exchangeId, apiAmendments);
 
-  // Update local order
-  if (amendments.price != null) order.price = amendments.price;
-  if (amendments.count != null) {
-    order.count = amendments.count;
-    order.remainingCount = amendments.count - order.filledCount;
+  // Update engine state through proper API (not direct mutation)
+  const updated = engine.amendOrder(orderId, amendments);
+  if (!updated) {
+    console.warn(`[OMS] Engine rejected amendment for order ${orderId}`);
   }
-  order.updatedAt = Date.now();
 
-  emit('order:amended', { order, apiResponse: response });
-  return { order, apiResponse: response };
+  const current = engine.findOrder(orderId);
+  emit('order:amended', { order: current, apiResponse: response });
+  return { order: current, apiResponse: response };
 }
 
 // --- Sync with exchange ---
