@@ -111,25 +111,27 @@ async function handleOpen() {
 }
 
 function handleMessage(event) {
-  let msg;
+  let rawMsg;
   try {
-    msg = JSON.parse(event.data);
+    rawMsg = JSON.parse(event.data);
   } catch {
     // Might be a pong frame or non-JSON; ignore
     return;
   }
 
   // Handle server heartbeat ping
-  if (msg.type === 'heartbeat' || event.data === 'heartbeat') {
+  if (rawMsg.type === 'heartbeat' || event.data === 'heartbeat') {
     sendRaw('heartbeat');
     return;
   }
+
+  const msg = normalizeMessageEnvelope(rawMsg);
 
   // Route message to appropriate channel subscribers
   const channel = msg.type || msg.channel || msg.cmd;
   if (!channel) return;
 
-  routeMessage(channel, msg);
+  routeMessage(channel, msg, rawMsg);
 }
 
 function handleClose(event) {
@@ -290,7 +292,7 @@ function resubscribeAll() {
 }
 
 /** Route an incoming message to the right callbacks */
-function routeMessage(type, msg) {
+function routeMessage(type, msg, rawMsg = msg) {
   // Map message types to channels
   // e.g., 'orderbook_snapshot' and 'orderbook_delta' both go to 'orderbook_delta' subscribers
   const channelMap = {
@@ -307,15 +309,56 @@ function routeMessage(type, msg) {
     market_positions: 'market_positions',
   };
 
-  const channel = channelMap[type] || type;
+  const candidateTypes = [
+    type,
+    msg?.type,
+    msg?.channel,
+    msg?.cmd,
+    rawMsg?.type,
+    rawMsg?.channel,
+    rawMsg?.cmd,
+  ].filter(Boolean);
+
+  const channel = candidateTypes
+    .map((candidate) => channelMap[candidate] || candidate)
+    .find((candidate) => subscriptions[candidate]);
+
+  if (!channel) return;
+
   const sub = subscriptions[channel];
-  if (!sub) return;
 
   sub.callbacks.forEach((cb) => {
     try { cb(msg); } catch (err) {
       console.error(`[KalshiWS] Callback error for ${channel}:`, err);
     }
   });
+}
+
+/**
+ * Flatten Kalshi data envelopes to keep business fields top-level.
+ * Preserves routing metadata (type/sid/seq) for downstream consumers.
+ */
+function normalizeMessageEnvelope(rawMsg) {
+  if (!rawMsg || typeof rawMsg !== 'object') return rawMsg;
+
+  const payload = rawMsg.msg;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return rawMsg;
+  }
+
+  const envelopeType = rawMsg.type || rawMsg.channel || rawMsg.cmd;
+  const payloadType = payload.type || payload.channel || payload.cmd;
+
+  return {
+    ...rawMsg,
+    ...payload,
+    type: payloadType || envelopeType,
+    channel: payload.channel ?? rawMsg.channel,
+    cmd: payload.cmd ?? rawMsg.cmd,
+    sid: payload.sid ?? rawMsg.sid,
+    seq: payload.seq ?? rawMsg.seq,
+    msg: payload,
+  };
 }
 
 // --- Convenience methods for common channels ---
