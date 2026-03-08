@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useMarketSearch } from '../../hooks/useKalshiData'
+import {
+  subscribeToLink,
+  unsubscribeFromLink,
+  emitLinkedMarket,
+  getColorGroup,
+} from '../../services/linkBus'
 import './NewsChat.css'
 
 const TICKERS = [
@@ -84,6 +90,23 @@ function NewsChat({ windowId }) {
     return () => clearTimeout(searchTimerRef.current)
   }, [])
 
+  // Color link subscription — inbound market sync
+  const handleLinkEvent = useCallback(
+    ({ ticker: linkedTicker }) => {
+      if (linkedTicker && linkedTicker !== filterTicker) {
+        setFilterTicker(linkedTicker)
+      }
+    },
+    [filterTicker]
+  )
+
+  useEffect(() => {
+    const colorId = getColorGroup(windowId)
+    if (!colorId) return
+    subscribeToLink(colorId, handleLinkEvent, windowId)
+    return () => unsubscribeFromLink(colorId, handleLinkEvent)
+  }, [windowId, handleLinkEvent])
+
   const handleSearchChange = useCallback((e) => {
     const q = e.target.value
     setSearchQuery(q)
@@ -97,7 +120,8 @@ function NewsChat({ windowId }) {
     if (!TICKER_SET.has(t)) return
     setFilterTicker(t)
     setSearchQuery('')
-  }, [])
+    emitLinkedMarket(windowId, t)
+  }, [windowId])
 
   const clearFilter = useCallback(() => {
     setFilterTicker('')
