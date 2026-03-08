@@ -216,6 +216,7 @@ function Montage({ windowId }) {
         type: order.type,
         yes_price: order.price,
         count: order.size,
+        time_in_force: order.tif,
       })
     } catch {
       // API not connected — fall back to local mock
