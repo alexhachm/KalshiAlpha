@@ -47,9 +47,19 @@ function sortResults(results, column, asc) {
       cmp = String(a[column] || '').localeCompare(String(b[column] || ''))
     }
     // Stable sort: use id as tie-breaker to prevent row flickering
-    if (cmp === 0) cmp = (a.id || 0) - (b.id || 0)
+    if (cmp === 0) {
+      cmp = String(a.id ?? '').localeCompare(String(b.id ?? ''), undefined, { numeric: true })
+    }
     return asc ? cmp : -cmp
   })
+}
+
+function normalizeSignal(signal) {
+  const normalized = String(signal || '').toLowerCase()
+  if (normalized === 'bullish') return 'bull'
+  if (normalized === 'bearish') return 'bear'
+  if (normalized === 'bull' || normalized === 'bear' || normalized === 'neutral') return normalized
+  return 'neutral'
 }
 
 function escapeCSVField(val) {
@@ -318,8 +328,11 @@ function HistoricalScanner({ windowId }) {
                       case 'ticker': content = <span className="scanner-ticker-link">{row.ticker}</span>; break
                       case 'pattern': content = row.pattern; break
                       case 'signal':
-                        content = row.signal.toUpperCase()
-                        className += ` hs-signal-${row.signal}`
+                        {
+                          const signal = normalizeSignal(row.signal)
+                          content = signal.toUpperCase()
+                          className += ` hs-signal-${signal}`
+                        }
                         break
                       case 'roi':
                         content = `${row.roi >= 0 ? '+' : ''}${row.roi.toFixed(1)}%`

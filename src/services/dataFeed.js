@@ -470,14 +470,34 @@ async function getHistoricalScanResults(params = {}) {
       status: 'settled',
       ...params,
     });
-    return (markets.markets || []).map((m) => ({
-      date: m.close_time || m.settled_time || '',
-      ticker: m.ticker,
-      pattern: 'Historical',
-      signal: m.result === 'yes' ? 'bullish' : 'bearish',
-      roi: m.last_price ? ((m.result === 'yes' ? 100 : 0) - m.last_price) : 0,
-      confidence: 3,
-    }));
+    const settledMarkets = [...(markets.markets || [])].sort((a, b) => {
+      const aDate = new Date(a.close_time || a.settled_time || 0).getTime();
+      const bDate = new Date(b.close_time || b.settled_time || 0).getTime();
+      if (aDate !== bDate) return bDate - aDate;
+      return String(a.ticker || '').localeCompare(String(b.ticker || ''));
+    });
+
+    const seenIds = new Map();
+
+    return settledMarkets.map((m) => {
+      const result = String(m.result || '').toLowerCase();
+      const signal = result === 'yes' ? 'bull' : result === 'no' ? 'bear' : 'neutral';
+      const date = m.close_time || m.settled_time || '';
+      const baseId = `hs-${m.ticker || 'unknown'}-${date || 'na'}-${result || 'unknown'}`;
+      const priorCount = seenIds.get(baseId) || 0;
+      seenIds.set(baseId, priorCount + 1);
+      const id = priorCount === 0 ? baseId : `${baseId}-${priorCount}`;
+
+      return {
+        id,
+        date,
+        ticker: m.ticker,
+        pattern: 'Historical',
+        signal,
+        roi: m.last_price ? ((result === 'yes' ? 100 : 0) - m.last_price) : 0,
+        confidence: 3,
+      };
+    });
   } catch (err) {
     console.error('[DataFeed] Historical scan error:', err);
     return [];
