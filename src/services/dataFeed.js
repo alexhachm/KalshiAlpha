@@ -131,7 +131,7 @@ function processOrderbookDelta(ticker, msg) {
 
   const side = msg.side === 'yes' ? store.yes : store.no;
   const price = msg.price;
-  const qty = msg.quantity || msg.delta;
+  const qty = msg.quantity ?? msg.delta;
 
   if (qty === 0) {
     side.delete(price);
