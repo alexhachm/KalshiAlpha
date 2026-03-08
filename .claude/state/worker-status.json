@@ -28,10 +28,10 @@
     "last_heartbeat": null
   },
   "worker-4": {
-    "status": "idle",
-    "last_heartbeat": "2026-03-07T20:37:50Z",
-    "current_task": null,
-    "domain": "frontend/scanners",
+    "status": "busy",
+    "last_heartbeat": "2026-03-08T01:25:33Z",
+    "current_task": "Fix Positions.jsx mock data",
+    "domain": "trade",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/89",
     "tasks_completed": 1
   },
