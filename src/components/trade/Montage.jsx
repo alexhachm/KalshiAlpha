@@ -381,7 +381,7 @@ function Montage({ windowId }) {
           <div className="mt-info-strip">
             <span>Last: <strong>{data.yes.price}c</strong></span>
             {spread !== null && <span>Spread: <strong>{spread}</strong></span>}
-            <span>Vol: <strong>{data.lastTrade.size}</strong></span>
+            <span>Qty: <strong>{data.lastTrade.size}</strong></span>
             <span className={data.lastTrade.side === 'YES' ? 'text-win' : 'text-loss'}>
               {data.lastTrade.side}
             </span>
