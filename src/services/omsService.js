@@ -284,8 +284,12 @@ async function amendOrder(orderId, amendments) {
 
   const exchangeId = order.id || orderId;
   const apiAmendments = {};
-  if (amendments.price != null) apiAmendments.price = amendments.price;
-  if (amendments.count != null) apiAmendments.count_fp = String(amendments.count) + '.00';
+  if (amendments.price != null) {
+    apiAmendments.yes_price = order.side === 'no'
+      ? 100 - amendments.price
+      : amendments.price;
+  }
+  if (amendments.count != null) apiAmendments.count_fp = parseFloat(amendments.count).toFixed(2);
 
   const response = await kalshiApi.amendOrder(exchangeId, apiAmendments);
 
