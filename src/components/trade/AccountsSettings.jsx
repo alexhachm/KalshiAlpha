@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import GridSettingsPanel from '../GridSettingsPanel'
 import '../GridSettingsPanel.css'
+import { useDialogFocusTrap } from '../../hooks/useDialogFocusTrap'
 
 function AccountsSettings({ settings, grid, onChange, onClose }) {
   const [local, setLocal] = useState({ ...settings })
+  const { dialogProps } = useDialogFocusTrap(true, onClose, { ariaLabel: 'Accounts Settings' })
 
   const update = (key, value) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
@@ -16,7 +18,7 @@ function AccountsSettings({ settings, grid, onChange, onClose }) {
 
   return (
     <div className="acct-settings-overlay" onClick={onClose}>
-      <div className="acct-settings-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="acct-settings-panel" {...dialogProps} onClick={(e) => e.stopPropagation()}>
         <div className="acct-settings-header">
           <span>Accounts Settings</span>
           <button className="acct-settings-close" onClick={onClose}>&times;</button>
