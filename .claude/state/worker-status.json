@@ -52,5 +52,9 @@
     "last_heartbeat": "2026-03-08T01:30:06Z",
     "current_task": "Fix submitOrder time_in_force",
     "domain": "services"
+  },
+  "worker-7": {
+    "status": "running",
+    "last_heartbeat": "2026-03-08T23:48:25Z"
   }
 }
