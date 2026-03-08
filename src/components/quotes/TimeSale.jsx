@@ -84,6 +84,10 @@ function TimeSale({ windowId }) {
   const autoScrollRef = useRef(true)
   const grid = useGridCustomization(`timeSale-${windowId}`, TS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 11
+  const bufferSize = useMemo(
+    () => Math.max(500, Math.ceil(settings.maxRows * 2.5)),
+    [settings.maxRows]
+  )
 
   // Persist settings
   useEffect(() => {
@@ -103,10 +107,22 @@ function TimeSale({ windowId }) {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }, [])
 
-  // Subscribe to trade stream — uses maxRows * 2.5 as buffer to allow filtering headroom
+  // Keep buffered history aligned with maxRows updates while preserving newest prints.
+  useEffect(() => {
+    setTrades((prev) => {
+      if (prev.length <= bufferSize) return prev
+      return prev.slice(-bufferSize)
+    })
+  }, [bufferSize])
+
+  // Ticker changes should start a fresh tape.
   useEffect(() => {
     setTrades([])
-    const bufferSize = Math.max(500, Math.ceil(settings.maxRows * 2.5))
+    setFlashedIds(new Set())
+  }, [ticker])
+
+  // Subscribe to trade stream — uses maxRows * 2.5 as buffer to allow filtering headroom
+  useEffect(() => {
     const unsub = subscribeToTimeSales(ticker, (trade) => {
       setTrades((prev) => {
         const next = [...prev, trade]
@@ -124,7 +140,7 @@ function TimeSale({ windowId }) {
       }, 800)
     })
     return unsub
-  }, [ticker])
+  }, [ticker, bufferSize])
 
   // Auto-scroll to bottom when new trades arrive
   useEffect(() => {
