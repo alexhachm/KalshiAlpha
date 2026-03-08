@@ -94,6 +94,9 @@ function stopWsListeners() {
 kalshiWs.onStateChange((newState) => {
   if (newState === kalshiWs.STATE.CONNECTED) {
     startWsListeners();
+    // Sync with exchange after reconnect to reconcile any orders/fills
+    // that changed during the disconnection. Short delay lets WS subs establish first.
+    setTimeout(() => syncWithExchange(), 500);
   } else if (newState === kalshiWs.STATE.DISCONNECTED) {
     stopWsListeners();
   }
