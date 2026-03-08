@@ -30,6 +30,14 @@ const MERGE_OPTIONS = [
   { value: 'disabled', label: 'Disabled' },
 ]
 
+const CONNECTION_STATUS_LABELS = {
+  mock: 'Mock mode (no credentials)',
+  connecting: 'Connecting...',
+  connected: 'Connected',
+  reconnecting: 'Reconnecting...',
+  disconnected: 'Disconnected',
+}
+
 // --- Reusable controls ---
 
 function Toggle({ value, onChange }) {
@@ -108,10 +116,14 @@ function PasswordInput({ value, onChange, placeholder }) {
 
 // --- Sections ---
 
-function ConnectionSection({ settings, onUpdate }) {
+function ConnectionSection({ settings, onUpdate, connectionStatus = 'mock' }) {
   const conn = settings.connection
+  const normalizedStatus = CONNECTION_STATUS_LABELS[connectionStatus] ? connectionStatus : 'disconnected'
   return (
     <>
+      <Row label="Runtime status" description="Current live data-feed state">
+        <span className="settings-label">{CONNECTION_STATUS_LABELS[normalizedStatus]}</span>
+      </Row>
       <Row label="API Key" description="Kalshi API key for authentication">
         <PasswordInput
           value={conn.apiKey}
@@ -263,7 +275,7 @@ const SECTIONS = {
 
 // --- Main Settings Panel ---
 
-function SettingsPanel({ isOpen, onClose }) {
+function SettingsPanel({ isOpen, onClose, connectionStatus = 'mock' }) {
   const [activeTab, setActiveTab] = useState('connection')
   const [settings, setSettings] = useState(() => getSettings())
 
@@ -329,7 +341,11 @@ function SettingsPanel({ isOpen, onClose }) {
               {TABS.find((t) => t.id === activeTab)?.label}
             </h3>
             {SectionComponent && (
-              <SectionComponent settings={settings} onUpdate={handleUpdate} />
+              <SectionComponent
+                settings={settings}
+                onUpdate={handleUpdate}
+                connectionStatus={connectionStatus}
+              />
             )}
           </div>
         </div>

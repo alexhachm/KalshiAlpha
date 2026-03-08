@@ -31,6 +31,14 @@ const TYPE_SIZES = {
   'hotkey-config': { width: 450, height: 400 },
 }
 
+const CONNECTION_STATUS_LABELS = {
+  mock: 'Mock Mode',
+  connecting: 'Connecting',
+  connected: 'Live',
+  reconnecting: 'Reconnecting',
+  disconnected: 'Disconnected',
+}
+
 function windowReducer(state, action) {
   switch (action.type) {
     case 'OPEN_WINDOW': {
@@ -222,9 +230,17 @@ const initialState = {
   nextZ: 1,
 }
 
-function Shell() {
+function Shell({ connected = false, connectionStatus = 'mock' }) {
   const [state, dispatch] = useReducer(windowReducer, initialState)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const normalizedStatus = CONNECTION_STATUS_LABELS[connectionStatus] ? connectionStatus : 'disconnected'
+
+  const statusClassName =
+    normalizedStatus === 'connected'
+      ? 'shell-status-dot--connected'
+      : normalizedStatus === 'connecting' || normalizedStatus === 'reconnecting'
+        ? 'shell-status-dot--connecting'
+        : 'shell-status-dot--disconnected'
 
   const openWindow = useCallback((type, title, ticker) => {
     const sizes = TYPE_SIZES[type] || {}
@@ -326,6 +342,16 @@ function Shell() {
   return (
     <div className="shell">
       <MenuBar onOpenWindow={openWindow} onOpenSettings={openSettings} />
+      <div className="shell-account-bar">
+        <div className="shell-account-bar-item">
+          <span className={`shell-status-dot ${statusClassName}`} />
+          <span className="shell-account-bar-label">Connection</span>
+          <span className="shell-account-bar-value">
+            {CONNECTION_STATUS_LABELS[normalizedStatus]}
+            {normalizedStatus === 'connected' && !connected ? ' (syncing)' : ''}
+          </span>
+        </div>
+      </div>
       <div className="shell-workspace">
         <WindowManager
           windows={state.windows}
@@ -341,6 +367,7 @@ function Shell() {
       <SettingsPanel
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        connectionStatus={normalizedStatus}
       />
     </div>
   )
