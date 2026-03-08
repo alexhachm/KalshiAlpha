@@ -548,6 +548,29 @@ async function cancelExistingOrder(orderId) {
   return kalshiApi.cancelOrder(orderId);
 }
 
+const CANCEL_DELAY_MS = 100;
+
+/**
+ * Cancel multiple orders sequentially with a delay between each to avoid rate limits.
+ * Returns { succeeded: string[], failed: { orderId: string, error: Error }[] }
+ */
+async function cancelOrdersSequential(orderIds) {
+  const succeeded = [];
+  const failed = [];
+  for (let i = 0; i < orderIds.length; i++) {
+    try {
+      await cancelExistingOrder(orderIds[i]);
+      succeeded.push(orderIds[i]);
+    } catch (err) {
+      failed.push({ orderId: orderIds[i], error: err });
+    }
+    if (i < orderIds.length - 1) {
+      await new Promise((r) => setTimeout(r, CANCEL_DELAY_MS));
+    }
+  }
+  return { succeeded, failed };
+}
+
 // --- Mock market selection ---
 
 function setActiveMockMarket(ticker) {
@@ -749,6 +772,7 @@ export {
   // Trading
   submitOrder,
   cancelOrder,
+  cancelOrdersSequential,
   placeOrder,
   cancelExistingOrder,
   // Mock market selection
