@@ -336,7 +336,6 @@ function Window({
       x: e.clientX - (rect?.left || 0),
       y: e.clientY - (rect?.top || 0),
     })
-    bodyRef.current?.dispatchEvent(new CustomEvent('toggle-settings', { bubbles: true }))
   }, [])
 
   const handleOpenSettings = useCallback(() => {
