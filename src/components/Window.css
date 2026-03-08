@@ -236,6 +236,21 @@
   display: none;
 }
 
+/* Drag strip shown instead of titlebar when titlebar is hidden */
+.window-drag-strip {
+  height: 4px;
+  flex-shrink: 0;
+  cursor: move;
+  background: transparent;
+  transition: background var(--transition-fast);
+  z-index: 2;
+  user-select: none;
+}
+
+.window-drag-strip:hover {
+  background: color-mix(in srgb, var(--accent-highlight) 30%, transparent);
+}
+
 /* Pinned window */
 .window--pinned {
   border-color: color-mix(in srgb, var(--accent-highlight) 40%, transparent);

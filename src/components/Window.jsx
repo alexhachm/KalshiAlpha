@@ -473,6 +473,15 @@ function Window({
         </div>
       )}
 
+      {/* Drag strip — visible only when titlebar is hidden */}
+      {hideTitlebar && (
+        <div
+          className="window-drag-strip"
+          onMouseDown={handleTitleBarMouseDown}
+          onContextMenu={handleContextMenu}
+        />
+      )}
+
       <div ref={bodyRef} className="window-body">{children}</div>
 
       {/* Right-click context menu */}
