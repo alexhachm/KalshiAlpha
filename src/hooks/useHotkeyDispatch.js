@@ -113,7 +113,10 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       if (action === 'CANCEL_ALL') {
         try {
           const orders = await dataFeed.getOpenOrders()
-          await Promise.all(orders.map((o) => dataFeed.cancelOrder(o.order_id)))
+          const result = await dataFeed.cancelOrdersSequential(orders.map((o) => o.order_id))
+          if (result.failed.length > 0) {
+            console.warn('[HotkeyDispatch] Some cancels failed:', result.failed)
+          }
         } catch (err) {
           console.error('[HotkeyDispatch] Cancel all failed:', err)
         }
@@ -125,7 +128,10 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
         try {
           const orders = await dataFeed.getOpenOrders()
           const filtered = orders.filter((o) => o.side === side)
-          await Promise.all(filtered.map((o) => dataFeed.cancelOrder(o.order_id)))
+          const result = await dataFeed.cancelOrdersSequential(filtered.map((o) => o.order_id))
+          if (result.failed.length > 0) {
+            console.warn('[HotkeyDispatch] Some cancels failed:', result.failed)
+          }
         } catch (err) {
           console.error('[HotkeyDispatch] Cancel by side failed:', err)
         }

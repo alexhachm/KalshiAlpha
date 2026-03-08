@@ -298,11 +298,6 @@ async function createOrder(order) {
   return request('POST', '/portfolio/orders', order);
 }
 
-/** POST /portfolio/orders/batched — up to 20 orders in one request */
-async function batchOrders(orders) {
-  return request('POST', '/portfolio/orders/batched', { orders });
-}
-
 /** DELETE /portfolio/orders/:orderId — cancel an order */
 async function cancelOrder(orderId) {
   return request('DELETE', `/portfolio/orders/${encodeURIComponent(orderId)}`);
@@ -364,7 +359,6 @@ export {
   getOrders,
   // Trading
   createOrder,
-  batchOrders,
   cancelOrder,
   amendOrder,
   decreaseOrder,
