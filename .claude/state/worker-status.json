@@ -29,9 +29,9 @@
   },
   "worker-4": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T01:25:33Z",
-    "current_task": "Fix Positions.jsx mock data",
-    "domain": "trade",
+    "last_heartbeat": "2026-03-08T01:46:31Z",
+    "current_task": "Fix dataFeed.js subscribeToMarketRace callback after unsubscribe",
+    "domain": "services",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/89",
     "tasks_completed": 1
   },
