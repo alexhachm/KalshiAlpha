@@ -117,6 +117,15 @@ function Montage({ windowId }) {
     prevDataRef.current = null
   }, [ticker])
 
+  // Clear stale state on ticker change
+  useEffect(() => {
+    setWorkingOrders([])
+    setOrderSize(settings.defaultOrderSize)
+    setLimitPrice('')
+    setOrderType('limit')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker])
+
   // Cleanup flash timers
   useEffect(() => {
     return () => {
