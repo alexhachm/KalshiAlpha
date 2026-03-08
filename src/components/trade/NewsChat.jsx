@@ -7,6 +7,8 @@ const TICKERS = [
   'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
 ]
 
+const TICKER_SET = new Set(TICKERS)
+
 const HEADLINES = [
   'Market sees elevated volume ahead of expiry',
   'New polling data shifts probability estimates',
@@ -32,17 +34,32 @@ const HEADLINES = [
 
 function generateNewsItems() {
   const now = Date.now()
-  return Array.from({ length: 20 }, (_, i) => {
+  const seededItems = TICKERS.map((ticker, i) => {
     const timeOffset = Math.floor(Math.random() * 3600000) // up to 1 hour ago
     const ts = new Date(now - timeOffset)
     return {
       id: `news-${i}-${now}`,
       time: ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: ts.getTime(),
-      ticker: TICKERS[Math.floor(Math.random() * TICKERS.length)],
+      ticker,
       headline: HEADLINES[i % HEADLINES.length],
     }
-  }).sort((a, b) => b.timestamp - a.timestamp)
+  })
+
+  const randomItems = Array.from({ length: Math.max(0, 20 - TICKERS.length) }, (_, i) => {
+    const idx = i + TICKERS.length
+    const timeOffset = Math.floor(Math.random() * 3600000) // up to 1 hour ago
+    const ts = new Date(now - timeOffset)
+    return {
+      id: `news-${idx}-${now}`,
+      time: ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: ts.getTime(),
+      ticker: TICKERS[Math.floor(Math.random() * TICKERS.length)],
+      headline: HEADLINES[idx % HEADLINES.length],
+    }
+  })
+
+  return [...seededItems, ...randomItems].sort((a, b) => b.timestamp - a.timestamp)
 }
 
 function NewsChat({ windowId }) {
@@ -77,6 +94,7 @@ function NewsChat({ windowId }) {
   }, [search])
 
   const handleSearchSelect = useCallback((t) => {
+    if (!TICKER_SET.has(t)) return
     setFilterTicker(t)
     setSearchQuery('')
   }, [])
@@ -84,6 +102,16 @@ function NewsChat({ windowId }) {
   const clearFilter = useCallback(() => {
     setFilterTicker('')
   }, [])
+
+  const { supportedResults, unsupportedResults } = useMemo(() => {
+    const supported = []
+    const unsupported = []
+    searchResults.forEach((market) => {
+      if (TICKER_SET.has(market.ticker)) supported.push(market)
+      else unsupported.push(market)
+    })
+    return { supportedResults: supported, unsupportedResults: unsupported }
+  }, [searchResults])
 
   // Memoize filtered items
   const filteredItems = useMemo(
@@ -139,10 +167,19 @@ function NewsChat({ windowId }) {
               {!searchLoading && searchResults.length === 0 && (
                 <div className="nc-search-item nc-search-empty">No results</div>
               )}
-              {searchResults.map((m) => (
+              {!searchLoading && searchResults.length > 0 && supportedResults.length === 0 && (
+                <div className="nc-search-item nc-search-empty">Matches found, but none have local mock news coverage.</div>
+              )}
+              {supportedResults.map((m) => (
                 <div key={m.ticker} className="nc-search-item" onClick={() => handleSearchSelect(m.ticker)}>
                   <span className="nc-search-ticker">{m.ticker}</span>
                   {m.title && <span className="nc-search-title">{m.title}</span>}
+                </div>
+              ))}
+              {unsupportedResults.map((m) => (
+                <div key={`${m.ticker}-unsupported`} className="nc-search-item nc-search-empty" title="No local mock news coverage for this ticker">
+                  <span className="nc-search-ticker">{m.ticker}</span>
+                  <span className="nc-search-title">No local mock news coverage</span>
                 </div>
               ))}
             </div>
