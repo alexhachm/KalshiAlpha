@@ -219,6 +219,37 @@ function windowReducer(state, action) {
         nextZ: state.nextZ + 1,
       }
     }
+    case 'UPDATE_WINDOW_TICKER': {
+      const { id, ticker } = action.payload
+      if (!id || !ticker) return state
+
+      // Direct window match
+      if (state.windows[id]) {
+        return {
+          ...state,
+          windows: {
+            ...state.windows,
+            [id]: { ...state.windows[id], ticker },
+          },
+        }
+      }
+
+      // Tab id → find owning window and update its ticker
+      for (const [winId, win] of Object.entries(state.windows)) {
+        if (win.tabs && win.tabs.some((tab) => tab.id === id)) {
+          return {
+            ...state,
+            windows: {
+              ...state.windows,
+              [winId]: { ...win, ticker },
+            },
+          }
+        }
+      }
+
+      // Unknown id — no-op
+      return state
+    }
     default:
       return state
   }
@@ -260,6 +291,19 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
     window.addEventListener('open-window', handler)
     return () => window.removeEventListener('open-window', handler)
   }, [openWindow])
+
+  // Listen for 'window-ticker-update' custom events from mounted tools
+  // e.g. a component can dispatch: window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowOrTabId, ticker: 'NEW-TICKER' } }))
+  useEffect(() => {
+    const handler = (e) => {
+      const { id, ticker } = e.detail || {}
+      if (id && ticker) {
+        dispatch({ type: 'UPDATE_WINDOW_TICKER', payload: { id, ticker } })
+      }
+    }
+    window.addEventListener('window-ticker-update', handler)
+    return () => window.removeEventListener('window-ticker-update', handler)
+  }, [])
 
   const closeWindow = useCallback((id) => {
     dispatch({ type: 'CLOSE_WINDOW', payload: { id } })
