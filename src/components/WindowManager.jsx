@@ -75,6 +75,7 @@ function WindowManager({
         const componentProps = {
           title: win.title,
           windowId: win.tabs?.[win.activeTabIndex]?.id ?? win.id,
+          hostWindowId: win.id,
           type: win.type,
         }
         // Pass ticker context if the window was opened with one
