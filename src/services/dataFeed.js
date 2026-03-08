@@ -36,6 +36,31 @@ kalshiWs.onStateChange((newState) => {
   setConnected(newState === kalshiWs.STATE.CONNECTED);
 });
 
+// --- Reconnect wrapper ---
+// Wraps subscribe functions so that when connection state changes,
+// stale (mock or real) subscriptions are torn down and re-created.
+
+function withReconnect(subscribeFn) {
+  return function (...args) {
+    let currentUnsub = subscribeFn(...args);
+    let wasMock = !connected;
+
+    const removeListener = onConnectionChange((isNowConnected) => {
+      const shouldBeMock = !isNowConnected;
+      if (wasMock !== shouldBeMock) {
+        currentUnsub();
+        currentUnsub = subscribeFn(...args);
+        wasMock = shouldBeMock;
+      }
+    });
+
+    return () => {
+      currentUnsub();
+      removeListener();
+    };
+  };
+}
+
 // --- Initialize / connect ---
 
 /**
@@ -689,6 +714,17 @@ function subscribeToPositionChanges(callback) {
   return kalshiWs.subscribePositions(callback);
 }
 
+// Apply reconnect wrappers — subscriptions auto-transition between mock and real data
+const _subscribeToTicker = withReconnect(subscribeToTicker);
+const _subscribeToMarketRace = withReconnect(subscribeToMarketRace);
+const _subscribeToScanner = withReconnect(subscribeToScanner);
+const _subscribeToOHLCV = withReconnect(subscribeToOHLCV);
+const _subscribeToTimeSales = withReconnect(subscribeToTimeSales);
+const _subscribeToPortfolio = withReconnect(subscribeToPortfolio);
+const _subscribeToUserOrders = withReconnect(subscribeToUserOrders);
+const _subscribeToUserFills = withReconnect(subscribeToUserFills);
+const _subscribeToPositionChanges = withReconnect(subscribeToPositionChanges);
+
 export {
   // Connection
   initialize,
@@ -698,14 +734,14 @@ export {
   isConnected,
   onConnectionChange,
   // Same interface as mockData (drop-in replacement)
-  subscribeToTicker,
-  subscribeToMarketRace,
-  subscribeToScanner,
-  subscribeToOHLCV,
-  subscribeToTimeSales,
+  _subscribeToTicker as subscribeToTicker,
+  _subscribeToMarketRace as subscribeToMarketRace,
+  _subscribeToScanner as subscribeToScanner,
+  _subscribeToOHLCV as subscribeToOHLCV,
+  _subscribeToTimeSales as subscribeToTimeSales,
   getHistoricalScanResults,
   // Portfolio (unified subscription + individual getters)
-  subscribeToPortfolio,
+  _subscribeToPortfolio as subscribeToPortfolio,
   getPortfolioBalance,
   getOpenPositions,
   getFillHistory,
@@ -722,9 +758,9 @@ export {
   // Market search
   searchMarkets,
   // User event streams
-  subscribeToUserOrders,
-  subscribeToUserFills,
-  subscribeToPositionChanges,
+  _subscribeToUserOrders as subscribeToUserOrders,
+  _subscribeToUserFills as subscribeToUserFills,
+  _subscribeToPositionChanges as subscribeToPositionChanges,
   // Orderbook
   buildSyntheticDom,
 };
