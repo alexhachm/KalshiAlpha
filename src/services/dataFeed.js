@@ -535,11 +535,98 @@ async function getOpenOrders() {
 
 // --- Order execution ---
 
+const VALID_ORDER_SIDES = new Set(['yes', 'no']);
+const VALID_ORDER_ACTIONS = new Set(['buy', 'sell']);
+const VALID_ORDER_TYPES = new Set(['market', 'limit']);
+const VALID_ORDER_TIFS = new Set(['gtc', 'ioc']);
+
+function normalizeOrderEnum(value, validValues, fieldName, fallback = null) {
+  const normalized = typeof value === 'string' ? value.toLowerCase() : '';
+  if (!normalized) {
+    if (fallback !== null) return fallback;
+    throw new Error(`Order ${fieldName} is required`);
+  }
+  if (!validValues.has(normalized)) {
+    throw new Error(`Invalid order ${fieldName}: ${value}`);
+  }
+  return normalized;
+}
+
+function normalizeOrderCount(rawCount) {
+  const count = Number.parseFloat(rawCount);
+  if (!Number.isFinite(count) || count <= 0) {
+    throw new Error('Order size must be greater than zero');
+  }
+  return count.toFixed(2);
+}
+
+function normalizeOrderYesPrice(rawYesPrice, side, type, isAlreadyYesPrice = false) {
+  if (rawYesPrice == null || rawYesPrice === '') {
+    if (type === 'limit') {
+      throw new Error('Limit orders require a price');
+    }
+    return undefined;
+  }
+
+  const parsedPrice = Number.parseFloat(rawYesPrice);
+  if (!Number.isFinite(parsedPrice)) {
+    throw new Error(`Invalid order price: ${rawYesPrice}`);
+  }
+
+  const mappedPrice = isAlreadyYesPrice
+    ? parsedPrice
+    : (side === 'no' ? 100 - parsedPrice : parsedPrice);
+  const yesPrice = Math.round(mappedPrice);
+
+  if (yesPrice <= 0 || yesPrice >= 100) {
+    throw new Error(`Order yes_price must be between 1 and 99 cents. Received: ${yesPrice}`);
+  }
+  return yesPrice;
+}
+
+function normalizeCreateOrderPayload(order = {}) {
+  const ticker = typeof order.ticker === 'string' ? order.ticker.trim() : '';
+  if (!ticker) throw new Error('Order ticker is required');
+
+  const side = normalizeOrderEnum(order.side, VALID_ORDER_SIDES, 'side');
+  const action = normalizeOrderEnum(order.action, VALID_ORDER_ACTIONS, 'action', 'buy');
+  const type = normalizeOrderEnum(order.type || order.route, VALID_ORDER_TYPES, 'type', 'limit');
+  const rawCount = order.count_fp ?? order.size ?? order.quantity ?? order.count;
+  const count_fp = normalizeOrderCount(rawCount);
+
+  // `yes_price` is always YES cents for Kalshi payloads. If callers provide NO-side price,
+  // we convert via 100 - price using side context.
+  const hasExplicitYesPrice = order.yes_price != null && order.yes_price !== '';
+  const rawPrice = hasExplicitYesPrice ? order.yes_price : order.price;
+  const yes_price = normalizeOrderYesPrice(rawPrice, side, type, hasExplicitYesPrice);
+
+  const payload = {
+    ticker,
+    side,
+    action,
+    type,
+    count_fp,
+  };
+
+  if (yes_price != null) payload.yes_price = yes_price;
+
+  const rawTif = order.time_in_force ?? order.timeInForce ?? order.tif;
+  if (rawTif != null && rawTif !== '') {
+    payload.time_in_force = normalizeOrderEnum(rawTif, VALID_ORDER_TIFS, 'time_in_force');
+  }
+
+  const clientOrderId = order.client_order_id ?? order.clientOrderId;
+  if (clientOrderId) payload.client_order_id = String(clientOrderId);
+
+  return payload;
+}
+
 async function placeOrder(order) {
   if (!connected) {
     throw new Error('Not connected to Kalshi API');
   }
-  return kalshiApi.createOrder(order);
+  const normalizedOrder = normalizeCreateOrderPayload(order);
+  return kalshiApi.createOrder(normalizedOrder);
 }
 
 async function cancelExistingOrder(orderId) {
@@ -774,6 +861,7 @@ export {
   submitOrder,
   cancelOrder,
   cancelOrdersSequential,
+  normalizeCreateOrderPayload,
   placeOrder,
   cancelExistingOrder,
   // Mock market selection

@@ -226,7 +226,8 @@ export function useOrderEntry() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await dataFeed.placeOrder(order);
+      const normalizedOrder = dataFeed.normalizeCreateOrderPayload(order);
+      const result = await dataFeed.placeOrder(normalizedOrder);
       setLastResult(result);
       return result;
     } catch (err) {
