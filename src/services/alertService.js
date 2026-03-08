@@ -32,7 +32,8 @@ function ensureWorker() {
     setTimeout(() => {
       if (!worker && _loadRules().some((r) => r.enabled)) {
         ensureWorker();
-        syncTickerSubscriptions();
+        // Existing ticker subscriptions capture the old worker; force a rebind.
+        syncTickerSubscriptions({ forceResubscribe: true });
       }
     }, 2000);
   };
@@ -145,15 +146,21 @@ function handleWorkerMessage(e) {
 
 const tickerUnsubs = {}; // ticker -> unsubscribe fn
 
-function subscribeTickerToWorker(ticker) {
-  if (tickerUnsubs[ticker]) return; // already subscribed
+function subscribeTickerToWorker(ticker, { forceResubscribe = false } = {}) {
+  if (tickerUnsubs[ticker]) {
+    if (!forceResubscribe) return; // already subscribed
+    tickerUnsubs[ticker]();
+    delete tickerUnsubs[ticker];
+  }
 
-  const w = ensureWorker();
+  ensureWorker();
   const unsub = dataFeed.subscribeToTicker(ticker, (data) => {
     const price = data.yes?.price ?? 0;
     // Volume: approximate from lastTrade size
     const volume = data.lastTrade?.size ?? 0;
-    w.postMessage({
+    const currentWorker = worker;
+    if (!workerReady || !currentWorker) return;
+    currentWorker.postMessage({
       type: 'tick',
       payload: { ticker, price, volume },
     });
@@ -169,7 +176,7 @@ function unsubscribeTickerFromWorker(ticker) {
 }
 
 /** Sync ticker subscriptions to match current rules */
-function syncTickerSubscriptions() {
+function syncTickerSubscriptions({ forceResubscribe = false } = {}) {
   const rules = _loadRules();
   const neededTickers = new Set();
 
@@ -181,7 +188,7 @@ function syncTickerSubscriptions() {
 
   // Subscribe to new tickers
   for (const ticker of neededTickers) {
-    subscribeTickerToWorker(ticker);
+    subscribeTickerToWorker(ticker, { forceResubscribe });
   }
 
   // Unsubscribe from tickers no longer needed
