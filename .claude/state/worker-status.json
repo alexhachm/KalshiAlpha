@@ -37,9 +37,9 @@
   },
   "worker-5": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T01:41:23Z",
-    "domain": "services",
-    "current_task": "Remove dead batchOrders and add cancel rate limiting"
+    "last_heartbeat": "2026-03-08T23:41:50Z",
+    "domain": "settings-storage",
+    "current_task": "Add windows.savedLayouts CRUD helpers"
   },
   "worker-6": {
     "status": "busy",

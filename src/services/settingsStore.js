@@ -289,7 +289,85 @@ function deepMerge(defaults, overrides) {
   return result
 }
 
+// ── Layout Preset CRUD ───────────────────────────────────────────────
+// Presets live at windows.savedLayouts as an array of:
+//   { id: string, name: string, data: any, createdAt: string, updatedAt: string }
+
+function _ensureLayoutsArray(s) {
+  if (!s.windows) s.windows = { ...DEFAULTS.windows }
+  if (!Array.isArray(s.windows.savedLayouts)) s.windows.savedLayouts = []
+  return s.windows.savedLayouts
+}
+
+function _generateId() {
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+}
+
+function saveLayoutPreset(name, data) {
+  if (typeof name !== 'string' || name.trim() === '') return null
+  const s = load()
+  const layouts = _ensureLayoutsArray(s)
+  const now = new Date().toISOString()
+  const existing = layouts.find((l) => l && l.name === name.trim())
+  if (existing) {
+    existing.data = data
+    existing.updatedAt = now
+  } else {
+    layouts.push({ id: _generateId(), name: name.trim(), data, createdAt: now, updatedAt: now })
+  }
+  save({ ...s })
+  return existing || layouts[layouts.length - 1]
+}
+
+function listLayoutPresets() {
+  const s = load()
+  const layouts = _ensureLayoutsArray(s)
+  return layouts.filter((l) => l && typeof l.name === 'string')
+}
+
+function getLayoutPreset(name) {
+  return listLayoutPresets().find((l) => l.name === name) || null
+}
+
+function renameLayoutPreset(oldName, newName) {
+  if (typeof newName !== 'string' || newName.trim() === '') return false
+  const s = load()
+  const layouts = _ensureLayoutsArray(s)
+  const preset = layouts.find((l) => l && l.name === oldName)
+  if (!preset) return false
+  if (layouts.some((l) => l && l.name === newName.trim() && l !== preset)) return false
+  preset.name = newName.trim()
+  preset.updatedAt = new Date().toISOString()
+  save({ ...s })
+  return true
+}
+
+function deleteLayoutPreset(name) {
+  const s = load()
+  const layouts = _ensureLayoutsArray(s)
+  const idx = layouts.findIndex((l) => l && l.name === name)
+  if (idx === -1) return false
+  layouts.splice(idx, 1)
+  save({ ...s })
+  return true
+}
+
 // Initialize on import
 load()
 
-export { DEFAULTS, get, update, updateSection, subscribe, reset, save, applyAppearanceSettings, initAppearanceRuntime }
+export {
+  DEFAULTS,
+  get,
+  update,
+  updateSection,
+  subscribe,
+  reset,
+  save,
+  applyAppearanceSettings,
+  initAppearanceRuntime,
+  saveLayoutPreset,
+  listLayoutPresets,
+  getLayoutPreset,
+  renameLayoutPreset,
+  deleteLayoutPreset,
+}
