@@ -67,6 +67,7 @@ function WindowManager({
   onDetachTab,
   onPopOut,
   onPopIn,
+  onGeometryChange,
 }) {
   return (
     <>
@@ -114,6 +115,7 @@ function WindowManager({
             activeTabIndex={win.activeTabIndex}
             onSetActiveTab={onSetActiveTab}
             onDetachTab={onDetachTab}
+            onGeometryChange={onGeometryChange}
             {...(win.type === 'time-sale' ? { minWidth: 50, minHeight: 30 } : {})}
           >
             <Component {...componentProps} />

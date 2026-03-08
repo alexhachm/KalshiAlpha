@@ -37,9 +37,9 @@
   },
   "worker-5": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T01:41:23Z",
-    "domain": "services",
-    "current_task": "Remove dead batchOrders and add cancel rate limiting"
+    "last_heartbeat": "2026-03-08T23:55:09Z",
+    "domain": "shell-layout",
+    "current_task": "Implement Shell layout snapshot persistence and startup restore flow"
   },
   "worker-6": {
     "status": "busy",

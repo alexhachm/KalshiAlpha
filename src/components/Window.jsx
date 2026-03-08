@@ -38,6 +38,7 @@ function Window({
   activeTabIndex,
   onSetActiveTab,
   onDetachTab,
+  onGeometryChange,
   minWidth = DEFAULT_MIN_WIDTH,
   minHeight = DEFAULT_MIN_HEIGHT,
   children,
@@ -256,6 +257,16 @@ function Window({
         }
 
         rerender((n) => n + 1)
+
+        // Report final geometry for layout persistence
+        if (onGeometryChange) {
+          onGeometryChange(id, {
+            x: posRef.current.x,
+            y: posRef.current.y,
+            width: sizeRef.current.width,
+            height: sizeRef.current.height,
+          })
+        }
       }
 
       document.addEventListener('mousemove', onMove)
@@ -316,6 +327,16 @@ function Window({
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
         rerender((n) => n + 1)
+
+        // Report final geometry for layout persistence
+        if (onGeometryChange) {
+          onGeometryChange(id, {
+            x: posRef.current.x,
+            y: posRef.current.y,
+            width: sizeRef.current.width,
+            height: sizeRef.current.height,
+          })
+        }
       }
 
       document.addEventListener('mousemove', onMove)

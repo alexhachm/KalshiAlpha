@@ -1,4 +1,4 @@
-import React, { useReducer, useState, useCallback, useEffect } from 'react'
+import React, { useReducer, useState, useCallback, useEffect, useRef } from 'react'
 import MenuBar from './MenuBar'
 import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
@@ -10,6 +10,8 @@ const DEFAULT_WIDTH = 400
 const DEFAULT_HEIGHT = 300
 const INITIAL_X = 50
 const INITIAL_Y = 10
+const STORAGE_KEY = 'kalshi-shell-layout'
+const SAVE_DEBOUNCE_MS = 1000
 
 // Per-type default sizes — mirrors CSS vars in index.css
 const TYPE_SIZES = {
@@ -219,6 +221,38 @@ function windowReducer(state, action) {
         nextZ: state.nextZ + 1,
       }
     }
+    case 'UPDATE_GEOMETRY': {
+      const { id, x, y, width, height } = action.payload
+      const win = state.windows[id]
+      if (!win) return state
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [id]: {
+            ...win,
+            initialX: x,
+            initialY: y,
+            initialWidth: width,
+            initialHeight: height,
+          },
+        },
+      }
+    }
+    case 'RESTORE_LAYOUT': {
+      const { windows, nextId, nextZ } = action.payload
+      let maxId = 0
+      let maxZ = 0
+      for (const win of Object.values(windows || {})) {
+        if (win.id > maxId) maxId = win.id
+        if (win.zIndex > maxZ) maxZ = win.zIndex
+      }
+      return {
+        windows: windows || {},
+        nextId: Math.max(nextId || 0, maxId + 1),
+        nextZ: Math.max(nextZ || 0, maxZ + 1),
+      }
+    }
     default:
       return state
   }
@@ -233,6 +267,8 @@ const initialState = {
 function Shell({ connected = false, connectionStatus = 'mock' }) {
   const [state, dispatch] = useReducer(windowReducer, initialState)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const saveTimerRef = useRef(null)
+  const hasHydratedRef = useRef(false)
   const normalizedStatus = CONNECTION_STATUS_LABELS[connectionStatus] ? connectionStatus : 'disconnected'
 
   const statusClassName =
@@ -328,14 +364,50 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
     return () => document.removeEventListener('keydown', handleKeyNav)
   }, [state.windows, getFocusedWindow, focusWindow])
 
-  // STUB: Layout persistence — save/restore window arrangement
-  // SOURCE: Internal — serialize state.windows to localStorage
-  // IMPLEMENT WHEN: Users request persistent layouts
-  // STEPS:
-  //   1. On window change (open/close/move/resize), debounce-save state.windows to localStorage
-  //   2. On mount, check localStorage for saved layout and restore via OPEN_WINDOW dispatches
-  //   3. Add "Save Layout" / "Load Layout" menu items to MenuBar
-  //   4. Support named layouts (e.g. "Trading", "Analysis", "Monitoring")
+  // Geometry change handler — called by Window on drag/resize end
+  const handleGeometryChange = useCallback((id, geo) => {
+    dispatch({ type: 'UPDATE_GEOMETRY', payload: { id, ...geo } })
+  }, [])
+
+  // Restore layout from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const snapshot = JSON.parse(saved)
+        if (snapshot?.windows && Object.keys(snapshot.windows).length > 0) {
+          dispatch({ type: 'RESTORE_LAYOUT', payload: snapshot })
+        }
+      }
+    } catch { /* ignore corrupt data */ }
+    hasHydratedRef.current = true
+  }, [])
+
+  // Debounced save to localStorage
+  useEffect(() => {
+    if (!hasHydratedRef.current) return
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        const snapshot = { windows: state.windows, nextId: state.nextId, nextZ: state.nextZ }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+      } catch { /* storage full or unavailable */ }
+    }, SAVE_DEBOUNCE_MS)
+    return () => clearTimeout(saveTimerRef.current)
+  }, [state.windows, state.nextId, state.nextZ])
+
+  // Flush save immediately before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      try {
+        const snapshot = { windows: state.windows, nextId: state.nextId, nextZ: state.nextZ }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+      } catch {}
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [state.windows, state.nextId, state.nextZ])
 
   useHotkeyDispatch({ focusWindow, getFocusedWindow, windows: state.windows })
 
@@ -362,6 +434,7 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
           onDetachTab={detachTab}
           onPopOut={popOutWindow}
           onPopIn={popInWindow}
+          onGeometryChange={handleGeometryChange}
         />
       </div>
       <SettingsPanel
