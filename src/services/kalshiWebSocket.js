@@ -106,6 +106,10 @@ async function handleOpen() {
     });
   } catch (err) {
     console.error('[KalshiWS] Auth failed:', err);
+    if (ws) {
+      ws.close(4001, 'Auth failed');
+    }
+    return;
   }
 
   setState(STATE.CONNECTED);

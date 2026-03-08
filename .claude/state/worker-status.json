@@ -21,11 +21,11 @@
   "worker-3": {
     "status": "busy",
     "domain": "services",
-    "current_task": "Fix dataFeed.js processOrderbookDelta || vs ??",
+    "current_task": "Fix kalshiWebSocket.js handleOpen auth failure silently connecting",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-08T01:46:12Z"
+    "last_heartbeat": "2026-03-08T01:51:15Z"
   },
   "worker-4": {
     "status": "busy",
