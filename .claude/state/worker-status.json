@@ -40,5 +40,11 @@
     "last_heartbeat": "2026-03-07T23:22:29Z",
     "domain": "trade",
     "current_task": "Fix TICKERS dropdown"
+  },
+  "worker-6": {
+    "status": "busy",
+    "last_heartbeat": "2026-03-08T00:44:45Z",
+    "domain": "services",
+    "current_task": "Fix omsService.js reconnect handler missing syncWithExchange"
   }
 }
