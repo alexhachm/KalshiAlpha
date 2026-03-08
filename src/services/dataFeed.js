@@ -428,28 +428,336 @@ function subscribeToMarketRace(callback) {
  * When connected: uses market lifecycle + ticker channels.
  * When disconnected: mock scanner data.
  */
+const SCANNER_POLL_INTERVAL_MS = 5000;
+const SCANNER_SIGNAL_COOLDOWN_MS = 20000;
+const SCANNER_BASELINE_MARKETS = 8;
+const SCANNER_MAX_ALERTS_PER_POLL = 3;
+let scannerAlertSequence = 0;
+
+function nextScannerAlertId() {
+  scannerAlertSequence = (scannerAlertSequence + 1) % 1000;
+  return Date.now() * 1000 + scannerAlertSequence;
+}
+
+function toFiniteNumber(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function percentile(values, p) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * p)));
+  return sorted[idx];
+}
+
+function formatSignedNumber(value, decimals = 1) {
+  if (!Number.isFinite(value)) return '0';
+  const formatted = value.toFixed(decimals);
+  return value >= 0 ? `+${formatted}` : formatted;
+}
+
+function getScannerPriceSnapshot(market) {
+  const yesBid = toFiniteNumber(market.yes_bid);
+  const yesAsk = toFiniteNumber(market.yes_ask);
+  const lastPrice = toFiniteNumber(market.last_price);
+  const volume = toFiniteNumber(market.volume);
+
+  const price = yesBid != null && yesAsk != null
+    ? (yesBid + yesAsk) / 2
+    : (yesBid ?? yesAsk ?? lastPrice);
+
+  if (price == null) return null;
+
+  return {
+    ticker: market.ticker || market.market_ticker || null,
+    price,
+    volume,
+    spread: yesBid != null && yesAsk != null ? Math.max(0, yesAsk - yesBid) : null,
+  };
+}
+
+function buildScannerSignalCandidate(candidate, thresholds, convictionEnabled) {
+  const absMove = Math.abs(candidate.priceMove);
+  const volumeDelta = candidate.volumeDelta;
+  const volumeBoost = volumeDelta != null && volumeDelta > thresholds.volume;
+  const tightSpread = candidate.spread != null && candidate.spread <= 2;
+
+  let type = 'neutral';
+  if (candidate.priceMove >= thresholds.move) type = 'bull';
+  if (candidate.priceMove <= -thresholds.move) type = 'bear';
+
+  let strategy = 'Range Hold';
+  if (type === 'bull') {
+    if (absMove >= thresholds.strongMove && volumeBoost) strategy = 'Momentum Breakout';
+    else if (tightSpread && volumeBoost) strategy = 'Bid-Lift Continuation';
+    else strategy = 'Upside Drift';
+  } else if (type === 'bear') {
+    if (absMove >= thresholds.strongMove && volumeBoost) strategy = 'Momentum Breakdown';
+    else if (tightSpread && volumeBoost) strategy = 'Offer-Pressure Continuation';
+    else strategy = 'Downside Drift';
+  } else if (candidate.spread != null && candidate.spread >= 5 && absMove < thresholds.move * 0.7) {
+    strategy = 'Wide-Spread Chop';
+  } else if (volumeBoost && absMove < thresholds.move * 0.9) {
+    strategy = 'High-Volume Rotation';
+  } else if (absMove >= thresholds.move * 0.75 && absMove < thresholds.strongMove) {
+    strategy = 'Mean Reversion Watch';
+  }
+
+  let score = 1;
+  if (absMove >= thresholds.move) score += 1;
+  if (absMove >= thresholds.strongMove) score += 1;
+  if (volumeBoost) score += 1;
+  if (tightSpread) score += 1;
+  if (type === 'neutral' && absMove < thresholds.move * 0.65) score += 1;
+
+  const conviction = convictionEnabled
+    ? (score >= 4 ? 3 : score >= 2 ? 2 : 1)
+    : 1;
+
+  const volumeSummary = volumeDelta == null
+    ? 'vol n/a'
+    : `vol ${formatSignedNumber(volumeDelta, 0)}`;
+  const spreadSummary = candidate.spread == null
+    ? 'spr n/a'
+    : `spr ${candidate.spread.toFixed(1)}c`;
+
+  return {
+    ticker: candidate.ticker,
+    strategy,
+    type,
+    conviction,
+    score,
+    absMove,
+    description: `YES ${candidate.price.toFixed(1)}c (${formatSignedNumber(candidate.priceMove)}c, ${volumeSummary}, ${spreadSummary})`,
+  };
+}
+
+function buildConnectedScannerSignals(candidates, convictionEnabled) {
+  if (!candidates.length) return [];
+
+  const absMoves = candidates.map((c) => Math.abs(c.priceMove)).filter((v) => Number.isFinite(v) && v > 0);
+  if (!absMoves.length) return [];
+
+  const positiveVolumeDeltas = candidates
+    .map((c) => c.volumeDelta)
+    .filter((v) => Number.isFinite(v) && v > 0);
+
+  const thresholds = {
+    move: Math.max(0.6, percentile(absMoves, 0.7)),
+    strongMove: Math.max(1.0, percentile(absMoves, 0.9)),
+    volume: positiveVolumeDeltas.length ? Math.max(10, percentile(positiveVolumeDeltas, 0.75)) : Number.POSITIVE_INFINITY,
+  };
+
+  const scored = candidates
+    .map((candidate) => buildScannerSignalCandidate(candidate, thresholds, convictionEnabled))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.absMove !== a.absMove) return b.absMove - a.absMove;
+      return String(a.ticker).localeCompare(String(b.ticker));
+    });
+
+  const bulls = scored.filter((s) => s.type === 'bull');
+  const bears = scored.filter((s) => s.type === 'bear');
+  const neutrals = scored.filter((s) => s.type === 'neutral');
+  const used = new Set();
+  const picked = [];
+
+  if (bulls[0]) {
+    picked.push(bulls[0]);
+    used.add(bulls[0].ticker);
+  }
+  if (bears[0] && !used.has(bears[0].ticker)) {
+    picked.push(bears[0]);
+    used.add(bears[0].ticker);
+  }
+
+  for (const signal of scored) {
+    if (picked.length >= SCANNER_MAX_ALERTS_PER_POLL) break;
+    if (used.has(signal.ticker)) continue;
+    picked.push(signal);
+    used.add(signal.ticker);
+  }
+
+  if (picked.length === 0 && neutrals[0]) picked.push(neutrals[0]);
+  return picked.slice(0, SCANNER_MAX_ALERTS_PER_POLL);
+}
+
 function subscribeToScanner(callback) {
   if (!connected) {
     return mockData.subscribeToScanner(callback);
   }
 
-  // Real scanner: subscribe to lifecycle events for new market alerts
-  // and ticker channel for volume/price spikes
-  const unsub = kalshiWs.subscribeLifecycle((msg) => {
-    if (msg.event_type === 'activated' || msg.event_type === 'created') {
-      callback({
-        id: Date.now(),
-        time: new Date().toLocaleTimeString(),
-        ticker: msg.market_ticker || msg.ticker || 'UNKNOWN',
-        strategy: 'New Market',
-        type: 'neutral',
-        conviction: 2,
-        description: `${msg.event_type}: ${msg.market_ticker || msg.ticker}`,
-      });
-    }
+  const marketSnapshots = new Map(); // ticker -> { price, volume, spread, ts }
+  const lastSignalByTicker = new Map(); // ticker -> { type, ts }
+  let running = true;
+  let pollTimer = null;
+  let consecutiveErrors = 0;
+  let lastCapabilityNoticeAt = 0;
+  let currentCapabilities = {
+    directionalSignals: false,
+    convictionRanking: false,
+    strategyLabels: true,
+    reason: 'Building baseline from connected feed.',
+  };
+
+  function emitAlert(alert) {
+    callback({
+      ...alert,
+      capabilities: currentCapabilities,
+    });
+  }
+
+  function maybeEmitCapabilityNotice(reason, tickerHint = null) {
+    const now = Date.now();
+    if (now - lastCapabilityNoticeAt < SCANNER_SIGNAL_COOLDOWN_MS) return;
+    lastCapabilityNoticeAt = now;
+
+    emitAlert({
+      id: nextScannerAlertId(),
+      time: new Date(now).toLocaleTimeString(),
+      ticker: tickerHint || 'CONNECTED-FEED',
+      strategy: 'Baseline Building',
+      type: 'neutral',
+      conviction: 1,
+      description: reason,
+    });
+  }
+
+  // Lifecycle is still useful for status changes and new listings.
+  const unsubLifecycle = kalshiWs.subscribeLifecycle((msg) => {
+    const eventType = String(msg.event_type || msg.type || '').toLowerCase();
+    const ticker = msg.market_ticker || msg.ticker || 'UNKNOWN';
+
+    const lifecycleMap = {
+      created: 'Market Listed',
+      activated: 'Market Activated',
+      reopened: 'Market Reopened',
+      suspended: 'Market Suspended',
+      halted: 'Market Halted',
+      closed: 'Market Closed',
+      settled: 'Market Settled',
+    };
+    const strategy = lifecycleMap[eventType];
+    if (!strategy) return;
+
+    const type = eventType === 'suspended' || eventType === 'halted' ? 'bear' : 'neutral';
+    const conviction = type === 'bear' ? 2 : 1;
+
+    emitAlert({
+      id: nextScannerAlertId(),
+      time: new Date().toLocaleTimeString(),
+      ticker,
+      strategy,
+      type,
+      conviction,
+      description: `${strategy}: ${ticker}`,
+    });
   });
 
-  return unsub;
+  async function pollScannerSignals() {
+    if (!running) return;
+
+    try {
+      const res = await kalshiApi.getMarkets({ limit: 200, status: 'open' });
+      if (!running) return;
+      consecutiveErrors = 0;
+
+      const markets = Array.isArray(res?.markets) ? res.markets : [];
+      const now = Date.now();
+      const candidates = [];
+      let firstTicker = null;
+
+      for (const market of markets) {
+        const snapshot = getScannerPriceSnapshot(market);
+        if (!snapshot || !snapshot.ticker) continue;
+
+        if (!firstTicker) firstTicker = snapshot.ticker;
+        const prev = marketSnapshots.get(snapshot.ticker);
+        marketSnapshots.set(snapshot.ticker, { ...snapshot, ts: now });
+
+        if (!prev) continue;
+        const priceMove = snapshot.price - prev.price;
+        if (!Number.isFinite(priceMove)) continue;
+
+        const volumeDelta = snapshot.volume != null && prev.volume != null
+          ? snapshot.volume - prev.volume
+          : null;
+
+        candidates.push({
+          ticker: snapshot.ticker,
+          price: snapshot.price,
+          spread: snapshot.spread,
+          priceMove,
+          volumeDelta,
+        });
+      }
+
+      const directionalSignals = candidates.length >= SCANNER_BASELINE_MARKETS;
+      const volumeComparable = candidates.filter((c) => c.volumeDelta != null).length;
+      const convictionRanking = directionalSignals && volumeComparable >= Math.max(4, Math.floor(SCANNER_BASELINE_MARKETS / 2));
+      const limitationReason = !directionalSignals
+        ? `Connected mode warming up (${candidates.length}/${SCANNER_BASELINE_MARKETS} comparable markets).`
+        : !convictionRanking
+          ? `Directional signals are active, but conviction ranking is limited (${volumeComparable} markets with volume deltas).`
+          : '';
+
+      currentCapabilities = {
+        directionalSignals,
+        convictionRanking,
+        strategyLabels: true,
+        reason: limitationReason,
+      };
+
+      if (!directionalSignals) {
+        maybeEmitCapabilityNotice(limitationReason, firstTicker);
+        return;
+      }
+
+      const signals = buildConnectedScannerSignals(candidates, convictionRanking);
+      if (!signals.length) return;
+
+      for (const signal of signals) {
+        const prior = lastSignalByTicker.get(signal.ticker);
+        if (prior && prior.type === signal.type && now - prior.ts < SCANNER_SIGNAL_COOLDOWN_MS) {
+          continue;
+        }
+        lastSignalByTicker.set(signal.ticker, { type: signal.type, ts: now });
+
+        emitAlert({
+          id: nextScannerAlertId(),
+          time: new Date(now).toLocaleTimeString(),
+          ticker: signal.ticker,
+          strategy: signal.strategy,
+          type: signal.type,
+          conviction: signal.conviction,
+          description: signal.description,
+        });
+      }
+    } catch (err) {
+      consecutiveErrors++;
+      currentCapabilities = {
+        directionalSignals: false,
+        convictionRanking: false,
+        strategyLabels: false,
+        reason: 'Connected scanner degraded: market feed unavailable.',
+      };
+      maybeEmitCapabilityNotice(currentCapabilities.reason);
+      console.error('[DataFeed] Scanner poll error:', err);
+    } finally {
+      if (!running) return;
+      const delay = Math.min(SCANNER_POLL_INTERVAL_MS * Math.pow(2, consecutiveErrors), 30000);
+      pollTimer = setTimeout(pollScannerSignals, delay);
+    }
+  }
+
+  pollScannerSignals();
+
+  return () => {
+    running = false;
+    if (pollTimer) clearTimeout(pollTimer);
+    unsubLifecycle();
+  };
 }
 
 /**

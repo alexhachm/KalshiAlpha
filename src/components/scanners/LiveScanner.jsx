@@ -24,6 +24,12 @@ const LS_COLUMNS = [
 ]
 
 const FONT_SIZE_MAP = { small: 11, medium: 12, large: 14 }
+const DEFAULT_SCANNER_CAPABILITIES = {
+  directionalSignals: true,
+  convictionRanking: true,
+  strategyLabels: true,
+  reason: '',
+}
 
 function sortAlerts(alerts, column, asc) {
   return [...alerts].sort((a, b) => {
@@ -56,6 +62,7 @@ function ConvictionBars({ level }) {
 
 function LiveScanner({ windowId }) {
   const [alerts, setAlerts] = useState([])
+  const [scannerCapabilities, setScannerCapabilities] = useState(DEFAULT_SCANNER_CAPABILITIES)
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem(`live-scanner-settings-${windowId}`)
@@ -81,8 +88,15 @@ function LiveScanner({ windowId }) {
   // Subscribe to scanner alerts
   useEffect(() => {
     if (paused) return
+    setScannerCapabilities(DEFAULT_SCANNER_CAPABILITIES)
 
     const unsub = subscribeToScanner((alert) => {
+      if (alert?.capabilities) {
+        setScannerCapabilities((prev) => ({
+          ...prev,
+          ...alert.capabilities,
+        }))
+      }
       alertsRef.current = [alert, ...alertsRef.current].slice(0, settings.maxResults)
       setAlerts([...alertsRef.current])
       // Track new row for flash animation
@@ -134,15 +148,51 @@ function LiveScanner({ windowId }) {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }, [])
 
+  const directionalSignalsEnabled = scannerCapabilities.directionalSignals !== false
+  const convictionRankingEnabled = scannerCapabilities.convictionRanking !== false
+  const scannerLimitationReason = scannerCapabilities.reason || (
+    !directionalSignalsEnabled
+      ? 'Directional connected signals are temporarily unavailable.'
+      : 'Conviction ranking is temporarily unavailable.'
+  )
+
+  useEffect(() => {
+    setSettings((prev) => {
+      const next = { ...prev }
+      let changed = false
+
+      if (!directionalSignalsEnabled && (next.filterType === 'bull' || next.filterType === 'bear')) {
+        next.filterType = 'all'
+        changed = true
+      }
+
+      if (!convictionRankingEnabled && next.minConviction !== 1) {
+        next.minConviction = 1
+        changed = true
+      }
+
+      if (!convictionRankingEnabled && next.sortColumn === 'conviction') {
+        next.sortColumn = 'time'
+        next.sortAsc = false
+        changed = true
+      }
+
+      return changed ? next : prev
+    })
+  }, [directionalSignalsEnabled, convictionRankingEnabled])
+
   // Filter and sort — memoized to avoid recalculation on unrelated re-renders
   const sorted = useMemo(() => {
+    const effectiveSortColumn = !convictionRankingEnabled && settings.sortColumn === 'conviction'
+      ? 'time'
+      : settings.sortColumn
     const filtered = alerts.filter((a) => {
       if (settings.filterType !== 'all' && a.type !== settings.filterType) return false
-      if (a.conviction < settings.minConviction) return false
+      if (convictionRankingEnabled && a.conviction < settings.minConviction) return false
       return true
     })
-    return sortAlerts(filtered, settings.sortColumn, settings.sortAsc)
-  }, [alerts, settings.filterType, settings.minConviction, settings.sortColumn, settings.sortAsc])
+    return sortAlerts(filtered, effectiveSortColumn, settings.sortAsc)
+  }, [alerts, convictionRankingEnabled, settings.filterType, settings.minConviction, settings.sortColumn, settings.sortAsc])
 
   // STUB: Row virtualization — render only visible rows for large datasets
   // SOURCE: react-window or @tanstack/react-virtual
@@ -164,13 +214,18 @@ function LiveScanner({ windowId }) {
             onChange={(e) => updateSetting('filterType', e.target.value)}
           >
             <option value="all">All Types</option>
-            <option value="bull">Bull</option>
-            <option value="bear">Bear</option>
+            <option value="bull" disabled={!directionalSignalsEnabled}>Bull</option>
+            <option value="bear" disabled={!directionalSignalsEnabled}>Bear</option>
             <option value="neutral">Neutral</option>
           </select>
           <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} />
           <span className="ls-live-label">{paused ? 'PAUSED' : 'LIVE'}</span>
           <span className="ls-count">{sorted.length} alerts</span>
+          {(!directionalSignalsEnabled || !convictionRankingEnabled) && (
+            <span className="ls-count" title={scannerLimitationReason}>
+              Limited connected signal mode
+            </span>
+          )}
         </div>
         <div className="ls-toolbar-right">
           <button
@@ -214,6 +269,7 @@ function LiveScanner({ windowId }) {
             <label>Min Conviction</label>
             <select
               value={settings.minConviction}
+              disabled={!convictionRankingEnabled}
               onChange={(e) => updateSetting('minConviction', Number(e.target.value))}
             >
               <option value={1}>1+</option>
@@ -226,6 +282,7 @@ function LiveScanner({ windowId }) {
             <input
               type="checkbox"
               checked={settings.showConvictionBars}
+              disabled={!convictionRankingEnabled}
               onChange={(e) => updateSetting('showConvictionBars', e.target.checked)}
             />
           </div>
@@ -285,7 +342,9 @@ function LiveScanner({ windowId }) {
                         className += ` ls-type-${alert.type}`
                         break
                       case 'conviction':
-                        content = settings.showConvictionBars
+                        content = !convictionRankingEnabled
+                          ? 'N/A'
+                          : settings.showConvictionBars
                           ? <ConvictionBars level={alert.conviction} />
                           : alert.conviction
                         break
@@ -303,7 +362,11 @@ function LiveScanner({ windowId }) {
             {sorted.length === 0 && (
               <tr>
                 <td colSpan={grid.visibleColumns.length} className="ls-empty">
-                  {paused ? 'Scanner paused' : 'Waiting for alerts...'}
+                  {paused
+                    ? 'Scanner paused'
+                    : (!directionalSignalsEnabled || !convictionRankingEnabled)
+                      ? scannerLimitationReason
+                      : 'Waiting for alerts...'}
                 </td>
               </tr>
             )}
