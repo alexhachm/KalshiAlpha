@@ -450,12 +450,28 @@ function Window({
 
       {/* Tab bar for merged windows */}
       {tabs && tabs.length > 1 && (
-        <div className="window-tab-bar">
+        <div className="window-tab-bar" role="tablist">
           {tabs.map((tab, idx) => (
             <div
               key={tab.id}
+              role="tab"
+              tabIndex={idx === activeTabIndex ? 0 : -1}
+              aria-selected={idx === activeTabIndex}
               className={`window-tab${idx === activeTabIndex ? ' window-tab--active' : ''}`}
               onClick={() => onSetActiveTab && onSetActiveTab(id, idx)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                  e.preventDefault()
+                  const next = e.key === 'ArrowRight'
+                    ? (idx + 1) % tabs.length
+                    : (idx - 1 + tabs.length) % tabs.length
+                  const nextTab = e.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next]
+                  if (nextTab) nextTab.focus()
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  if (onSetActiveTab) onSetActiveTab(id, idx)
+                }
+              }}
             >
               <span className="window-tab-label">{tab.title}</span>
               <button
@@ -464,6 +480,7 @@ function Window({
                   e.stopPropagation()
                   if (onDetachTab) onDetachTab(id, idx)
                 }}
+                aria-label={`Detach ${tab.title}`}
                 title="Detach tab"
               >
                 ×
