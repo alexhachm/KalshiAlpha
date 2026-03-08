@@ -9,7 +9,7 @@ const DEFAULT_BINDINGS = [
   {
     id: crypto.randomUUID(),
     key: 'Ctrl+B',
-    script: 'Buy=Route:LIMIT Price+0.00 Share=1 TIF=DAY',
+    script: 'Buy=Route:LIMIT Price=Ask Share=1 TIF=DAY',
     label: 'Quick Buy',
     active: true,
     category: 'trading',
@@ -17,7 +17,7 @@ const DEFAULT_BINDINGS = [
   {
     id: crypto.randomUUID(),
     key: 'Ctrl+S',
-    script: 'Sell=Route:LIMIT Price+0.00 Share=Pos TIF=DAY',
+    script: 'Sell=Route:LIMIT Price=Bid Share=Pos TIF=DAY',
     label: 'Quick Sell',
     active: true,
     category: 'trading',
