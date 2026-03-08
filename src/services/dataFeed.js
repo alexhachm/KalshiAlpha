@@ -290,6 +290,7 @@ function subscribeToMarketRace(callback) {
     if (!running) return;
     try {
       const res = await kalshiApi.getMarkets({ limit: 100, status: 'open' });
+      if (!running) return;
       consecutiveErrors = 0;
       if (res && res.markets) {
         const racers = res.markets
