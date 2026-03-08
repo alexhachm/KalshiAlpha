@@ -43,8 +43,8 @@
   },
   "worker-6": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T00:44:45Z",
-    "domain": "services",
-    "current_task": "Fix omsService.js reconnect handler missing syncWithExchange"
+    "last_heartbeat": "2026-03-08T00:47:13Z",
+    "domain": "trade",
+    "current_task": "Fix Montage.jsx ticker change issues"
   }
 }
