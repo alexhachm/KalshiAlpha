@@ -181,15 +181,16 @@ function Montage({ windowId }) {
 
   // Place order — with size and price validation
   const placeOrder = (side) => {
-    if (orderSize <= 0 || orderSize > 10000) return
-    const price = orderType === 'limit' ? Number(limitPrice) : (data ? data.yes.price : 0)
-    if (orderType === 'limit' && (!limitPrice || price <= 0 || price >= 100)) return
+    const roundedSize = Math.round(orderSize)
+    if (roundedSize <= 0 || roundedSize > 10000 || !Number.isInteger(roundedSize)) return
+    const price = orderType === 'limit' ? Math.round(Number(limitPrice)) : (data ? data.yes.price : 0)
+    if (orderType === 'limit' && (!limitPrice || !Number.isInteger(price) || price <= 0 || price >= 100)) return
     if (orderType === 'market' && !data) return
 
     const order = {
       id: orderIdRef.current++,
       side,
-      size: orderSize,
+      size: roundedSize,
       price,
       type: orderType,
       tif: timeInForce,
@@ -395,8 +396,9 @@ function Montage({ windowId }) {
                 className="mt-input mt-shares-input"
                 type="number"
                 min="1"
+                step="1"
                 value={orderSize}
-                onChange={(e) => setOrderSize(Math.max(1, Number(e.target.value)))}
+                onChange={(e) => setOrderSize(Math.max(1, Math.round(Number(e.target.value))))}
               />
               <label className="mt-label">Type</label>
               <select
@@ -417,9 +419,10 @@ function Montage({ windowId }) {
                     type="number"
                     min="1"
                     max="99"
+                    step="1"
                     placeholder="1-99"
                     value={limitPrice}
-                    onChange={(e) => setLimitPrice(e.target.value)}
+                    onChange={(e) => setLimitPrice(String(Math.round(Number(e.target.value)) || ''))}
                   />
                 </>
               )}
