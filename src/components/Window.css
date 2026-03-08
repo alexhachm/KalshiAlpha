@@ -18,7 +18,7 @@
   align-items: center;
   height: var(--window-titlebar-height);
   background: var(--bg-tertiary);
-  padding: 0 var(--spacing-sm);
+  padding: 0 var(--spacing-xs);
   cursor: default;
   user-select: none;
   flex-shrink: 0;
@@ -101,7 +101,7 @@
 
 .window-title {
   flex: 1;
-  font-size: var(--font-size-xs);
+  font-size: 8.5px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -298,7 +298,7 @@
 .window-tab-bar {
   display: flex;
   align-items: stretch;
-  height: 24px;
+  height: 20px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   overflow-x: auto;
