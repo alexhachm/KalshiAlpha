@@ -390,9 +390,12 @@ function getTotalPnl(ticker, side, price) { return engine.getTotalPnl(ticker, si
 function getPositionSummaries(currentPrices = {}) {
   return engine.getAllPositions().map((pos) => {
     const key = `${pos.ticker}:${pos.side}`;
-    const currentPrice = currentPrices[key] || 0;
+    // Use live mark price when available; fall back to avg cost so unrealized
+    // P&L shows $0 instead of extreme artifacts from a zero-price default.
+    const currentPrice = currentPrices[key] != null ? currentPrices[key] : pos.avgCost;
     return {
       ...pos,
+      avgPrice: pos.avgCost,
       unrealized: engine.getUnrealizedPnl(pos.ticker, pos.side, currentPrice),
       total: engine.getTotalPnl(pos.ticker, pos.side, currentPrice),
     };

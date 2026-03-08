@@ -6,10 +6,12 @@ import {
   getOpenOrders,
   getRecentFills,
   getPositionSummaries,
+  getAllPositions,
   cancelOrder,
   on,
   ORDER_STATUS,
 } from '../../services/omsService'
+import { buildSyntheticDom } from '../../services/dataFeed'
 import { subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './OrderBook.css'
 
@@ -131,7 +133,21 @@ function OrderBook({ windowId }) {
         )
     setOrders(allOrders)
     setFills(getRecentFills(settings.maxFills))
-    setPositions(getPositionSummaries({}))
+
+    // Build currentPrices from live orderbook mark data for each position
+    const currentPrices = {}
+    getAllPositions().forEach((pos) => {
+      const dom = buildSyntheticDom(pos.ticker)
+      if (dom.bids.length > 0 && dom.asks.length > 0) {
+        const mid = Math.round((dom.bids[0].price + dom.asks[0].price) / 2)
+        currentPrices[`${pos.ticker}:${pos.side}`] = mid
+      } else if (dom.bids.length > 0) {
+        currentPrices[`${pos.ticker}:${pos.side}`] = dom.bids[0].price
+      } else if (dom.asks.length > 0) {
+        currentPrices[`${pos.ticker}:${pos.side}`] = dom.asks[0].price
+      }
+    })
+    setPositions(getPositionSummaries(currentPrices))
   }, [settings.showCancelled, settings.maxFills])
 
   // Auto-refresh interval
