@@ -253,10 +253,13 @@ function computePnLFromFills(fills) {
       }
     }
 
-    // Unmatched buys are open positions — include with zero realized P&L
-    while (buyIdx < group.buys.length) {
-      result.push({ ...group.buys[buyIdx], pnlCents: 0 });
-      buyIdx++;
+    // Unmatched buys are open positions — include with zero realized P&L.
+    // The current FIFO lot may be partially consumed, so emit its residual size.
+    for (let i = buyIdx; i < group.buys.length; i++) {
+      const remainingCount = i === buyIdx ? buyRemaining : group.buys[i].count;
+      if (remainingCount > 0) {
+        result.push({ ...group.buys[i], count: remainingCount, pnlCents: 0 });
+      }
     }
   }
 
