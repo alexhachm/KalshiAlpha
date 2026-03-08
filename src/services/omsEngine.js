@@ -235,6 +235,9 @@ function processFill(orderId, fill) {
   const order = findOrder(orderId);
   if (!order) return null;
 
+  // Deduplicate fills by fillId
+  if (fill.fillId && order.fills.some(f => f.fillId === fill.fillId)) return null;
+
   const fillObj = {
     fillId: fill.fillId || crypto.randomUUID(),
     orderId: order.clientOrderId,
