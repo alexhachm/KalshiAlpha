@@ -5,77 +5,13 @@ import {
   isLinkingEnabled,
   setLinkingEnabled,
 } from '../services/linkBus'
+import {
+  get as getSettings,
+  update as updateSetting,
+  reset as resetSettings,
+  subscribe as subscribeSettings,
+} from '../services/settingsStore'
 import './SettingsPanel.css'
-
-const LS_KEY = 'kalshi_settings'
-const SETTINGS_VERSION = 1
-
-const DEFAULTS = {
-  connection: {
-    apiKey: '',
-    paperMode: true,
-    wsUrl: '',
-    wsReconnectInterval: 5,
-    wsMaxRetries: 10,
-  },
-  appearance: {
-    theme: 'dark',
-    accentColor: '#4fc3f7',
-    fontFamily: 'Inter',
-    fontSize: 13,
-    windowOpacity: 100,
-  },
-  trading: {
-    defaultOrderSize: 1,
-    confirmOrders: true,
-    soundAlerts: true,
-    autoCancelOnDisconnect: false,
-  },
-  windows: {
-    snapDistance: 10,
-    mergeBehavior: 'tab',
-  },
-  notifications: {
-    desktopNotifications: false,
-    soundAlerts: true,
-    notifyOnFill: true,
-    notifyOnCancel: false,
-    notifyOnConnection: true,
-    notifyOnError: true,
-  },
-}
-
-function loadSettings() {
-  try {
-    const raw = localStorage.getItem(LS_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      // Merge with defaults so new keys are always present
-      const result = {}
-      for (const section of Object.keys(DEFAULTS)) {
-        result[section] = { ...DEFAULTS[section], ...(parsed[section] || {}) }
-      }
-      result._version = parsed._version || 0
-      return result
-    }
-  } catch { /* ignore */ }
-  return structuredClone(DEFAULTS)
-}
-
-function saveSettings(settings) {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ ...settings, _version: SETTINGS_VERSION }))
-  } catch { /* ignore */ }
-}
-
-// STUB: Import/export settings — allow users to backup and share configurations
-// SOURCE: Internal — serialize/deserialize DEFAULTS structure
-// IMPLEMENT WHEN: Users request settings portability
-// STEPS:
-//   1. Add "Export" button to settings header — JSON.stringify(settings) → Blob download
-//   2. Add "Import" button — FileReader → JSON.parse → validate shape → merge with DEFAULTS
-//   3. Validate imported version against SETTINGS_VERSION, run migration if needed
-//   4. Show confirmation dialog before overwriting current settings
 
 const TABS = [
   { id: 'connection', label: 'Connection', icon: Wifi },
@@ -329,10 +265,12 @@ const SECTIONS = {
 
 function SettingsPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('connection')
-  const [settings, setSettings] = useState(() => loadSettings())
+  const [settings, setSettings] = useState(() => getSettings())
+
+  useEffect(() => subscribeSettings((next) => setSettings(next)), [])
 
   useEffect(() => {
-    if (isOpen) setSettings(loadSettings())
+    if (isOpen) setSettings(getSettings())
   }, [isOpen])
 
   useEffect(() => {
@@ -345,17 +283,11 @@ function SettingsPanel({ isOpen, onClose }) {
   }, [isOpen, onClose])
 
   const handleUpdate = useCallback((section, key, value) => {
-    setSettings((prev) => {
-      const next = { ...prev, [section]: { ...prev[section], [key]: value } }
-      saveSettings(next)
-      return next
-    })
+    updateSetting(section, key, value)
   }, [])
 
   const handleReset = useCallback(() => {
-    const fresh = structuredClone(DEFAULTS)
-    saveSettings(fresh)
-    setSettings(fresh)
+    resetSettings()
   }, [])
 
   if (!isOpen) return null

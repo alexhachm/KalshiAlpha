@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);
+  opacity: var(--window-opacity, 1);
   border: 1px solid color-mix(in srgb, var(--accent-highlight) 20%, transparent);
   border-radius: 0;
   box-shadow: var(--shadow-sm);
