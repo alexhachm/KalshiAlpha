@@ -38,14 +38,14 @@ const COMMAND_REFERENCE = {
     {
       name: 'CXLBUY',
       syntax: 'CXLBUY',
-      description: 'Cancel all open buy orders for the active ticker.',
+      description: 'Cancel all open buy-action orders for the active ticker (across YES/NO sides).',
       examples: ['CXLBUY'],
       params: [],
     },
     {
       name: 'CXLSELL',
       syntax: 'CXLSELL',
-      description: 'Cancel all open sell orders for the active ticker.',
+      description: 'Cancel all open sell-action orders for the active ticker (across YES/NO sides).',
       examples: ['CXLSELL'],
       params: [],
     },
