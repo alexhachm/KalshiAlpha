@@ -68,6 +68,7 @@ engine.on('position:updated', (pos) => emit('position:updated', pos));
 
 let wsUnsubOrders = null;
 let wsUnsubFills = null;
+let syncTimeoutId = null;
 
 /**
  * Start listening to WebSocket channels for order and fill updates.
@@ -94,10 +95,14 @@ function stopWsListeners() {
 kalshiWs.onStateChange((newState) => {
   if (newState === kalshiWs.STATE.CONNECTED) {
     startWsListeners();
+    // Cancel any pending sync to prevent stacking on rapid reconnect
+    clearTimeout(syncTimeoutId);
     // Sync with exchange after reconnect to reconcile any orders/fills
     // that changed during the disconnection. Short delay lets WS subs establish first.
-    setTimeout(() => syncWithExchange(), 500);
+    syncTimeoutId = setTimeout(() => syncWithExchange(), 500);
   } else if (newState === kalshiWs.STATE.DISCONNECTED) {
+    clearTimeout(syncTimeoutId);
+    syncTimeoutId = null;
     stopWsListeners();
   }
 });
