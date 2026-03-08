@@ -28,8 +28,8 @@
     "last_heartbeat": "2026-03-08T01:46:12Z"
   },
   "worker-4": {
-    "status": "busy",
-    "last_heartbeat": "2026-03-08T01:46:31Z",
+    "status": "running",
+    "last_heartbeat": "2026-03-08T01:51:02Z",
     "current_task": "Fix dataFeed.js subscribeToMarketRace callback after unsubscribe",
     "domain": "services",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/89",

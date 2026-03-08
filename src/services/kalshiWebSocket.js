@@ -35,9 +35,6 @@ const subscriptions = {};
 // Global listeners for connection state changes
 const stateListeners = new Set();
 
-// Pending subscription commands to send after reconnect
-const pendingSubscriptions = [];
-
 // --- Event helpers ---
 
 function setState(newState) {
