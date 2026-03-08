@@ -49,8 +49,8 @@
   },
   "worker-8": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T01:15:42Z",
-    "current_task": "Fix omsService.js submitOrder count_fp malformed for decimals",
+    "last_heartbeat": "2026-03-08T01:30:06Z",
+    "current_task": "Fix submitOrder time_in_force",
     "domain": "services"
   }
 }

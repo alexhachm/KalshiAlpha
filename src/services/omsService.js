@@ -214,6 +214,13 @@ async function submitOrder(params) {
         : 100 - params.price;
     }
 
+    if (params.time_in_force) {
+      apiOrder.time_in_force = params.time_in_force;
+    }
+    if (params.expiration_ts) {
+      apiOrder.expiration_ts = params.expiration_ts;
+    }
+
     // Submit to exchange
     const response = await kalshiApi.createOrder(apiOrder);
 
