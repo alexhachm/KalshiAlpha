@@ -293,18 +293,22 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
     setIsSettingsOpen(true)
   }, [])
 
-  const getFocusedWindow = useCallback(() => {
-    // The window with the highest zIndex is considered focused
-    let focused = null
-    let maxZ = -1
-    for (const win of Object.values(state.windows)) {
-      if (win.zIndex > maxZ) {
-        maxZ = win.zIndex
-        focused = win
+  const getFocusedWindow = useCallback(
+    ({ includePoppedOut = true } = {}) => {
+      // The focused window is the highest z-index window within the requested scope.
+      const candidates = Object.values(state.windows).filter(
+        (win) => includePoppedOut || !win.poppedOut
+      )
+      if (candidates.length === 0) return null
+
+      let focused = candidates[0]
+      for (const win of candidates) {
+        if (win.zIndex > focused.zIndex) focused = win
       }
-    }
-    return focused
-  }, [state.windows])
+      return focused
+    },
+    [state.windows]
+  )
 
   // Keyboard navigation: Ctrl+Tab / Ctrl+Shift+Tab to cycle between windows
   useEffect(() => {
@@ -316,9 +320,10 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
         .sort((a, b) => a.zIndex - b.zIndex)
       if (windowList.length < 2) return
 
-      const focused = getFocusedWindow()
+      const focused = getFocusedWindow({ includePoppedOut: false })
       if (!focused) return
       const idx = windowList.findIndex((w) => w.id === focused.id)
+      if (idx === -1) return
       const nextIdx = e.shiftKey
         ? (idx - 1 + windowList.length) % windowList.length
         : (idx + 1) % windowList.length
