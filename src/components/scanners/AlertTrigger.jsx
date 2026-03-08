@@ -32,15 +32,48 @@ const RULE_TYPES = [
   { value: 'volume_spike', label: 'Volume Spike' },
 ]
 
+const RULE_PARAM_DEFAULTS = {
+  price_crosses: { threshold: 50, direction: 'either' },
+  pct_change: { pctThreshold: 1, lookback: 10 },
+  volume_spike: { multiplier: 2, window: 60 },
+}
+
+function getRuleInputDefaults(type) {
+  switch (type) {
+    case 'price_crosses':
+      return {
+        param1: String(RULE_PARAM_DEFAULTS.price_crosses.threshold),
+        param2: RULE_PARAM_DEFAULTS.price_crosses.direction,
+      }
+    case 'pct_change':
+      return {
+        param1: String(RULE_PARAM_DEFAULTS.pct_change.pctThreshold),
+        param2: String(RULE_PARAM_DEFAULTS.pct_change.lookback),
+      }
+    case 'volume_spike':
+      return {
+        param1: String(RULE_PARAM_DEFAULTS.volume_spike.multiplier),
+        param2: String(RULE_PARAM_DEFAULTS.volume_spike.window),
+      }
+    default:
+      return { param1: '', param2: '' }
+  }
+}
+
 function formatParams(type, params) {
   if (!params) return ''
   switch (type) {
-    case 'price_crosses':
-      return `threshold: ${params.threshold ?? ''}`
-    case 'pct_change':
-      return `${params.threshold ?? ''}% / ${params.window ?? ''}s`
+    case 'price_crosses': {
+      const direction = params.direction ?? RULE_PARAM_DEFAULTS.price_crosses.direction
+      return `threshold: ${params.threshold ?? ''}, direction: ${direction}`
+    }
+    case 'pct_change': {
+      const pctThreshold = params.pctThreshold ?? params.threshold
+      const lookback = params.lookback ?? params.window
+      return `pctThreshold: ${pctThreshold ?? ''}, lookback: ${lookback ?? ''}`
+    }
     case 'volume_spike':
-      return `${params.multiplier ?? ''}x / ${params.window ?? ''}s`
+      return `multiplier: ${params.multiplier ?? ''}, window: ${params.window ?? ''}`
     default:
       return JSON.stringify(params)
   }
@@ -81,8 +114,8 @@ function AlertTrigger({ windowId }) {
   // Add-rule form state
   const [newTicker, setNewTicker] = useState('')
   const [newType, setNewType] = useState('price_crosses')
-  const [newParam1, setNewParam1] = useState('')
-  const [newParam2, setNewParam2] = useState('')
+  const [newParam1, setNewParam1] = useState(() => getRuleInputDefaults('price_crosses').param1)
+  const [newParam2, setNewParam2] = useState(() => getRuleInputDefaults('price_crosses').param2)
 
   // Keep settings ref current to avoid stale closure in alert callback
   useEffect(() => {
@@ -158,16 +191,34 @@ function AlertTrigger({ windowId }) {
   const handleAddRule = useCallback(() => {
     if (!newTicker.trim()) return
 
+    const parseNumberOrDefault = (value, fallback) => {
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : fallback
+    }
+
     let params
     switch (newType) {
-      case 'price_crosses':
-        params = { threshold: Number(newParam1) || 0 }
+      case 'price_crosses': {
+        const direction = ['above', 'below', 'either'].includes(newParam2)
+          ? newParam2
+          : RULE_PARAM_DEFAULTS.price_crosses.direction
+        params = {
+          threshold: parseNumberOrDefault(newParam1, RULE_PARAM_DEFAULTS.price_crosses.threshold),
+          direction,
+        }
         break
+      }
       case 'pct_change':
-        params = { threshold: Number(newParam1) || 0, window: Number(newParam2) || 60 }
+        params = {
+          pctThreshold: parseNumberOrDefault(newParam1, RULE_PARAM_DEFAULTS.pct_change.pctThreshold),
+          lookback: Math.max(1, Math.round(parseNumberOrDefault(newParam2, RULE_PARAM_DEFAULTS.pct_change.lookback))),
+        }
         break
       case 'volume_spike':
-        params = { multiplier: Number(newParam1) || 2, window: Number(newParam2) || 60 }
+        params = {
+          multiplier: parseNumberOrDefault(newParam1, RULE_PARAM_DEFAULTS.volume_spike.multiplier),
+          window: Math.max(1, Math.round(parseNumberOrDefault(newParam2, RULE_PARAM_DEFAULTS.volume_spike.window))),
+        }
         break
       default:
         return
@@ -175,9 +226,10 @@ function AlertTrigger({ windowId }) {
 
     try {
       alertService.addRule({ type: newType, ticker: newTicker.trim().toUpperCase(), params })
+      const defaults = getRuleInputDefaults(newType)
       setNewTicker('')
-      setNewParam1('')
-      setNewParam2('')
+      setNewParam1(defaults.param1)
+      setNewParam2(defaults.param2)
     } catch (err) {
       console.error('[AlertTrigger] Failed to add rule:', err)
     }
@@ -201,14 +253,25 @@ function AlertTrigger({ windowId }) {
     switch (newType) {
       case 'price_crosses':
         return (
-          <input
-            className="at-input-param"
-            type="number"
-            step="any"
-            placeholder="Price"
-            value={newParam1}
-            onChange={(e) => setNewParam1(e.target.value)}
-          />
+          <>
+            <input
+              className="at-input-param"
+              type="number"
+              step="any"
+              placeholder="Threshold"
+              value={newParam1}
+              onChange={(e) => setNewParam1(e.target.value)}
+            />
+            <select
+              className="at-input-param"
+              value={newParam2}
+              onChange={(e) => setNewParam2(e.target.value)}
+            >
+              <option value="either">Either</option>
+              <option value="above">Above</option>
+              <option value="below">Below</option>
+            </select>
+          </>
         )
       case 'pct_change':
         return (
@@ -217,14 +280,14 @@ function AlertTrigger({ windowId }) {
               className="at-input-param"
               type="number"
               step="any"
-              placeholder="%"
+              placeholder="% Threshold"
               value={newParam1}
               onChange={(e) => setNewParam1(e.target.value)}
             />
             <input
               className="at-input-param"
               type="number"
-              placeholder="Window(s)"
+              placeholder="Lookback (ticks)"
               value={newParam2}
               onChange={(e) => setNewParam2(e.target.value)}
             />
@@ -292,9 +355,11 @@ function AlertTrigger({ windowId }) {
             <select
               value={newType}
               onChange={(e) => {
-                setNewType(e.target.value)
-                setNewParam1('')
-                setNewParam2('')
+                const nextType = e.target.value
+                const defaults = getRuleInputDefaults(nextType)
+                setNewType(nextType)
+                setNewParam1(defaults.param1)
+                setNewParam2(defaults.param2)
               }}
             >
               {RULE_TYPES.map((rt) => (
