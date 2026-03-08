@@ -10,12 +10,12 @@
   },
   "worker-2": {
     "status": "busy",
-    "domain": "services",
-    "current_task": "Fix omsService.js submitOrder double-counting",
+    "domain": "trade",
+    "current_task": "Fix Montage.jsx executeOrder three API field errors",
     "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-08T01:22:41Z",
+    "last_heartbeat": "2026-03-08T01:39:08Z",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
   },
   "worker-3": {

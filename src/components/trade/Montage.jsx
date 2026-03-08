@@ -214,8 +214,8 @@ function Montage({ windowId }) {
         action: 'buy',
         side: order.side,
         type: order.type,
-        yes_price: order.price,
-        count: order.size,
+        yes_price: order.side === 'no' ? 100 - order.price : order.price,
+        count_fp: parseFloat(order.size).toFixed(2),
         time_in_force: order.tif,
       })
     } catch {
