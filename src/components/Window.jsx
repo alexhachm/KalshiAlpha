@@ -65,7 +65,12 @@ function Window({
   const [isPinned, setIsPinned] = useState(false)
   const [hideTitlebar, setHideTitlebar] = useState(() => {
     try {
-      return localStorage.getItem(`window-hide-titlebar-${id}`) === 'true'
+      // Per-tool-type preference: keyed by type (e.g. "hideTitle_montage")
+      if (type) {
+        const byType = localStorage.getItem(`hideTitle_${type}`)
+        if (byType !== null) return byType === 'true'
+      }
+      return false
     } catch { return false }
   })
 
@@ -358,10 +363,13 @@ function Window({
     setContextMenu(null)
     setHideTitlebar((prev) => {
       const next = !prev
-      try { localStorage.setItem(`window-hide-titlebar-${id}`, String(next)) } catch {}
+      try {
+        // Persist per tool type so new windows of same type inherit preference
+        if (type) localStorage.setItem(`hideTitle_${type}`, String(next))
+      } catch {}
       return next
     })
-  }, [id])
+  }, [type])
 
   // Double-click titlebar to pop out
   const handleTitleBarDoubleClick = useCallback(
