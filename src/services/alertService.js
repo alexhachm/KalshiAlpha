@@ -10,6 +10,53 @@ import * as dataFeed from './dataFeed';
 const LS_RULES_KEY = 'kalshi_alert_rules';
 const LS_HISTORY_KEY = 'kalshi_alert_history';
 const MAX_HISTORY = 200;
+const VALID_RULE_TYPES = ['price_crosses', 'pct_change', 'volume_spike'];
+const VALID_PRICE_DIRECTIONS = ['above', 'below', 'either'];
+
+function isFiniteNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isPositiveInteger(value) {
+  return Number.isInteger(value) && value > 0;
+}
+
+function validateRuleParams(type, params) {
+  const errors = [];
+
+  switch (type) {
+    case 'price_crosses':
+      if (!isFiniteNumber(params.threshold)) {
+        errors.push('threshold must be a finite number');
+      }
+      if (!VALID_PRICE_DIRECTIONS.includes(params.direction)) {
+        errors.push(`direction must be one of: ${VALID_PRICE_DIRECTIONS.join(', ')}`);
+      }
+      break;
+    case 'pct_change':
+      if (!isFiniteNumber(params.pctThreshold) || params.pctThreshold < 0) {
+        errors.push('pctThreshold must be a non-negative number');
+      }
+      if (!isPositiveInteger(params.lookback)) {
+        errors.push('lookback must be a positive integer');
+      }
+      break;
+    case 'volume_spike':
+      if (!isFiniteNumber(params.multiplier) || params.multiplier <= 0) {
+        errors.push('multiplier must be a positive number');
+      }
+      if (!isPositiveInteger(params.window)) {
+        errors.push('window must be a positive integer');
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (errors.length) {
+    throw new Error(`Invalid params for "${type}": ${errors.join('; ')}`);
+  }
+}
 
 // --- Worker lifecycle ---
 
@@ -215,12 +262,14 @@ function getRules() {
  * @returns {Object} the created rule
  */
 function addRule({ type, ticker, params, label }) {
-  const validTypes = ['price_crosses', 'pct_change', 'volume_spike'];
-  if (!validTypes.includes(type)) {
-    throw new Error(`Invalid alert type: "${type}". Must be one of: ${validTypes.join(', ')}`);
+  if (!VALID_RULE_TYPES.includes(type)) {
+    throw new Error(`Invalid alert type: "${type}". Must be one of: ${VALID_RULE_TYPES.join(', ')}`);
   }
-  if (!ticker) throw new Error('ticker is required');
-  if (!params || typeof params !== 'object') throw new Error('params object is required');
+  if (typeof ticker !== 'string' || !ticker.trim()) throw new Error('ticker is required');
+  if (!params || typeof params !== 'object' || Array.isArray(params)) {
+    throw new Error('params object is required');
+  }
+  validateRuleParams(type, params);
 
   const rules = _loadRules();
   const rule = {
