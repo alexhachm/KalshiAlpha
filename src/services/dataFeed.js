@@ -370,7 +370,7 @@ function subscribeToOHLCV(ticker, timeframe, callback) {
 
   async function loadCandles() {
     try {
-      const interval = timeframeToInterval[timeframe] || 60;
+      const interval = typeof timeframe === 'number' ? timeframe : (timeframeToInterval[timeframe] || 60);
       const res = await kalshiApi.getMarketCandlesticks({
         tickers: ticker,
         period_interval: interval,
