@@ -362,6 +362,19 @@
   background: color-mix(in srgb, var(--accent-sell) 80%, black);
 }
 
+/* Keyboard focus indicators for merged tabs */
+.window-tab:focus-visible {
+  outline: 2px solid var(--accent-highlight);
+  outline-offset: -2px;
+  color: var(--text-primary);
+}
+
+.window-tab-detach:focus-visible {
+  outline: 2px solid var(--accent-highlight);
+  outline-offset: -1px;
+  color: var(--text-primary);
+}
+
 /* Merge target highlight */
 .window--merge-target {
   outline: 2px solid var(--accent-highlight);
