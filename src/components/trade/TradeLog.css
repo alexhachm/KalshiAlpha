@@ -234,6 +234,11 @@
 .tradelog .pnl-negative { color: var(--accent-sell); font-weight: 600; }
 .tradelog .pnl-zero { color: var(--text-muted); }
 
+/* Drag-over indicator for column reorder */
+.tl-th.drag-over {
+  border-left: 2px solid var(--accent-info, #4488ff);
+}
+
 /* Empty state */
 .tl-empty {
   text-align: center;

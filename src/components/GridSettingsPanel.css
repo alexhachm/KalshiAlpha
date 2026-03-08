@@ -1,19 +1,14 @@
 .grid-settings {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 /* --- Section --- */
 .gs-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.gs-section + .gs-section {
-  border-top: 1px solid var(--border-subtle);
-  padding-top: var(--spacing-sm);
+  gap: 6px;
 }
 
 .gs-section-header {
@@ -23,18 +18,18 @@
 }
 
 .gs-section-title {
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--accent-highlight);
+  color: var(--accent-info);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.5px;
 }
 
 /* --- Column list (drag-reorder) --- */
 .gs-column-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   max-height: 200px;
   overflow-y: auto;
 }
@@ -43,8 +38,8 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 2px;
+  padding: 4px var(--spacing-sm);
+  border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
   cursor: grab;
   user-select: none;
@@ -55,16 +50,12 @@
   background: var(--bg-hover);
 }
 
-.gs-column-item:active {
-  cursor: grabbing;
-}
-
 .gs-column-dragging {
   opacity: 0.5;
 }
 
 .gs-column-over {
-  border-top: 2px solid var(--accent-highlight);
+  border-top: 2px solid var(--accent-info);
 }
 
 .gs-drag-handle {
@@ -77,23 +68,18 @@
 .gs-column-label {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-sm);
+  gap: 6px;
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
   cursor: pointer;
   flex: 1;
 }
 
 .gs-checkbox {
-  accent-color: var(--accent-highlight);
-  width: 13px;
-  height: 13px;
+  accent-color: var(--accent-info);
+  width: 14px;
+  height: 14px;
   cursor: pointer;
-}
-
-.gs-checkbox:focus-visible {
-  outline: 1px solid var(--border-focus);
-  outline-offset: 1px;
 }
 
 /* --- Row layout --- */
@@ -101,29 +87,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xs) 0;
+  padding: 4px 0;
   gap: var(--spacing-lg);
 }
 
 .gs-label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--text-secondary);
 }
 
 /* --- Select --- */
 .gs-select {
-  padding: 2px var(--spacing-sm);
+  padding: var(--spacing-xs) 6px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
+  font-size: var(--font-size-md);
   transition: border-color var(--transition-fast);
-}
-
-.gs-select:hover {
-  border-color: var(--border-active);
 }
 
 .gs-select:focus {
@@ -140,14 +121,13 @@
 
 .gs-slider {
   width: 100px;
-  accent-color: var(--accent-highlight);
+  accent-color: var(--accent-info);
 }
 
 .gs-slider-value {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
   min-width: 36px;
-  font-variant-numeric: tabular-nums;
 }
 
 /* --- Color picker --- */
@@ -158,18 +138,13 @@
 }
 
 .gs-color-picker {
-  width: 24px;
-  height: 20px;
+  width: 28px;
+  height: 22px;
   border: 1px solid var(--border-color);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: none;
   cursor: pointer;
   padding: 0;
-  transition: border-color var(--transition-fast);
-}
-
-.gs-color-picker:hover {
-  border-color: var(--border-active);
 }
 
 .gs-clear-color {
@@ -178,13 +153,12 @@
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--font-size-lg);
-  padding: 0 var(--spacing-xs);
+  padding: 0 2px;
   line-height: 1;
-  transition: color var(--transition-fast);
 }
 
 .gs-clear-color:hover {
-  color: #ff4757;
+  color: var(--accent-sell);
 }
 
 /* --- Buttons --- */
@@ -193,10 +167,10 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--spacing-xs);
+  padding: 2px;
   display: flex;
   align-items: center;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
@@ -205,49 +179,38 @@
   color: var(--text-primary);
 }
 
-.gs-reset-btn:focus-visible,
-.gs-add-rule-btn:focus-visible {
-  outline: 1px solid var(--border-focus);
-  outline-offset: 1px;
-}
-
 .gs-add-rule-btn {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: 2px var(--spacing-md);
+  gap: 4px;
+  padding: 3px 8px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  border-radius: 2px;
-  color: var(--accent-highlight);
-  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  color: var(--accent-info);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: background var(--transition-fast);
 }
 
 .gs-add-rule-btn:hover {
   background: var(--bg-hover);
-  border-color: var(--border-active);
 }
 
 /* --- Conditional formatting rules --- */
 .gs-empty-rules {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-muted);
   font-style: italic;
-  padding: var(--spacing-xs) 0;
+  padding: 4px 0;
 }
 
 .gs-rule {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) 0;
+  gap: 6px;
+  padding: 4px 0;
   flex-wrap: wrap;
-}
-
-.gs-rule + .gs-rule {
-  border-top: 1px solid var(--border-subtle);
 }
 
 .gs-rule-col {
@@ -261,20 +224,14 @@
 }
 
 .gs-rule-value {
-  width: 56px;
-  padding: 2px var(--spacing-sm);
+  width: 60px;
+  padding: var(--spacing-xs) 6px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-md);
   text-align: center;
-  transition: border-color var(--transition-fast);
-}
-
-.gs-rule-value:hover {
-  border-color: var(--border-active);
 }
 
 .gs-rule-value:focus {
@@ -283,8 +240,8 @@
 }
 
 .gs-rule-color {
-  width: 22px;
-  height: 18px;
+  width: 24px;
+  height: 20px;
 }
 
 .gs-remove-rule {
@@ -292,13 +249,13 @@
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--spacing-xs);
+  padding: 2px;
   display: flex;
   align-items: center;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   transition: color var(--transition-fast);
 }
 
 .gs-remove-rule:hover {
-  color: #ff4757;
+  color: var(--accent-sell);
 }
