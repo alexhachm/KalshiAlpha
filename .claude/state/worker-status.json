@@ -43,8 +43,8 @@
   },
   "worker-6": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T00:56:39Z",
+    "last_heartbeat": "2026-03-08T01:06:37Z",
     "domain": "services",
-    "current_task": "Fix amendOrder API fields and price conversion"
+    "current_task": "Fix omsEngine.js NO-side position P&L inversion"
   }
 }

@@ -314,7 +314,10 @@ function updatePosition(ticker, side, action, price, count) {
     // Closing or reducing position (sell)
     const closeCount = Math.min(count, pos.contracts);
     if (closeCount > 0) {
-      pos.realized += (price - pos.avgCost) * closeCount;
+      // NO positions: realized P&L inverted (profit when price drops)
+      pos.realized += side === 'no'
+        ? (pos.avgCost - price) * closeCount
+        : (price - pos.avgCost) * closeCount;
       pos.contracts -= closeCount;
       pos.totalCost = pos.contracts * pos.avgCost;
     }
@@ -344,6 +347,10 @@ function updatePosition(ticker, side, action, price, count) {
 function getUnrealizedPnl(ticker, side, currentPrice) {
   const pos = positions.get(`${ticker}:${side}`);
   if (!pos || pos.contracts === 0) return 0;
+  // NO positions profit when price drops (inverted from YES)
+  if (side === 'no') {
+    return (pos.avgCost - currentPrice) * pos.contracts;
+  }
   return (currentPrice - pos.avgCost) * pos.contracts;
 }
 
