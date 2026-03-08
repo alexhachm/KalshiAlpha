@@ -89,21 +89,21 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
         if (!ticker) return
 
         const price = resolvePrice(params.price, ticker)
-        const quantity = await resolveShares(params.shares, ticker)
-        if (quantity == null || quantity <= 0) return
+        const size = await resolveShares(params.shares, ticker)
+        if (size == null || size <= 0) return
 
         const side = (params.side || (action === 'BUY' ? 'YES' : 'NO')).toLowerCase()
         try {
-          await dataFeed.placeOrder({
+          const normalizedOrder = dataFeed.normalizeCreateOrderPayload({
             ticker,
             action: action.toLowerCase(),
             type: (params.route || 'LIMIT').toLowerCase(),
             side,
-            yes_price: price != null
-              ? (side === 'yes' ? price : 100 - price)
-              : undefined,
-            count_fp: parseFloat(quantity).toFixed(2),
+            price,
+            size,
+            timeInForce: params.tif,
           })
+          await dataFeed.placeOrder(normalizedOrder)
         } catch (err) {
           console.error('[HotkeyDispatch] Order failed:', err)
         }

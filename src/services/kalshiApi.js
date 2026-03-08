@@ -292,10 +292,26 @@ async function getOrders(params = {}) {
  * @param {string} [order.time_in_force] - 'gtc' or 'ioc'
  */
 async function createOrder(order) {
-  if (!order.client_order_id) {
-    order.client_order_id = crypto.randomUUID();
+  const payload = {
+    ticker: order.ticker,
+    side: order.side,
+    action: order.action,
+    type: order.type,
+    count_fp: order.count_fp,
+    client_order_id: order.client_order_id || crypto.randomUUID(),
+  };
+
+  if (order.yes_price != null) payload.yes_price = order.yes_price;
+  if (order.time_in_force != null) payload.time_in_force = order.time_in_force;
+
+  const requiredFields = ['ticker', 'side', 'action', 'type', 'count_fp'];
+  for (const field of requiredFields) {
+    if (payload[field] == null || payload[field] === '') {
+      throw new Error(`createOrder missing required field: ${field}`);
+    }
   }
-  return request('POST', '/portfolio/orders', order);
+
+  return request('POST', '/portfolio/orders', payload);
 }
 
 /** DELETE /portfolio/orders/:orderId — cancel an order */

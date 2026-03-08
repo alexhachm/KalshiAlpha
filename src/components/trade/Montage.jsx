@@ -193,7 +193,7 @@ function Montage({ windowId }) {
       size: roundedSize,
       price,
       type: orderType,
-      tif: timeInForce,
+      timeInForce,
       ticker,
       status: 'working',
       time: new Date().toLocaleTimeString(),
@@ -210,28 +210,24 @@ function Montage({ windowId }) {
     setConfirmDialog(null)
     try {
       await submitOrder({
-        ticker,
+        ticker: order.ticker,
         action: 'buy',
         side: order.side,
         type: order.type,
-        yes_price: order.side === 'no' ? 100 - order.price : order.price,
-        count_fp: parseFloat(order.size).toFixed(2),
-        time_in_force: order.tif,
+        price: order.price,
+        size: order.size,
+        timeInForce: order.timeInForce,
       })
-    } catch {
-      // API not connected — fall back to local mock
-      if (order.type === 'limit') {
-        setWorkingOrders((prev) => [...prev, order])
-      }
+    } catch (err) {
+      console.error('[Montage] Order placement failed:', err)
     }
   }
 
   const cancelOrder = async (orderId) => {
     try {
       await cancelApiOrder(orderId)
-    } catch {
-      // Local fallback
-      setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
+    } catch (err) {
+      console.error('[Montage] Cancel failed:', err)
     }
   }
 
@@ -486,7 +482,9 @@ function Montage({ windowId }) {
               {confirmDialog.order.type.toUpperCase()} {confirmDialog.order.size}{' '}
               {confirmDialog.order.side.toUpperCase()} @ {confirmDialog.order.price}c
               <br />
-              <span className="text-muted">{ticker} | {confirmDialog.order.tif.toUpperCase()}</span>
+              <span className="text-muted">
+                {ticker} | {confirmDialog.order.timeInForce.toUpperCase()}
+              </span>
             </div>
             <div className="mt-confirm-buttons">
               <button
