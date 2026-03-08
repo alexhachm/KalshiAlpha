@@ -111,9 +111,15 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       }
 
       if (action === 'CANCEL_ALL') {
+        const ticker = getActiveTicker()
+        if (!ticker) return
         try {
           const orders = await dataFeed.getOpenOrders()
-          const result = await dataFeed.cancelOrdersSequential(orders.map((o) => o.order_id))
+          const orderIds = orders
+            .filter((o) => o.ticker === ticker)
+            .map((o) => o.order_id)
+            .filter(Boolean)
+          const result = await dataFeed.cancelOrdersSequential(orderIds)
           if (result.failed.length > 0) {
             console.warn('[HotkeyDispatch] Some cancels failed:', result.failed)
           }
@@ -124,11 +130,17 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       }
 
       if (action === 'CANCEL_BUY' || action === 'CANCEL_SELL') {
-        const side = action === 'CANCEL_BUY' ? 'yes' : 'no'
+        const ticker = getActiveTicker()
+        if (!ticker) return
+        const targetAction = action === 'CANCEL_BUY' ? 'buy' : 'sell'
         try {
           const orders = await dataFeed.getOpenOrders()
-          const filtered = orders.filter((o) => o.side === side)
-          const result = await dataFeed.cancelOrdersSequential(filtered.map((o) => o.order_id))
+          const orderIds = orders
+            .filter((o) => o.ticker === ticker)
+            .filter((o) => String(o.action || '').toLowerCase() === targetAction)
+            .map((o) => o.order_id)
+            .filter(Boolean)
+          const result = await dataFeed.cancelOrdersSequential(orderIds)
           if (result.failed.length > 0) {
             console.warn('[HotkeyDispatch] Some cancels failed:', result.failed)
           }
