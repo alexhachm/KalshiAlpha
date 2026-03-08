@@ -10,12 +10,12 @@
   },
   "worker-2": {
     "status": "busy",
-    "domain": "frontend",
-    "current_task": "Deep UI polish: Trade + quotes components",
+    "domain": "infra",
+    "current_task": "Fix electron/main.js memory leak, macOS quit, and crash recovery",
     "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-07T04:11:32Z",
+    "last_heartbeat": "2026-03-08T00:49:02Z",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
   },
   "worker-3": {
