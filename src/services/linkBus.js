@@ -1,5 +1,11 @@
 // Color Link Event Bus — pub/sub for color-group window linking
 // Module-level singleton: import { emitLinkedMarket, subscribeToLink, ... } from './linkBus'
+//
+// linkingEnabled state is owned by settingsStore.colorCoordination.linkingEnabled.
+// This module reads/writes through settingsStore and keeps a runtime cache in sync
+// via a settingsStore subscriber so resets propagate automatically.
+
+import { get as getSettings, update as updateSettings, subscribe as subscribeSettings } from './settingsStore'
 
 const LINK_COLORS = [
   { id: 'red', hex: '#ff4444' },
@@ -13,7 +19,7 @@ const LINK_COLORS = [
 ];
 
 const LS_KEY_GROUPS = 'kalshi_link_groups';
-const LS_KEY_ENABLED = 'kalshi_linking_enabled';
+const LS_KEY_ENABLED_LEGACY = 'kalshi_linking_enabled';
 
 // State: windowId -> colorId
 let windowGroups = {};
@@ -21,7 +27,7 @@ let windowGroups = {};
 // Subscribers: colorId -> Array<{callback, windowId}>
 const subscribers = {};
 
-// Global enable/disable
+// Runtime cache — kept in sync with settingsStore via subscriber
 let linkingEnabled = true;
 
 // --- Persistence ---
@@ -33,18 +39,28 @@ function loadLinkState() {
   } catch {
     windowGroups = {};
   }
+
+  // Migrate legacy localStorage key → settingsStore (backward compat)
   try {
-    const raw = localStorage.getItem(LS_KEY_ENABLED);
-    if (raw !== null) linkingEnabled = JSON.parse(raw);
+    const legacyRaw = localStorage.getItem(LS_KEY_ENABLED_LEGACY);
+    if (legacyRaw !== null) {
+      const legacyValue = JSON.parse(legacyRaw);
+      // Apply legacy value to settingsStore so existing user preference is preserved
+      updateSettings('colorCoordination', 'linkingEnabled', !!legacyValue);
+      localStorage.removeItem(LS_KEY_ENABLED_LEGACY);
+    }
   } catch {
-    linkingEnabled = true;
+    localStorage.removeItem(LS_KEY_ENABLED_LEGACY);
   }
+
+  // Read authoritative value from settingsStore
+  linkingEnabled = !!getSettings().colorCoordination.linkingEnabled;
 }
 
 function saveLinkState() {
   try {
     localStorage.setItem(LS_KEY_GROUPS, JSON.stringify(windowGroups));
-    localStorage.setItem(LS_KEY_ENABLED, JSON.stringify(linkingEnabled));
+    // linkingEnabled is persisted by settingsStore — not duplicated here
   } catch {
     // localStorage may be unavailable (SSR, quota exceeded)
   }
@@ -137,7 +153,8 @@ function emitDragDelta(colorId, sourceWindowId, dx, dy) {
 
 function setLinkingEnabled(enabled) {
   linkingEnabled = !!enabled;
-  saveLinkState();
+  // Write through to settingsStore (authoritative persistence)
+  updateSettings('colorCoordination', 'linkingEnabled', linkingEnabled);
 }
 
 function isLinkingEnabled() {
@@ -146,6 +163,11 @@ function isLinkingEnabled() {
 
 // --- Init ---
 loadLinkState();
+
+// Keep runtime linkingEnabled in sync with settingsStore (handles reset, external updates)
+subscribeSettings((settings) => {
+  linkingEnabled = !!settings.colorCoordination.linkingEnabled;
+});
 
 export {
   LINK_COLORS,
