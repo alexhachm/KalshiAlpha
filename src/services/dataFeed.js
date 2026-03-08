@@ -11,14 +11,36 @@ import * as mockData from './mockData';
 
 let connected = false;
 const connectionListeners = new Set();
+const connectionStatusListeners = new Set();
+
+const CONNECTION_STATUS = {
+  MOCK: 'mock',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  RECONNECTING: 'reconnecting',
+  DISCONNECTED: 'disconnected',
+};
+
+let connectionStatus = CONNECTION_STATUS.MOCK;
+let hasLiveCredentials = false;
+let lastInitializeSignature = '';
 
 function isConnected() {
   return connected;
 }
 
+function getConnectionStatus() {
+  return connectionStatus;
+}
+
 function onConnectionChange(callback) {
   connectionListeners.add(callback);
   return () => connectionListeners.delete(callback);
+}
+
+function onConnectionStatusChange(callback) {
+  connectionStatusListeners.add(callback);
+  return () => connectionStatusListeners.delete(callback);
 }
 
 function setConnected(val) {
@@ -27,13 +49,54 @@ function setConnected(val) {
   if (old !== val) {
     connectionListeners.forEach((cb) => {
       try { cb(val); } catch { /* ignore */ }
-    });
+    })
   }
+}
+
+function setConnectionStatus(nextStatus) {
+  const oldStatus = connectionStatus;
+  connectionStatus = nextStatus;
+  if (oldStatus !== nextStatus) {
+    connectionStatusListeners.forEach((cb) => {
+      try { cb(nextStatus); } catch { /* ignore */ }
+    })
+  }
+}
+
+function toConnectionStatus(wsState) {
+  switch (wsState) {
+    case kalshiWs.STATE.CONNECTING:
+      return CONNECTION_STATUS.CONNECTING;
+    case kalshiWs.STATE.CONNECTED:
+      return CONNECTION_STATUS.CONNECTED;
+    case kalshiWs.STATE.RECONNECTING:
+      return CONNECTION_STATUS.RECONNECTING;
+    default:
+      return hasLiveCredentials ? CONNECTION_STATUS.DISCONNECTED : CONNECTION_STATUS.MOCK;
+  }
+}
+
+function hasCredentials(opts = {}) {
+  const apiKeyId = typeof opts.apiKeyId === 'string' ? opts.apiKeyId.trim() : '';
+  const privateKeyPem = typeof opts.privateKeyPem === 'string' ? opts.privateKeyPem.trim() : '';
+  return Boolean(apiKeyId && privateKeyPem);
+}
+
+function getInitializeSignature(opts = {}) {
+  return JSON.stringify({
+    apiKeyId: typeof opts.apiKeyId === 'string' ? opts.apiKeyId.trim() : '',
+    privateKeyPem: typeof opts.privateKeyPem === 'string' ? opts.privateKeyPem.trim() : '',
+    environment: opts.environment || 'demo',
+    wsUrl: typeof opts.wsUrl === 'string' ? opts.wsUrl.trim() : '',
+    wsReconnectInterval: Number(opts.wsReconnectInterval) || 0,
+    wsMaxRetries: Number(opts.wsMaxRetries) || 0,
+  });
 }
 
 // Listen to WS state changes
 kalshiWs.onStateChange((newState) => {
   setConnected(newState === kalshiWs.STATE.CONNECTED);
+  setConnectionStatus(toConnectionStatus(newState));
 });
 
 // --- Reconnect wrapper ---
@@ -68,24 +131,52 @@ function withReconnect(subscribeFn) {
  * If credentials are not provided, stays in mock mode.
  */
 async function initialize(opts = {}) {
-  if (opts.apiKeyId && opts.privateKeyPem) {
-    try {
-      await kalshiApi.configure({
-        environment: opts.environment || 'demo',
-        apiKeyId: opts.apiKeyId,
-        privateKeyPem: opts.privateKeyPem,
-      });
-      await kalshiWs.connect();
-    } catch (err) {
-      console.error('[DataFeed] Failed to connect to Kalshi:', err);
-      // Fall back to mock data silently
-    }
+  if (!hasCredentials(opts)) {
+    hasLiveCredentials = false;
+    lastInitializeSignature = '';
+    kalshiWs.disconnect();
+    setConnected(false);
+    setConnectionStatus(CONNECTION_STATUS.MOCK);
+    return;
+  }
+
+  const nextSignature = getInitializeSignature(opts);
+  const wsState = kalshiWs.getState();
+  const alreadyConnectingOrConnected =
+    wsState === kalshiWs.STATE.CONNECTED ||
+    wsState === kalshiWs.STATE.CONNECTING ||
+    wsState === kalshiWs.STATE.RECONNECTING;
+
+  if (alreadyConnectingOrConnected && nextSignature === lastInitializeSignature) {
+    return;
+  }
+
+  hasLiveCredentials = true;
+  lastInitializeSignature = nextSignature;
+  setConnectionStatus(CONNECTION_STATUS.CONNECTING);
+
+  try {
+    kalshiWs.disconnect();
+    setConnected(false);
+    await kalshiApi.configure({
+      environment: opts.environment || 'demo',
+      apiKeyId: opts.apiKeyId,
+      privateKeyPem: opts.privateKeyPem,
+    });
+    await kalshiWs.connect();
+  } catch (err) {
+    console.error('[DataFeed] Failed to connect to Kalshi:', err);
+    setConnected(false);
+    setConnectionStatus(CONNECTION_STATUS.DISCONNECTED);
   }
 }
 
 function disconnectFeed() {
+  hasLiveCredentials = false;
+  lastInitializeSignature = '';
   kalshiWs.disconnect();
   setConnected(false);
+  setConnectionStatus(CONNECTION_STATUS.DISCONNECTED);
 }
 
 // --- Orderbook State Machine ---
@@ -864,6 +955,9 @@ export {
   disconnectFeed,
   isConnected,
   onConnectionChange,
+  getConnectionStatus,
+  onConnectionStatusChange,
+  CONNECTION_STATUS,
   // Same interface as mockData (drop-in replacement)
   _subscribeToTicker as subscribeToTicker,
   _subscribeToMarketRace as subscribeToMarketRace,
