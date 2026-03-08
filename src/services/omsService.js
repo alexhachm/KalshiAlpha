@@ -238,13 +238,11 @@ async function submitOrder(params) {
     if (respStatus === 'resting') {
       engine.markOpen(order.clientOrderId);
     } else if (respStatus === 'executed') {
-      // Immediate fill (market order)
-      const fillPrice = response?.order?.yes_price || params.price || 0;
-      const fillCount = parseFloat(response?.order?.count_fp || String(params.count));
-      engine.processFill(order.clientOrderId, {
-        price: fillPrice,
-        count: fillCount,
-      });
+      // Immediate fill (market order) — only transition status here.
+      // Skip processFill: the WS fill event will deliver the real trade_id
+      // and handle fill/position accounting. Calling processFill here with a
+      // synthetic fillId causes double-counting when the WS fill arrives.
+      engine.transitionOrder(order.clientOrderId, engine.ORDER_STATUS.FILLED);
     }
 
     emit('order:submitted', { order: engine.getOrder(order.clientOrderId), apiResponse: response });
