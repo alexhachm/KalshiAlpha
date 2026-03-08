@@ -289,16 +289,11 @@ async function amendOrder(orderId, amendments) {
 
   const response = await kalshiApi.amendOrder(exchangeId, apiAmendments);
 
-  // Update local order
-  if (amendments.price != null) order.price = amendments.price;
-  if (amendments.count != null) {
-    order.count = amendments.count;
-    order.remainingCount = amendments.count - order.filledCount;
-  }
-  order.updatedAt = Date.now();
+  // Update local order via engine (not direct mutation)
+  const updated = engine.amendOrder(order.clientOrderId, amendments);
 
-  emit('order:amended', { order, apiResponse: response });
-  return { order, apiResponse: response };
+  emit('order:amended', { order: updated || order, apiResponse: response });
+  return { order: updated || order, apiResponse: response };
 }
 
 // --- Sync with exchange ---

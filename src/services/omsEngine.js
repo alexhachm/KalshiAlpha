@@ -189,6 +189,33 @@ function markRejected(orderId, reason) {
   return transitionOrder(orderId, ORDER_STATUS.REJECTED, { reason });
 }
 
+/**
+ * Amend an order's price or quantity.
+ * Validates the order is not in a terminal state before applying.
+ * @param {string} orderId - clientOrderId or exchange orderId
+ * @param {Object} amendments - { price, count }
+ * @returns {Object|null} Updated order, or null if order not found or terminal
+ */
+function amendOrder(orderId, amendments) {
+  const order = findOrder(orderId);
+  if (!order) return null;
+
+  if (TERMINAL_STATES.has(order.status)) {
+    console.warn(`[OMS] Cannot amend terminal order ${orderId} (status: ${order.status})`);
+    return null;
+  }
+
+  if (amendments.price != null) order.price = amendments.price;
+  if (amendments.count != null) {
+    order.count = amendments.count;
+    order.remainingCount = amendments.count - order.filledCount;
+  }
+  order.updatedAt = Date.now();
+
+  emit('order:updated', order);
+  return order;
+}
+
 // --- Fill processing ---
 
 /**
@@ -443,6 +470,7 @@ export {
   markOpen,
   markCancelled,
   markRejected,
+  amendOrder,
   processFill,
   // Position
   updatePosition,
