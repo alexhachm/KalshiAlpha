@@ -204,7 +204,7 @@ async function submitOrder(params) {
       side: params.side,
       action: params.action,
       type: params.type === 'stop' ? 'limit' : params.type,
-      count_fp: String(params.count) + '.00',
+      count_fp: parseFloat(params.count).toFixed(2),
       client_order_id: order.clientOrderId,
     };
 
