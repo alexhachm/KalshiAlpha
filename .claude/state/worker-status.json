@@ -10,12 +10,12 @@
   },
   "worker-2": {
     "status": "busy",
-    "domain": "infra",
-    "current_task": "Fix electron/main.js memory leak, macOS quit, and crash recovery",
+    "domain": "hooks",
+    "current_task": "Fix useKalshiData.js usePortfolio WS-triggered refresh storm",
     "tasks_completed": 1,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-08T00:49:02Z",
+    "last_heartbeat": "2026-03-08T00:55:25Z",
     "last_pr": "https://github.com/alexhachm/KalshiAlpha/pull/19"
   },
   "worker-3": {

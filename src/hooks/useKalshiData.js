@@ -161,18 +161,23 @@ export function usePortfolio(refreshInterval = 5000) {
   const [orders, setOrders] = useState([]);
   const [fills, setFills] = useState([]);
   const timerRef = useRef(null);
+  const debounceRef = useRef(null);
 
   const refresh = useCallback(async () => {
-    const [bal, pos, ord, fil] = await Promise.all([
-      dataFeed.getPortfolioBalance(),
-      dataFeed.getOpenPositions(),
-      dataFeed.getOpenOrders(),
-      dataFeed.getFillHistory(),
-    ]);
-    setBalance(bal);
-    setPositions(pos);
-    setOrders(ord);
-    setFills(fil);
+    try {
+      const [bal, pos, ord, fil] = await Promise.all([
+        dataFeed.getPortfolioBalance(),
+        dataFeed.getOpenPositions(),
+        dataFeed.getOpenOrders(),
+        dataFeed.getFillHistory(),
+      ]);
+      setBalance(bal);
+      setPositions(pos);
+      setOrders(ord);
+      setFills(fil);
+    } catch (err) {
+      console.error('[usePortfolio] refresh failed:', err);
+    }
   }, []);
 
   useEffect(() => {
@@ -187,15 +192,17 @@ export function usePortfolio(refreshInterval = 5000) {
     };
   }, [refresh, refreshInterval]);
 
-  // Also listen for real-time position updates
+  // Also listen for real-time position updates — debounced to prevent refresh storms
   useEffect(() => {
-    const unsubFills = dataFeed.subscribeToUserFills(() => {
-      refresh();
-    });
-    const unsubPositions = dataFeed.subscribeToPositionChanges(() => {
-      refresh();
-    });
+    const debouncedRefresh = () => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(refresh, 300);
+    };
+
+    const unsubFills = dataFeed.subscribeToUserFills(debouncedRefresh);
+    const unsubPositions = dataFeed.subscribeToPositionChanges(debouncedRefresh);
     return () => {
+      clearTimeout(debounceRef.current);
       unsubFills();
       unsubPositions();
     };
