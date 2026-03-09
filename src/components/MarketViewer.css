@@ -226,8 +226,14 @@
   transition: background var(--transition-fast);
 }
 
-.mv-search-item:hover {
+.mv-search-item:hover,
+.mv-search-item--active {
   background: var(--bg-hover);
+}
+
+.mv-search-item--active {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
 }
 
 .mv-search-ticker {
