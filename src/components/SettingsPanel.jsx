@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { X, Wifi, Palette, BarChart3, Link2, Layout, Bell, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import {
   LINK_COLORS,
+  resetLinkState,
 } from '../services/linkBus'
 import {
   get as getSettings,
@@ -291,6 +292,7 @@ function SettingsPanel({ isOpen, onClose, connectionStatus = 'mock' }) {
 
   const handleReset = useCallback(() => {
     resetSettings()
+    resetLinkState()
   }, [])
 
   if (!isOpen) return null
