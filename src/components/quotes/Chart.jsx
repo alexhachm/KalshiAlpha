@@ -6,6 +6,8 @@ import {
   unsubscribeFromLink,
   emitLinkedMarket,
   getColorGroup,
+  subscribeToGroupChanges,
+  unsubscribeToGroupChanges,
 } from '../../services/linkBus'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import ChartSettings from './ChartSettings'
@@ -372,6 +374,18 @@ function Chart({ windowId }) {
     window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowId, ticker } }))
   }, [windowId, ticker])
 
+  // Track live color group — reacts to runtime relink/unlink
+  const [colorGroup, setColorGroup] = useState(() => getColorGroup(windowId))
+
+  useEffect(() => {
+    setColorGroup(getColorGroup(windowId))
+    const handleGroupChange = ({ windowId: changedId, colorId }) => {
+      if (changedId === windowId) setColorGroup(colorId)
+    }
+    subscribeToGroupChanges(handleGroupChange)
+    return () => unsubscribeToGroupChanges(handleGroupChange)
+  }, [windowId])
+
   // Color link bus integration
   const handleLinkEvent = useCallback(
     ({ ticker: linkedTicker }) => {
@@ -383,11 +397,10 @@ function Chart({ windowId }) {
   )
 
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
-    if (!colorId) return
-    subscribeToLink(colorId, handleLinkEvent, windowId)
-    return () => unsubscribeFromLink(colorId, handleLinkEvent)
-  }, [windowId, handleLinkEvent])
+    if (!colorGroup) return
+    subscribeToLink(colorGroup, handleLinkEvent, windowId)
+    return () => unsubscribeFromLink(colorGroup, handleLinkEvent)
+  }, [colorGroup, windowId, handleLinkEvent])
 
   const handleTickerChange = useCallback((e) => {
     const newTicker = e.target.value
