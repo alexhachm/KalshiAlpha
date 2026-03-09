@@ -247,7 +247,7 @@ function TimeSale({ windowId }) {
     <div ref={containerRef} className="ts-component">
       <div className="ts-toolbar">
         <select className="ts-ticker-select" value={ticker} onChange={handleTickerChange}>
-          {TICKERS.map((t) => (
+          {(TICKERS.includes(ticker) ? TICKERS : [ticker, ...TICKERS]).map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
