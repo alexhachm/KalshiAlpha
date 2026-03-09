@@ -180,3 +180,119 @@
   outline: 1px solid var(--border-focus);
   outline-offset: 1px;
 }
+
+/* Signal filter bar */
+.nc-signal-bar {
+  display: flex;
+  gap: 2px;
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nc-signal-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  padding: 2px var(--spacing-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.nc-signal-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.nc-signal-btn--active {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+  background: var(--bg-tertiary);
+}
+
+.nc-signal-btn--bullish.nc-signal-btn--active {
+  color: var(--accent-win);
+  border-color: var(--accent-win);
+}
+
+.nc-signal-btn--bearish.nc-signal-btn--active {
+  color: var(--accent-loss);
+  border-color: var(--accent-loss);
+}
+
+.nc-signal-btn--breaking.nc-signal-btn--active {
+  color: var(--accent-warning);
+  border-color: var(--accent-warning);
+}
+
+.nc-signal-btn--volume.nc-signal-btn--active {
+  color: var(--accent-info);
+  border-color: var(--accent-info);
+}
+
+.nc-signal-count {
+  font-size: var(--font-size-xs);
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  padding: 0 3px;
+  min-width: 14px;
+  text-align: center;
+}
+
+/* Signal tags on news items */
+.nc-signal-tag {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nc-signal-tag--bullish {
+  color: var(--accent-win);
+  background: color-mix(in srgb, var(--accent-win) 12%, transparent);
+}
+
+.nc-signal-tag--bearish {
+  color: var(--accent-loss);
+  background: color-mix(in srgb, var(--accent-loss) 12%, transparent);
+}
+
+.nc-signal-tag--neutral {
+  color: var(--accent-neutral);
+  background: color-mix(in srgb, var(--accent-neutral) 12%, transparent);
+}
+
+/* Urgency badge */
+.nc-urgency-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--accent-warning);
+  background: color-mix(in srgb, var(--accent-warning) 15%, transparent);
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Volume badge */
+.nc-volume-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--accent-info);
+  background: color-mix(in srgb, var(--accent-info) 12%, transparent);
+  padding: 0 3px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Breaking news highlight */
+.nc-item--breaking {
+  border-left: 2px solid var(--accent-warning);
+}

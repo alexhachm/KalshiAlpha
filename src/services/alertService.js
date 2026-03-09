@@ -11,6 +11,7 @@ import * as settingsStore from './settingsStore';
 const LS_RULES_KEY = 'kalshi_alert_rules';
 const LS_HISTORY_KEY = 'kalshi_alert_history';
 const MAX_HISTORY = 200;
+const DEFAULT_TTL_MINUTES = 60;
 const VALID_RULE_TYPES = ['price_crosses', 'pct_change', 'volume_spike'];
 const VALID_PRICE_DIRECTIONS = ['above', 'below', 'either'];
 
@@ -246,8 +247,19 @@ function handleWorkerMessage(e) {
   const { type, alerts } = e.data;
   if (type === 'alerts' && Array.isArray(alerts)) {
     const history = _loadHistory();
+    const rules = _loadRules();
     for (const alert of alerts) {
-      const entry = { ...alert, id: crypto.randomUUID() };
+      // Skip alerts from expired rules
+      const sourceRule = rules.find((r) => r.id === alert.ruleId);
+      if (sourceRule && isRuleExpired(sourceRule)) continue;
+
+      const entry = {
+        ...alert,
+        id: crypto.randomUUID(),
+        firedAt: new Date().toISOString(),
+        thesis: sourceRule?.thesis || '',
+        invalidation: sourceRule?.invalidation || '',
+      };
       history.unshift(entry);
       dispatchNotification(entry);
       _notifyAlertListeners(entry);
@@ -326,14 +338,17 @@ function getRules() {
 
 /**
  * Add a new alert rule.
- * @param {Object} rule - { type, ticker, params, label? }
+ * @param {Object} rule - { type, ticker, params, label?, ttlMinutes?, thesis?, invalidation? }
  *   type: 'price_crosses' | 'pct_change' | 'volume_spike'
  *   ticker: market ticker string
  *   params: type-specific params (see alertEngine.worker.js)
  *   label: optional human-readable label
+ *   ttlMinutes: optional time-to-live in minutes (default 60); 0 = no expiry
+ *   thesis: optional trade thesis / rationale for setting this alert
+ *   invalidation: optional condition that would invalidate the alert thesis
  * @returns {Object} the created rule
  */
-function addRule({ type, ticker, params, label }) {
+function addRule({ type, ticker, params, label, ttlMinutes, thesis, invalidation }) {
   if (!VALID_RULE_TYPES.includes(type)) {
     throw new Error(`Invalid alert type: "${type}". Must be one of: ${VALID_RULE_TYPES.join(', ')}`);
   }
@@ -343,6 +358,8 @@ function addRule({ type, ticker, params, label }) {
   }
   validateRuleParams(type, params);
 
+  const ttl = ttlMinutes != null ? Number(ttlMinutes) : DEFAULT_TTL_MINUTES;
+
   const rules = _loadRules();
   const rule = {
     id: crypto.randomUUID(),
@@ -351,7 +368,11 @@ function addRule({ type, ticker, params, label }) {
     params,
     label: label || `${type} on ${ticker}`,
     enabled: true,
+    ttlMinutes: ttl,
+    thesis: thesis || '',
+    invalidation: invalidation || '',
     createdAt: new Date().toISOString(),
+    expiresAt: ttl > 0 ? new Date(Date.now() + ttl * 60000).toISOString() : null,
   };
   rules.push(rule);
   _persistRules();
@@ -441,6 +462,68 @@ function destroy() {
   terminateWorker();
 }
 
+// --- Public API: Staleness & TTL ---
+
+/** Check if a rule has expired based on its TTL */
+function isRuleExpired(rule) {
+  if (!rule.expiresAt) return false;
+  return new Date(rule.expiresAt).getTime() < Date.now();
+}
+
+/** Get all rules, each annotated with an `expired` boolean */
+function getRulesWithStatus() {
+  return _loadRules().map((rule) => ({
+    ...rule,
+    expired: isRuleExpired(rule),
+  }));
+}
+
+/** Get only active (non-expired, enabled) rules */
+function getActiveRules() {
+  return _loadRules().filter((r) => r.enabled && !isRuleExpired(r));
+}
+
+/** Get expired rules that haven't been cleaned up */
+function getExpiredRules() {
+  return _loadRules().filter((r) => isRuleExpired(r));
+}
+
+/**
+ * Remove all expired rules.
+ * @returns {number} count of removed rules
+ */
+function purgeExpiredRules() {
+  const rules = _loadRules();
+  const before = rules.length;
+  const kept = rules.filter((r) => !isRuleExpired(r));
+  if (kept.length < before) {
+    _rules = kept;
+    _persistRules();
+    syncTickerSubscriptions();
+  }
+  return before - kept.length;
+}
+
+/** Check if a history entry is stale (older than `minutes`; default 30) */
+function isAlertStale(entry, minutes = 30) {
+  if (!entry.firedAt) return false;
+  const age = Date.now() - new Date(entry.firedAt).getTime();
+  return age > minutes * 60000;
+}
+
+/** Get alert history with staleness annotation */
+function getHistoryWithStaleness(staleMinutes = 30) {
+  return _loadHistory().map((entry) => ({
+    ...entry,
+    stale: isAlertStale(entry, staleMinutes),
+  }));
+}
+
+/** Get only fresh (non-stale) alerts from history */
+function getFreshAlerts(staleMinutes = 30) {
+  return _loadHistory().filter((entry) => !isAlertStale(entry, staleMinutes));
+}
+
 // --- Exports ---
 
 export {
@@ -452,9 +535,19 @@ export {
   updateRule,
   removeRule,
   toggleRule,
+  // Rules — status & TTL
+  getRulesWithStatus,
+  getActiveRules,
+  getExpiredRules,
+  purgeExpiredRules,
+  isRuleExpired,
   // History
   getHistory,
   clearHistory,
+  // History — staleness
+  getHistoryWithStaleness,
+  getFreshAlerts,
+  isAlertStale,
   // Subscriptions
   onAlert,
   onRulesChange,
