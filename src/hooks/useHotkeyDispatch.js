@@ -40,6 +40,40 @@ const FOCUS_TYPE_MAP = {
   priceladder: 'price-ladder',
 }
 
+/**
+ * Resolve the active ticker for trading hotkeys.
+ * Checks live component registry first (handles in-window ticker changes),
+ * then falls back to Shell window metadata.
+ * Returns null and logs a warning if no ticker can be resolved.
+ */
+function resolveActiveTicker(getFocusedWindow) {
+  const focused = getFocusedWindow()
+  if (!focused) {
+    console.warn('[HotkeyDispatch] No focused window — cannot resolve ticker')
+    return null
+  }
+
+  // Tabbed windows: check active tab's ID in the live registry
+  const tabId = focused.tabs?.[focused.activeTabIndex]?.id
+  if (tabId) {
+    const reg = tickerRegistry.get(String(tabId))
+    if (reg) return reg
+  }
+
+  // Non-tabbed windows: check window ID in registry
+  const reg = tickerRegistry.get(String(focused.id))
+  if (reg) return reg
+
+  // Fallback: Shell window state (initial ticker from OPEN_WINDOW / UPDATE_WINDOW_TICKER)
+  if (focused.ticker) return focused.ticker
+
+  console.warn(
+    '[HotkeyDispatch] Window %s has no ticker in registry or Shell metadata',
+    focused.id
+  )
+  return null
+}
+
 function resolvePrice(priceParam, ticker) {
   if (!priceParam) return null
   if (priceParam.type === 'fixed') return priceParam.value
@@ -95,31 +129,15 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
   getFocusedWindowRef.current = getFocusedWindow
 
   useEffect(() => {
-    function getActiveTicker() {
-      const focused = getFocusedWindowRef.current()
-      if (!focused) return null
-
-      // For tabbed windows, check active tab's ID in the live registry
-      const tabId = focused.tabs?.[focused.activeTabIndex]?.id
-      if (tabId) {
-        const reg = tickerRegistry.get(String(tabId))
-        if (reg) return reg
-      }
-
-      // Check window ID in registry (non-tabbed windows)
-      const reg = tickerRegistry.get(String(focused.id))
-      if (reg) return reg
-
-      // Fallback: Shell window state (initial ticker from OPEN_WINDOW)
-      return focused.ticker || null
-    }
-
     async function executeAction(parsed) {
       const { action, params } = parsed
 
       if (action === 'BUY' || action === 'SELL') {
-        const ticker = getActiveTicker()
-        if (!ticker) return
+        const ticker = resolveActiveTicker(() => getFocusedWindowRef.current())
+        if (!ticker) {
+          console.warn('[HotkeyDispatch] %s skipped — no active ticker', action)
+          return
+        }
 
         const price = resolvePrice(params.price, ticker)
         const size = await resolveShares(params.shares, ticker)
@@ -144,8 +162,11 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       }
 
       if (action === 'CANCEL_ALL') {
-        const ticker = getActiveTicker()
-        if (!ticker) return
+        const ticker = resolveActiveTicker(() => getFocusedWindowRef.current())
+        if (!ticker) {
+          console.warn('[HotkeyDispatch] %s skipped — no active ticker', action)
+          return
+        }
         try {
           const orders = await dataFeed.getOpenOrders()
           const orderIds = orders
@@ -163,8 +184,11 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       }
 
       if (action === 'CANCEL_BUY' || action === 'CANCEL_SELL') {
-        const ticker = getActiveTicker()
-        if (!ticker) return
+        const ticker = resolveActiveTicker(() => getFocusedWindowRef.current())
+        if (!ticker) {
+          console.warn('[HotkeyDispatch] %s skipped — no active ticker', action)
+          return
+        }
         const targetAction = action === 'CANCEL_BUY' ? 'buy' : 'sell'
         try {
           const orders = await dataFeed.getOpenOrders()
