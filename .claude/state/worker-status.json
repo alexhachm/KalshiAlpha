@@ -43,9 +43,9 @@
   },
   "worker-6": {
     "status": "busy",
-    "last_heartbeat": "2026-03-08T23:51:11Z",
-    "domain": "settings-color-coordination",
-    "current_task": "Make settingsStore/linkBus color-linking contract authoritative"
+    "last_heartbeat": "2026-03-09T00:32:12Z",
+    "domain": "shell-window-ui",
+    "current_task": "Make Window chrome controls keyboard-operable"
   },
   "worker-8": {
     "status": "busy",
