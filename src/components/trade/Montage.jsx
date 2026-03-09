@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTickerData, useOrderEntry, useMarketSearch } from '../../hooks/useKalshiData'
+import useCombobox from '../../hooks/useCombobox'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -170,21 +171,29 @@ function Montage({ windowId }) {
   }, [])
 
   // Search handlers
-  const handleSearchChange = useCallback((e) => {
-    const q = e.target.value
-    setSearchQuery(q)
-    clearTimeout(searchTimerRef.current)
-    if (q.trim().length >= 2) {
-      searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
-    }
-  }, [search])
-
   const handleSearchSelect = useCallback((t) => {
     setTicker(t)
     setSearchQuery('')
     setLimitPrice('')
+    combobox.close()
     emitLinkedMarket(windowId, t)
   }, [windowId])
+
+  const combobox = useCombobox({
+    id: `mt-search-${windowId}`,
+    items: searchResults,
+    onSelect: handleSearchSelect,
+  })
+
+  const handleSearchChange = useCallback((e) => {
+    const q = e.target.value
+    setSearchQuery(q)
+    combobox.open()
+    clearTimeout(searchTimerRef.current)
+    if (q.trim().length >= 2) {
+      searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
+    }
+  }, [search, combobox.open])
 
   // Set limit price when clicking a bid/ask level
   const handlePriceClick = useCallback((price) => {
@@ -308,22 +317,31 @@ function Montage({ windowId }) {
       {/* Ticker search bar */}
       <div className="mt-ticker-bar">
         <span className="mt-current-ticker">{ticker}</span>
-        <div className="mt-search-wrapper">
+        <div className="mt-search-wrapper" ref={combobox.wrapperRef}>
           <input
+            ref={combobox.inputRef}
             className="mt-search-input"
             type="text"
             placeholder="Search markets..."
             value={searchQuery}
             onChange={handleSearchChange}
+            onKeyDown={combobox.handleKeyDown}
+            onFocus={() => searchQuery.trim().length >= 2 && combobox.open()}
+            {...combobox.getInputProps()}
           />
-          {searchQuery.trim().length >= 2 && (
-            <div className="mt-search-results">
+          {combobox.isOpen && searchQuery.trim().length >= 2 && (
+            <div className="mt-search-results" {...combobox.getListboxProps()}>
               {searchLoading && <div className="mt-search-item mt-search-loading">Searching...</div>}
               {!searchLoading && searchResults.length === 0 && (
                 <div className="mt-search-item mt-search-empty">No results</div>
               )}
-              {searchResults.map((m) => (
-                <div key={m.ticker} className="mt-search-item" onClick={() => handleSearchSelect(m.ticker)}>
+              {searchResults.map((m, i) => (
+                <div
+                  key={m.ticker}
+                  className={`mt-search-item${i === combobox.activeIndex ? ' mt-search-item--active' : ''}`}
+                  {...combobox.getOptionProps(i)}
+                  onClick={() => handleSearchSelect(m.ticker)}
+                >
                   <span className="mt-search-ticker">{m.ticker}</span>
                   {m.title && <span className="mt-search-title">{m.title}</span>}
                 </div>
