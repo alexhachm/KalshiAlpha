@@ -38,17 +38,66 @@ const HEADLINES = [
   'Smart money divergence flagged by scanner',
 ]
 
+// Signal classification keywords for mock sentiment tagging
+const BULLISH_KEYWORDS = [
+  'strong buy', 'bullish signal', 'breakout', 'surges', 'pile into',
+  'conviction rating', 'momentum', 'arbitrage opportunity',
+]
+const BEARISH_KEYWORDS = [
+  'risk-off', 'dries up', 'widen spreads', 'uncertainty', 'hedging',
+  'reversion', 'divergence flagged',
+]
+const BREAKING_KEYWORDS = [
+  'spike', 'detected', 'flash', 'breakout', 'block trade',
+]
+const HIGH_VOLUME_KEYWORDS = [
+  'volume', 'surges', 'open interest', 'institutional flow', 'block trade',
+  'pile into', 'retail flow', 'smart money',
+]
+
+function classifySignal(headline) {
+  const lower = headline.toLowerCase()
+  if (BULLISH_KEYWORDS.some((kw) => lower.includes(kw))) return 'bullish'
+  if (BEARISH_KEYWORDS.some((kw) => lower.includes(kw))) return 'bearish'
+  return 'neutral'
+}
+
+function classifyUrgency(headline) {
+  const lower = headline.toLowerCase()
+  if (BREAKING_KEYWORDS.some((kw) => lower.includes(kw))) return 'breaking'
+  return 'routine'
+}
+
+function classifyVolume(headline) {
+  const lower = headline.toLowerCase()
+  return HIGH_VOLUME_KEYWORDS.some((kw) => lower.includes(kw))
+}
+
+const SIGNAL_LABELS = { bullish: 'Bull', bearish: 'Bear', neutral: 'Neut' }
+const FILTER_OPTIONS = ['all', 'bullish', 'bearish', 'breaking', 'volume']
+const FILTER_LABELS = {
+  all: 'All',
+  bullish: 'Bullish',
+  bearish: 'Bearish',
+  breaking: 'Breaking',
+  volume: 'Volume',
+}
+
 function generateNewsItems() {
   const now = Date.now()
   const seededItems = TICKERS.map((ticker, i) => {
     const timeOffset = Math.floor(Math.random() * 3600000) // up to 1 hour ago
     const ts = new Date(now - timeOffset)
+    const headline = HEADLINES[i % HEADLINES.length]
     return {
       id: `news-${i}-${now}`,
       time: ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: ts.getTime(),
       ticker,
-      headline: HEADLINES[i % HEADLINES.length],
+      headline,
+      signal: classifySignal(headline),
+      urgency: classifyUrgency(headline),
+      highVolume: classifyVolume(headline),
     }
   })
 
@@ -56,12 +105,16 @@ function generateNewsItems() {
     const idx = i + TICKERS.length
     const timeOffset = Math.floor(Math.random() * 3600000) // up to 1 hour ago
     const ts = new Date(now - timeOffset)
+    const headline = HEADLINES[idx % HEADLINES.length]
     return {
       id: `news-${idx}-${now}`,
       time: ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: ts.getTime(),
       ticker: TICKERS[Math.floor(Math.random() * TICKERS.length)],
-      headline: HEADLINES[idx % HEADLINES.length],
+      headline,
+      signal: classifySignal(headline),
+      urgency: classifyUrgency(headline),
+      highVolume: classifyVolume(headline),
     }
   })
 
@@ -70,6 +123,7 @@ function generateNewsItems() {
 
 function NewsChat({ windowId }) {
   const [filterTicker, setFilterTicker] = useState('')
+  const [signalFilter, setSignalFilter] = useState('all')
   const [items, setItems] = useState(() => generateNewsItems())
 
   // Search state for ticker filter
@@ -137,37 +191,50 @@ function NewsChat({ windowId }) {
     return { supportedResults: supported, unsupportedResults: unsupported }
   }, [searchResults])
 
-  // Memoize filtered items
-  const filteredItems = useMemo(
-    () => filterTicker
-      ? items.filter((item) => item.ticker === filterTicker)
-      : items,
-    [items, filterTicker]
-  )
+  // Memoize filtered items — ticker filter + signal/urgency filter
+  const filteredItems = useMemo(() => {
+    let result = items
+    if (filterTicker) {
+      result = result.filter((item) => item.ticker === filterTicker)
+    }
+    if (signalFilter !== 'all') {
+      switch (signalFilter) {
+        case 'bullish':
+          result = result.filter((item) => item.signal === 'bullish')
+          break
+        case 'bearish':
+          result = result.filter((item) => item.signal === 'bearish')
+          break
+        case 'breaking':
+          result = result.filter((item) => item.urgency === 'breaking')
+          break
+        case 'volume':
+          result = result.filter((item) => item.highVolume)
+          break
+        default:
+          break
+      }
+    }
+    return result
+  }, [items, filterTicker, signalFilter])
+
+  // Signal filter counts for badges
+  const signalCounts = useMemo(() => {
+    const base = filterTicker ? items.filter((item) => item.ticker === filterTicker) : items
+    return {
+      all: base.length,
+      bullish: base.filter((i) => i.signal === 'bullish').length,
+      bearish: base.filter((i) => i.signal === 'bearish').length,
+      breaking: base.filter((i) => i.urgency === 'breaking').length,
+      volume: base.filter((i) => i.highVolume).length,
+    }
+  }, [items, filterTicker])
 
   // STUB: Real news feed integration — connect to live news APIs
-  // SOURCE: "Financial news APIs (Benzinga, NewsAPI, Alpha Vantage)"
   // IMPLEMENT WHEN: API keys configured and news service available
-  // STEPS: 1. Add news provider selection in settings (Benzinga, NewsAPI, etc.)
-  //        2. Map Kalshi tickers to relevant news search terms
-  //        3. Poll API on configurable interval (30s-5m)
-  //        4. Deduplicate and merge with existing items, sort by timestamp
 
-  // STUB: Sentiment analysis — tag news items with bullish/bearish sentiment
-  // SOURCE: "NLP sentiment analysis for financial news", FinBERT model
-  // IMPLEMENT WHEN: AI/NLP service available (local or API)
-  // STEPS: 1. Run headline through sentiment classifier
-  //        2. Tag each item with sentiment score (-1 to +1)
-  //        3. Display colored indicator (green=bullish, red=bearish, gray=neutral)
-  //        4. Add aggregate sentiment bar for filtered ticker
-
-  // STUB: News alert notifications — sound/visual alert on breaking news
-  // SOURCE: "Trading terminal alert systems", Bloomberg Terminal alerts
-  // IMPLEMENT WHEN: Web Notifications API integrated
-  // STEPS: 1. Add alert keyword configuration in settings
-  //        2. Check incoming headlines against keyword patterns
-  //        3. Trigger browser notification + optional sound
-  //        4. Highlight matching items in feed with alert badge
+  // Signal tagging is now implemented via keyword classification.
+  // STUB: Upgrade to NLP/FinBERT sentiment analysis when AI service available.
 
   return (
     <div className="nc-container">
@@ -210,13 +277,43 @@ function NewsChat({ windowId }) {
           )}
         </div>
       </div>
+      <div className="nc-signal-bar">
+        {FILTER_OPTIONS.map((opt) => (
+          <button
+            key={opt}
+            className={`nc-signal-btn nc-signal-btn--${opt}${signalFilter === opt ? ' nc-signal-btn--active' : ''}`}
+            onClick={() => setSignalFilter(opt)}
+          >
+            {FILTER_LABELS[opt]}
+            {signalCounts[opt] > 0 && (
+              <span className="nc-signal-count">{signalCounts[opt]}</span>
+            )}
+          </button>
+        ))}
+      </div>
       <div className="nc-feed">
         {filteredItems.length === 0 ? (
-          <div className="nc-empty">No news for {filterTicker}</div>
+          <div className="nc-empty">
+            {filterTicker
+              ? `No ${signalFilter !== 'all' ? FILTER_LABELS[signalFilter].toLowerCase() + ' ' : ''}news for ${filterTicker}`
+              : `No ${FILTER_LABELS[signalFilter].toLowerCase()} news`}
+          </div>
         ) : (
           filteredItems.map((item) => (
-            <div key={item.id} className="nc-item">
+            <div
+              key={item.id}
+              className={`nc-item${item.urgency === 'breaking' ? ' nc-item--breaking' : ''}`}
+            >
               <span className="nc-time">{item.time}</span>
+              <span className={`nc-signal-tag nc-signal-tag--${item.signal}`}>
+                {SIGNAL_LABELS[item.signal]}
+              </span>
+              {item.urgency === 'breaking' && (
+                <span className="nc-urgency-badge">BRK</span>
+              )}
+              {item.highVolume && (
+                <span className="nc-volume-badge">VOL</span>
+              )}
               <span className="nc-ticker-badge">{item.ticker}</span>
               <span className="nc-headline">{item.headline}</span>
             </div>
