@@ -95,13 +95,44 @@ function resolvePrice(priceParam, ticker) {
   return null
 }
 
-async function resolveShares(sharesParam, ticker) {
+/**
+ * Infer the SELL side from open positions when Side is omitted.
+ * Returns 'YES' or 'NO' if exactly one side is open,
+ * 'AMBIGUOUS' if both sides are open, or null if no position exists.
+ */
+async function resolveSellSide(ticker) {
+  const positions = await dataFeed.getOpenPositions()
+  const tickerPositions = positions.filter(
+    (p) => p.ticker === ticker && (p.position > 0 || p.contracts > 0)
+  )
+
+  if (tickerPositions.length === 0) return null
+
+  if (tickerPositions.length === 1) {
+    return tickerPositions[0].side?.toUpperCase() || null
+  }
+
+  // Multiple entries — check which sides actually have quantity
+  const yesPos = tickerPositions.find((p) => p.side === 'yes')
+  const noPos = tickerPositions.find((p) => p.side === 'no')
+  const yesQty = yesPos?.position || yesPos?.contracts || 0
+  const noQty = noPos?.position || noPos?.contracts || 0
+
+  if (yesQty > 0 && noQty > 0) return 'AMBIGUOUS'
+  if (yesQty > 0) return 'YES'
+  if (noQty > 0) return 'NO'
+  return null
+}
+
+async function resolveShares(sharesParam, ticker, side) {
   if (!sharesParam) return null
   if (sharesParam.type === 'fixed') return sharesParam.value
 
   if (sharesParam.type === 'position' || sharesParam.type === 'position_fraction') {
     const positions = await dataFeed.getOpenPositions()
-    const pos = positions.find((p) => p.ticker === ticker)
+    const pos = positions.find(
+      (p) => p.ticker === ticker && (!side || p.side === side)
+    )
     const size = pos?.position || 0
     return sharesParam.type === 'position'
       ? size
@@ -139,11 +170,31 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
           return
         }
 
-        const price = resolvePrice(params.price, ticker)
-        const size = await resolveShares(params.shares, ticker)
-        if (size == null || size <= 0) return
+        let side
+        if (params.side) {
+          side = params.side.toLowerCase()
+        } else if (action === 'BUY') {
+          side = 'yes'
+        } else {
+          // SELL with no explicit side: infer from open position
+          const inferred = await resolveSellSide(ticker)
+          if (inferred === 'AMBIGUOUS') {
+            console.warn(
+              '[HotkeyDispatch] SELL skipped — both YES and NO positions open for %s; specify Side=YES or Side=NO',
+              ticker
+            )
+            return
+          }
+          if (!inferred) {
+            console.warn('[HotkeyDispatch] SELL skipped — no open position for %s', ticker)
+            return
+          }
+          side = inferred.toLowerCase()
+        }
 
-        const side = (params.side || (action === 'BUY' ? 'YES' : 'NO')).toLowerCase()
+        const price = resolvePrice(params.price, ticker)
+        const size = await resolveShares(params.shares, ticker, side)
+        if (size == null || size <= 0) return
         try {
           const normalizedOrder = dataFeed.normalizeCreateOrderPayload({
             ticker,

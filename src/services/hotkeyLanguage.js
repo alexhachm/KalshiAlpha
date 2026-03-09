@@ -21,10 +21,12 @@ const COMMAND_REFERENCE = {
     {
       name: 'Sell',
       syntax: 'Sell=Route:<route> Price=<expr> Share=<expr> TIF=<tif> [Side=<side>]',
-      description: 'Place a sell order. Can sell position or go short (No side).',
+      description:
+        'Place a sell order. When Side is omitted, automatically closes the open position leg for the active ticker. If both YES and NO positions are open, Side must be specified explicitly.',
       examples: [
         'Sell=Route:MARKET Share=Pos TIF=IOC',
         'Sell=Route:LIMIT Price=Bid-0.02 Share=Pos*0.5 TIF=DAY',
+        'Sell=Route:MARKET Share=Pos TIF=IOC Side=YES',
       ],
       params: ['Route', 'Price', 'Share', 'TIF', 'Side'],
     },
@@ -69,7 +71,7 @@ const COMMAND_REFERENCE = {
     { name: 'Ask', description: 'Current best ask price' },
     { name: 'Last', description: 'Last traded price' },
     { name: 'Mid', description: 'Midpoint between bid and ask' },
-    { name: 'Pos', description: 'Current position size (contracts held)' },
+    { name: 'Pos', description: 'Current position size for the resolved side (contracts held)' },
     { name: 'BP', description: 'Buying power — use with multiplier (e.g. BP*0.1)' },
     { name: 'MaxPos', description: 'Maximum position allowed by risk settings' },
     { name: 'Price', description: 'Base price keyword — use with offset (e.g. Price+0.05)' },
