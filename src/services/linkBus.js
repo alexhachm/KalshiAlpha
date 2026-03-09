@@ -69,13 +69,17 @@ function saveLinkState() {
 // --- Color Group Management ---
 
 function setColorGroup(windowId, colorId) {
+  const previous = windowGroups[windowId] || null;
   windowGroups[windowId] = colorId;
   saveLinkState();
+  emitGroupChange(windowId, colorId, previous);
 }
 
 function removeFromGroup(windowId) {
+  const previous = windowGroups[windowId] || null;
   delete windowGroups[windowId];
   saveLinkState();
+  emitGroupChange(windowId, null, previous);
 }
 
 function getColorGroup(windowId) {
@@ -119,6 +123,26 @@ function emitLinkedMarket(windowId, ticker) {
     } catch {
       // Don't let one bad subscriber break others
     }
+  });
+}
+
+// --- Group-change signaling ---
+// Flat array of callbacks — notified whenever a window's color group changes
+const groupChangeSubscribers = [];
+
+function subscribeToGroupChanges(callback) {
+  groupChangeSubscribers.push(callback);
+}
+
+function unsubscribeToGroupChanges(callback) {
+  const idx = groupChangeSubscribers.indexOf(callback);
+  if (idx !== -1) groupChangeSubscribers.splice(idx, 1);
+}
+
+function emitGroupChange(windowId, colorId, previousColorId) {
+  const detail = { windowId, colorId, previousColorId };
+  groupChangeSubscribers.forEach((cb) => {
+    try { cb(detail); } catch { /* isolate subscriber errors */ }
   });
 }
 
@@ -178,6 +202,9 @@ export {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
+  subscribeToGroupChanges,
+  unsubscribeToGroupChanges,
+  emitGroupChange,
   subscribeToDrag,
   unsubscribeDrag,
   emitDragDelta,
