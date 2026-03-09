@@ -7,6 +7,7 @@ import {
   getColorGroup,
 } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
+import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import PriceLadderSettings from './PriceLadderSettings'
 import './PriceLadder.css'
 
@@ -86,6 +87,12 @@ function PriceLadder({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
   const { data } = useTickerData(ticker)
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
+
+  // Report current ticker to hotkey dispatch registry
+  useEffect(() => {
+    registerWindowTicker(windowId, ticker)
+    return () => unregisterWindowTicker(windowId)
+  }, [windowId, ticker])
   const [showSettings, setShowSettings] = useState(false)
   const [orderSize, setOrderSize] = useState(settings.defaultSize)
   const [workingOrders, setWorkingOrders] = useState([])

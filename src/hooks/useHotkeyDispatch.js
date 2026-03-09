@@ -7,6 +7,25 @@ import { parseHotkeyScript } from '../services/hotkeyLanguage'
 import * as dataFeed from '../services/dataFeed'
 import { emitLinkedMarket } from '../services/linkBus'
 
+// Live ticker registry — components call registerWindowTicker so trading hotkeys
+// always resolve the current in-component ticker, not stale Shell metadata.
+const tickerRegistry = new Map()
+
+function registerWindowTicker(windowId, ticker) {
+  if (windowId == null) return
+  const key = String(windowId)
+  if (ticker) {
+    tickerRegistry.set(key, ticker)
+  } else {
+    tickerRegistry.delete(key)
+  }
+}
+
+function unregisterWindowTicker(windowId) {
+  if (windowId == null) return
+  tickerRegistry.delete(String(windowId))
+}
+
 // Map focus-target names (from hotkeyLanguage) to window type strings (from Shell)
 const FOCUS_TYPE_MAP = {
   montage: 'montage',
@@ -78,7 +97,21 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
   useEffect(() => {
     function getActiveTicker() {
       const focused = getFocusedWindowRef.current()
-      return focused?.ticker || null
+      if (!focused) return null
+
+      // For tabbed windows, check active tab's ID in the live registry
+      const tabId = focused.tabs?.[focused.activeTabIndex]?.id
+      if (tabId) {
+        const reg = tickerRegistry.get(String(tabId))
+        if (reg) return reg
+      }
+
+      // Check window ID in registry (non-tabbed windows)
+      const reg = tickerRegistry.get(String(focused.id))
+      if (reg) return reg
+
+      // Fallback: Shell window state (initial ticker from OPEN_WINDOW)
+      return focused.ticker || null
     }
 
     async function executeAction(parsed) {
@@ -204,4 +237,4 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
   }, [focusWindow])
 }
 
-export { useHotkeyDispatch }
+export { useHotkeyDispatch, registerWindowTicker, unregisterWindowTicker }

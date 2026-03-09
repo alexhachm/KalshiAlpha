@@ -6,6 +6,7 @@ import {
   emitLinkedMarket,
   getColorGroup,
 } from '../services/linkBus'
+import { registerWindowTicker, unregisterWindowTicker } from '../hooks/useHotkeyDispatch'
 import './MarketViewer.css'
 
 const TICKERS = [
@@ -15,6 +16,13 @@ const TICKERS = [
 
 function MarketViewer({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
+
+  // Report current ticker to hotkey dispatch registry
+  useEffect(() => {
+    registerWindowTicker(windowId, ticker)
+    return () => unregisterWindowTicker(windowId)
+  }, [windowId, ticker])
+
   const [yesFlash, setYesFlash] = useState(null)
   const [noFlash, setNoFlash] = useState(null)
   const flashTimerRef = useRef({})

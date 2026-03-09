@@ -6,6 +6,7 @@ import {
   emitLinkedMarket,
   getColorGroup,
 } from '../../services/linkBus'
+import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
 
@@ -44,6 +45,12 @@ function Montage({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Report current ticker to hotkey dispatch registry
+  useEffect(() => {
+    registerWindowTicker(windowId, ticker)
+    return () => unregisterWindowTicker(windowId)
+  }, [windowId, ticker])
 
   // Data hooks
   const { data, error: tickerError } = useTickerData(ticker)
