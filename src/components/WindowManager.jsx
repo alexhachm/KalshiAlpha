@@ -69,9 +69,10 @@ function WindowManager({
       {Object.values(windows).map((win) => {
         const entry = getToolByType(win.type)
         const Component = COMPONENTS[win.type] || Placeholder
+        const activeTab = win.tabs?.[win.activeTabIndex]
         const componentProps = {
           title: win.title || entry?.label || win.type,
-          windowId: win.tabs?.[win.activeTabIndex]?.id ?? win.id,
+          windowId: activeTab?.settingsId ?? win.settingsId ?? win.id,
           hostWindowId: win.id,
           type: win.type,
         }

@@ -36,6 +36,7 @@ function windowReducer(state, action) {
 
       const win = {
         id,
+        settingsId: id,
         type: action.payload.type,
         title: action.payload.title,
         initialX: pos.x,
@@ -79,10 +80,10 @@ function windowReducer(state, action) {
 
       // Build the tabs array for the merged window
       const targetTabs = target.tabs || [
-        { id: target.id, type: target.type, title: target.title },
+        { id: target.id, settingsId: target.settingsId ?? target.id, type: target.type, title: target.title },
       ]
       const sourceTabs = source.tabs || [
-        { id: source.id, type: source.type, title: source.title },
+        { id: source.id, settingsId: source.settingsId ?? source.id, type: source.type, title: source.title },
       ]
       const mergedTabs = [...targetTabs, ...sourceTabs]
 
@@ -143,6 +144,7 @@ function windowReducer(state, action) {
               ...win,
               tabs: undefined,
               activeTabIndex: undefined,
+              settingsId: remainingTabs[0].settingsId ?? remainingTabs[0].id,
               type: remainingTabs[0].type,
               title: remainingTabs[0].title,
             }
@@ -163,6 +165,7 @@ function windowReducer(state, action) {
           [action.payload.windowId]: updatedWin,
           [newId]: {
             id: newId,
+            settingsId: tab.settingsId ?? tab.id,
             type: tab.type,
             title: tab.title,
             initialX: win.initialX + 40,
@@ -207,7 +210,7 @@ function windowReducer(state, action) {
       const { id, ticker } = action.payload
       if (!id || !ticker) return state
 
-      // Direct window match
+      // Direct window key match
       if (state.windows[id]) {
         return {
           ...state,
@@ -218,9 +221,18 @@ function windowReducer(state, action) {
         }
       }
 
-      // Tab id → find owning window and update its ticker
+      // settingsId or tab settingsId/id → find owning window
       for (const [winId, win] of Object.entries(state.windows)) {
-        if (win.tabs && win.tabs.some((tab) => tab.id === id)) {
+        if (win.settingsId === id) {
+          return {
+            ...state,
+            windows: {
+              ...state.windows,
+              [winId]: { ...win, ticker },
+            },
+          }
+        }
+        if (win.tabs && win.tabs.some((tab) => (tab.settingsId ?? tab.id) === id)) {
           return {
             ...state,
             windows: {
