@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { X, Wifi, Palette, BarChart3, Link2, Layout, Bell, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import {
   LINK_COLORS,
-  isLinkingEnabled,
-  setLinkingEnabled,
 } from '../services/linkBus'
 import {
   get as getSettings,
@@ -199,18 +197,11 @@ function TradingSection({ settings, onUpdate }) {
   )
 }
 
-function ColorSection() {
-  const [linkingOn, setLinkingOn] = useState(() => isLinkingEnabled())
-
-  const handleToggle = (val) => {
-    setLinkingOn(val)
-    setLinkingEnabled(val)
-  }
-
+function ColorSection({ settings, onUpdate }) {
   return (
     <>
       <Row label="Enable window linking" description="Sync market selection across linked windows">
-        <Toggle value={linkingOn} onChange={handleToggle} />
+        <Toggle value={settings.colorCoordination.linkingEnabled} onChange={(v) => onUpdate('colorCoordination', 'linkingEnabled', v)} />
       </Row>
       <Row label="Link group colors" description="Available color groups for window linking">
         <div className="settings-color-swatches">
