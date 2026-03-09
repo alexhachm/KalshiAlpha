@@ -4,6 +4,7 @@ import WindowManager from './WindowManager'
 import SettingsPanel from './SettingsPanel'
 import { findOpenPosition } from './SnapManager'
 import { useHotkeyDispatch } from '../hooks/useHotkeyDispatch'
+import { getTypeSizes } from '../config/toolManifest'
 import './Shell.css'
 
 const DEFAULT_WIDTH = 400
@@ -11,25 +12,8 @@ const DEFAULT_HEIGHT = 300
 const INITIAL_X = 50
 const INITIAL_Y = 10
 
-// Per-type default sizes — mirrors CSS vars in index.css
-const TYPE_SIZES = {
-  login: { width: 360, height: 280 },
-  montage: { width: 350, height: 400 },
-  'price-ladder': { width: 280, height: 500 },
-  accounts: { width: 500, height: 300 },
-  positions: { width: 500, height: 300 },
-  'trade-log': { width: 550, height: 350 },
-  'event-log': { width: 500, height: 250 },
-  chart: { width: 600, height: 400 },
-  'time-sale': { width: 300, height: 400 },
-  'market-viewer': { width: 350, height: 400 },
-  'news-chat': { width: 400, height: 350 },
-  'live-scanner': { width: 500, height: 350 },
-  'historical-scanner': { width: 500, height: 350 },
-  'alert-trigger': { width: 450, height: 350 },
-  'market-clock': { width: 200, height: 100 },
-  'hotkey-config': { width: 450, height: 400 },
-}
+// Per-type default sizes — sourced from canonical tool manifest
+const TYPE_SIZES = getTypeSizes()
 
 const CONNECTION_STATUS_LABELS = {
   mock: 'Mock Mode',
