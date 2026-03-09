@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import GridSettingsPanel from '../GridSettingsPanel'
 import * as alertService from '../../services/alertService'
+import * as settingsStore from '../../services/settingsStore'
 import './AlertTrigger.css'
 
 const LS_KEY_PREFIX = 'alert-trigger-settings-'
@@ -170,23 +171,28 @@ function AlertTrigger({ windowId }) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // STUB: Desktop notification permission handling
-  // SOURCE: Notification API (window.Notification)
-  // IMPLEMENT WHEN: settings.notifications.desktopNotifications is wired up
-  // STEPS:
-  //   1. On alert trigger, check Notification.permission
-  //   2. If 'default', request permission with Notification.requestPermission()
-  //   3. If 'granted', show new Notification(alert.message)
-  //   4. If 'denied', show in-app toast instead
+  // Track global notification settings from settingsStore
+  const [notifSettings, setNotifSettings] = useState(() => settingsStore.getNotifications())
+  const [desktopPermission, setDesktopPermission] = useState(() => alertService.getDesktopPermissionStatus())
 
-  // STUB: Alert deduplication — prevent same alert firing repeatedly
-  // SOURCE: Internal — compare alert fingerprint (ticker + type + params hash)
-  // IMPLEMENT WHEN: Real market data feed is connected
-  // STEPS:
-  //   1. Generate fingerprint: `${alert.ticker}-${alert.type}-${JSON.stringify(alert.params)}`
-  //   2. Track last-fired timestamp per fingerprint
-  //   3. Skip alert if same fingerprint fired within cooldown window (e.g. 60s)
-  //   4. Make cooldown configurable per rule
+  useEffect(() => {
+    const unsub = settingsStore.subscribeSection('notifications', (next) => {
+      setNotifSettings(next)
+      // Auto-request permission when user enables desktop notifications
+      if (next.desktopNotifications && alertService.getDesktopPermissionStatus() === 'default') {
+        alertService.requestDesktopPermission().then((result) => {
+          setDesktopPermission(result)
+        })
+      }
+    })
+    return unsub
+  }, [])
+
+  const handleRequestPermission = useCallback(() => {
+    alertService.requestDesktopPermission().then((result) => {
+      setDesktopPermission(result)
+    })
+  }, [])
 
   const handleAddRule = useCallback(() => {
     if (!newTicker.trim()) return
@@ -324,6 +330,27 @@ function AlertTrigger({ windowId }) {
       <div className="at-header-bar">
         <span className="at-title">Alert Trigger</span>
         <div className="at-header-right">
+          {/* Notification status indicators */}
+          <span className="at-notif-status" title={
+            !notifSettings.desktopNotifications && !notifSettings.soundAlerts
+              ? 'All notifications disabled — configure in Settings > Notifications'
+              : [
+                  notifSettings.desktopNotifications
+                    ? desktopPermission === 'granted' ? 'Desktop: on' : desktopPermission === 'denied' ? 'Desktop: blocked by browser' : 'Desktop: permission needed'
+                    : 'Desktop: off',
+                  notifSettings.soundAlerts ? 'Sound: on' : 'Sound: off',
+                ].join(' | ')
+          }>
+            {notifSettings.soundAlerts && <span className="at-notif-icon at-notif-on">&#128264;</span>}
+            {notifSettings.desktopNotifications && desktopPermission === 'granted' && <span className="at-notif-icon at-notif-on">&#128276;</span>}
+            {notifSettings.desktopNotifications && desktopPermission === 'denied' && <span className="at-notif-icon at-notif-denied" title="Desktop notifications blocked by browser">&#128276;</span>}
+            {notifSettings.desktopNotifications && desktopPermission === 'default' && (
+              <button className="at-notif-permit-btn" onClick={handleRequestPermission} title="Click to allow desktop notifications">
+                &#128276;?
+              </button>
+            )}
+            {!notifSettings.desktopNotifications && !notifSettings.soundAlerts && <span className="at-notif-icon at-notif-off" title="Notifications disabled">&#128263;</span>}
+          </span>
           <span className="at-count">{rules.length} rules</span>
           <button
             className="at-settings-btn"

@@ -459,3 +459,47 @@
 }
 
 .at-btn-cancel:hover { opacity: 0.85; }
+
+/* Notification status indicators */
+.at-notif-status {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.at-notif-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.at-notif-on {
+  color: var(--accent-buy);
+}
+
+.at-notif-off {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.at-notif-denied {
+  color: var(--accent-sell);
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.at-notif-permit-btn {
+  background: none;
+  border: 1px solid var(--accent-warning);
+  border-radius: 2px;
+  color: var(--accent-warning);
+  font-size: 10px;
+  padding: 0 3px;
+  cursor: pointer;
+  line-height: 16px;
+  font-family: var(--font-mono);
+  transition: opacity var(--transition-fast);
+}
+
+.at-notif-permit-btn:hover {
+  opacity: 0.8;
+}

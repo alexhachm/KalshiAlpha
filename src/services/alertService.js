@@ -4,6 +4,7 @@
 // Follows same patterns as hotkeyStore.js (localStorage + listener set).
 
 import * as dataFeed from './dataFeed';
+import * as settingsStore from './settingsStore';
 
 // --- Constants ---
 
@@ -169,6 +170,76 @@ function _notifyRulesListeners() {
   });
 }
 
+// --- Notification dispatch (settings-driven) ---
+
+let _alertAudioCtx = null;
+
+function _getAudioContext() {
+  if (!_alertAudioCtx) {
+    try {
+      _alertAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch {
+      // Web Audio not available
+    }
+  }
+  return _alertAudioCtx;
+}
+
+function _playAlertSound() {
+  const ctx = _getAudioContext();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch {
+    // ignore audio errors
+  }
+}
+
+function _showDesktopNotification(alert) {
+  if (typeof Notification === 'undefined') return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    const title = `Alert: ${alert.ticker || 'Unknown'}`
+    const body = alert.message || alert.label || `${(alert.type || '').replace('_', ' ')} triggered`;
+    new Notification(title, { body, tag: alert.id });
+  } catch {
+    // notification construction failed
+  }
+}
+
+function dispatchNotification(alert) {
+  const notifSettings = settingsStore.getNotifications();
+
+  if (notifSettings.soundAlerts) {
+    _playAlertSound();
+  }
+
+  if (notifSettings.desktopNotifications) {
+    _showDesktopNotification(alert);
+  }
+}
+
+function requestDesktopPermission() {
+  if (typeof Notification === 'undefined') return Promise.resolve('unsupported');
+  if (Notification.permission === 'granted') return Promise.resolve('granted');
+  if (Notification.permission === 'denied') return Promise.resolve('denied');
+  return Notification.requestPermission();
+}
+
+function getDesktopPermissionStatus() {
+  if (typeof Notification === 'undefined') return 'unsupported';
+  return Notification.permission; // 'default' | 'granted' | 'denied'
+}
+
 // --- Worker message handling ---
 
 function handleWorkerMessage(e) {
@@ -178,6 +249,7 @@ function handleWorkerMessage(e) {
     for (const alert of alerts) {
       const entry = { ...alert, id: crypto.randomUUID() };
       history.unshift(entry);
+      dispatchNotification(entry);
       _notifyAlertListeners(entry);
     }
     // Trim history
@@ -386,4 +458,7 @@ export {
   // Subscriptions
   onAlert,
   onRulesChange,
+  // Notifications
+  requestDesktopPermission,
+  getDesktopPermissionStatus,
 };
