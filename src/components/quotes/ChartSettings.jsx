@@ -1,15 +1,25 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useDialogFocusTrap } from '../../hooks/useDialogFocusTrap'
 
-function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
+function ChartSettings({ settings, onSave, onClose, availableTickers }) {
+  const [draft, setDraft] = useState(() => ({ ...settings }))
   const { dialogProps } = useDialogFocusTrap(true, onClose, { ariaLabel: 'Chart Settings' })
+
+  const updateDraft = (key, value) => {
+    setDraft((prev) => ({ ...prev, [key]: value }))
+  }
+
   const toggleOverlayTicker = (t) => {
-    const current = settings.overlayTickers || []
+    const current = draft.overlayTickers || []
     if (current.includes(t)) {
-      onUpdate('overlayTickers', current.filter((x) => x !== t))
+      updateDraft('overlayTickers', current.filter((x) => x !== t))
     } else {
-      onUpdate('overlayTickers', [...current, t])
+      updateDraft('overlayTickers', [...current, t])
     }
+  }
+
+  const handleSave = () => {
+    onSave(draft)
   }
 
   return (
@@ -23,24 +33,24 @@ function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
           <span>Grid Lines</span>
           <input
             type="checkbox"
-            checked={settings.showGrid}
-            onChange={(e) => onUpdate('showGrid', e.target.checked)}
+            checked={draft.showGrid}
+            onChange={(e) => updateDraft('showGrid', e.target.checked)}
           />
         </label>
         <label className="chart-setting-row">
           <span>Volume</span>
           <input
             type="checkbox"
-            checked={settings.showVolume}
-            disabled={settings.overlayMode}
-            onChange={(e) => onUpdate('showVolume', e.target.checked)}
+            checked={draft.showVolume}
+            disabled={draft.overlayMode}
+            onChange={(e) => updateDraft('showVolume', e.target.checked)}
           />
         </label>
         <label className="chart-setting-row">
           <span>Crosshair</span>
           <select
-            value={settings.crosshairStyle}
-            onChange={(e) => onUpdate('crosshairStyle', e.target.value)}
+            value={draft.crosshairStyle}
+            onChange={(e) => updateDraft('crosshairStyle', e.target.value)}
           >
             <option value="normal">Normal</option>
             <option value="magnet">Magnet</option>
@@ -50,16 +60,16 @@ function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
           <span>Up Color</span>
           <input
             type="color"
-            value={settings.upColor}
-            onChange={(e) => onUpdate('upColor', e.target.value)}
+            value={draft.upColor}
+            onChange={(e) => updateDraft('upColor', e.target.value)}
           />
         </label>
         <label className="chart-setting-row">
           <span>Down Color</span>
           <input
             type="color"
-            value={settings.downColor}
-            onChange={(e) => onUpdate('downColor', e.target.value)}
+            value={draft.downColor}
+            onChange={(e) => updateDraft('downColor', e.target.value)}
           />
         </label>
 
@@ -69,18 +79,18 @@ function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
           <span>Overlay Mode</span>
           <input
             type="checkbox"
-            checked={settings.overlayMode}
-            onChange={(e) => onUpdate('overlayMode', e.target.checked)}
+            checked={draft.overlayMode}
+            onChange={(e) => updateDraft('overlayMode', e.target.checked)}
           />
         </label>
-        {settings.overlayMode && (
+        {draft.overlayMode && (
           <div className="chart-overlay-tickers">
             <span className="chart-setting-label">Compare Markets</span>
             {availableTickers.map((t) => (
               <label key={t} className="chart-overlay-ticker-row">
                 <input
                   type="checkbox"
-                  checked={(settings.overlayTickers || []).includes(t)}
+                  checked={(draft.overlayTickers || []).includes(t)}
                   onChange={() => toggleOverlayTicker(t)}
                 />
                 <span>{t}</span>
@@ -88,6 +98,10 @@ function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
             ))}
           </div>
         )}
+      </div>
+      <div className="chart-settings-footer">
+        <button className="chart-settings-cancel-btn" onClick={onClose}>Cancel</button>
+        <button className="chart-settings-save-btn" onClick={handleSave}>Save</button>
       </div>
     </div>
   )
