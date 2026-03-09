@@ -8,6 +8,7 @@ import {
   getColorGroup,
 } from '../../services/linkBus'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
+import * as settingsStore from '../../services/settingsStore'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
 
@@ -32,19 +33,38 @@ function saveSettings(windowId, settings) {
   } catch { /* ignore */ }
 }
 
-const DEFAULT_SETTINGS = {
-  defaultOrderSize: 100,
-  confirmBeforeSend: true,
-  soundAlerts: true,
+// Display-only defaults (per-window, no global equivalent)
+const DISPLAY_DEFAULTS = {
   depthLevels: 5,
   flashDuration: 300,
   fontSize: 'medium',
   showWorkingOrders: true,
 }
 
+// Map settingsStore trading section to Montage field names
+function getGlobalTradingDefaults() {
+  const t = settingsStore.getTrading()
+  return {
+    defaultOrderSize: t.defaultOrderSize,
+    confirmBeforeSend: t.confirmOrders,
+    soundAlerts: t.soundAlerts,
+  }
+}
+
+// Trading field keys used for sparse override detection
+const TRADING_KEYS = ['defaultOrderSize', 'confirmBeforeSend', 'soundAlerts']
+
 function Montage({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
-  const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
+  // Per-window overrides (sparse — only fields explicitly changed in MontageSettings)
+  const [overrides, setOverrides] = useState(() => loadSettings(windowId) || {})
+  // Global trading defaults from settingsStore (reactive)
+  const [globalTrading, setGlobalTrading] = useState(getGlobalTradingDefaults)
+  // Effective settings: display defaults + global trading + per-window overrides
+  const settings = useMemo(
+    () => ({ ...DISPLAY_DEFAULTS, ...globalTrading, ...overrides }),
+    [globalTrading, overrides]
+  )
   const [showSettings, setShowSettings] = useState(false)
 
   // Report current ticker to hotkey dispatch registry
@@ -88,10 +108,21 @@ function Montage({ windowId }) {
     return () => el.removeEventListener('toggle-settings', handler)
   }, [])
 
-  // Persist settings
+  // Persist per-window overrides (not the full computed settings)
   useEffect(() => {
-    saveSettings(windowId, settings)
-  }, [windowId, settings])
+    saveSettings(windowId, overrides)
+  }, [windowId, overrides])
+
+  // Subscribe to global trading setting changes from settingsStore
+  useEffect(() => {
+    return settingsStore.subscribeSection('trading', (trading) => {
+      setGlobalTrading({
+        defaultOrderSize: trading.defaultOrderSize,
+        confirmBeforeSend: trading.confirmOrders,
+        soundAlerts: trading.soundAlerts,
+      })
+    })
+  }, [])
 
   // Flash detection on data changes
   useEffect(() => {
@@ -254,7 +285,19 @@ function Montage({ windowId }) {
   }
 
   const handleSettingsChange = (newSettings) => {
-    setSettings(newSettings)
+    const globalDefaults = getGlobalTradingDefaults()
+    const sparse = {}
+    // Always save display settings (they're per-window only)
+    for (const key of Object.keys(DISPLAY_DEFAULTS)) {
+      if (newSettings[key] !== undefined) sparse[key] = newSettings[key]
+    }
+    // Only save trading settings if they differ from global
+    for (const key of TRADING_KEYS) {
+      if (newSettings[key] !== undefined && newSettings[key] !== globalDefaults[key]) {
+        sparse[key] = newSettings[key]
+      }
+    }
+    setOverrides(sparse)
     setOrderSize(newSettings.defaultOrderSize)
   }
 
