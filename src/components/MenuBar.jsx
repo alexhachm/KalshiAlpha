@@ -1,52 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import clsx from 'clsx'
+import { getMenuConfig } from '../config/toolManifest'
 import './MenuBar.css'
 
-const MENU_CONFIG = [
-  {
-    label: 'Login',
-    action: 'login',
-  },
-  {
-    label: 'Trade',
-    items: [
-      { label: 'Montage', type: 'montage', shortcut: 'Ctrl+M' },
-      { label: 'Price Ladder', type: 'price-ladder', shortcut: 'Ctrl+L' },
-      { label: 'Accounts', type: 'accounts' },
-      { label: 'Positions', type: 'positions', shortcut: 'Ctrl+P' },
-      { label: 'Trade Log', type: 'trade-log' },
-      { label: 'Event Log', type: 'event-log' },
-      { label: 'Order Book', type: 'order-book' },
-      { label: 'Changes', type: 'changes' },
-    ],
-  },
-  {
-    label: 'Quotes',
-    items: [
-      { label: 'Chart', type: 'chart', shortcut: 'Ctrl+K' },
-      { label: 'Time/Sale', type: 'time-sale' },
-      { label: 'Market Viewer', type: 'market-viewer' },
-      { label: 'News/Chat', type: 'news-chat' },
-    ],
-  },
-  {
-    label: 'Scanners',
-    items: [
-      { label: 'Live', type: 'live-scanner' },
-      { label: 'Historical', type: 'historical-scanner' },
-      { label: 'Alert & Trigger', type: 'alert-trigger' },
-      { label: 'Market Clock', type: 'market-clock' },
-    ],
-  },
-  {
-    label: 'Setup',
-    items: [{ label: 'Hotkey Config', type: 'hotkey-config' }],
-  },
-  {
-    label: 'Settings',
-    action: 'settings',
-  },
-]
+const MENU_CONFIG = getMenuConfig()
 
 function MenuBar({ onOpenWindow, onOpenSettings }) {
   const [activeMenu, setActiveMenu] = useState(null)
