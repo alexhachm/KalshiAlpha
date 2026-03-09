@@ -12,15 +12,15 @@ echo "bash-ok"
 ```
 **If the above fails** (Exit code 1, or no output), you are in **native-only mode**:
 - Use Read tool instead of `cat`
-- Use Write/Edit tools instead of heredocs and `state-lock.sh`
-- Only use Bash for: `git`, `touch` (signals), `sleep`
-- For state writes: use Write tool to write the full JSON, then `touch` the signal file
+- Use Write/Edit tools instead of heredocs
+- Only use Bash for: `git`, `mac10` commands, `sleep`
 - Adapt all instructions below accordingly — replace `cat` with Read, etc.
 
 **If it succeeds**, proceed normally with Bash commands.
 
-**First, read your role document and user preferences:**
+**First, set up mac10 and read your role document and user preferences:**
 ```bash
+export PATH="$(pwd)/.claude/scripts:$PATH"
 cat .claude/docs/master-1-role.md
 cat .claude/knowledge/user-preferences.md
 ```
@@ -56,48 +56,24 @@ For EVERY user message, determine the type and respond:
 ### Type 1: New Request (default)
 User describes work: "Fix the popout bugs" / "Add authentication" / etc.
 
-**STOP — Do NOT investigate.** Do not run git, ls, find, cat, grep, diff, or read any source files. You are a router, not a researcher. No matter how urgent or complex the request sounds, your ONLY job is to write the handoff and move on. Every Bash command you run here wastes your context and duplicates work that Master-2 will do. Pass the user's words through — Master-2 has the tools and role to investigate.
+**STOP — Do NOT investigate.** Do not run git, ls, find, cat, grep, diff, or read any source files. You are a router, not a researcher. No matter how urgent or complex the request sounds, your ONLY job is to submit the request via `mac10` and move on. Every Bash command you run here wastes your context and duplicates work that Master-2 will do. Pass the user's words through — Master-2 has the tools and role to investigate.
 
 **Action:**
 1. Ask 1-2 clarifying questions if truly unclear (usually skip this)
 2. Structure into optimal prompt (under 60 seconds)
-3. Write to handoff.json AND touch signal
+3. Submit via mac10
 4. Confirm to user
 
 ```bash
-# Write new request to temp file (avoids heredoc escaping issues inside state-lock)
-cat > /tmp/new-handoff-request.json << 'HANDOFF'
-{
-  "request_id": "[short-name]",
-  "timestamp": "[ISO timestamp]",
-  "type": "[bug-fix|feature|refactor]",
-  "description": "[clear description]",
-  "tasks": ["[task1]", "[task2]"],
-  "success_criteria": ["[criterion1]"],
-  "complexity_hint": "[trivial|simple|moderate|complex]",
-  "status": "pending_decomposition"
-}
-HANDOFF
-# Append to handoff queue (handoff.json is an array — multiple requests coexist safely)
-bash .claude/scripts/state-lock.sh .claude/state/handoff.json '
-  if ! jq -e "type == \"array\"" .claude/state/handoff.json >/dev/null 2>&1; then
-    echo "[]" > .claude/state/handoff.json
-  fi
-  jq --slurpfile req /tmp/new-handoff-request.json ". + \$req" .claude/state/handoff.json > /tmp/ho.json && mv /tmp/ho.json .claude/state/handoff.json
-'
-```
-
-**Signal Master-2 immediately:**
-```bash
-touch .claude/signals/.handoff-signal
+mac10 request "[type]: [clear description]. Tasks: [task1], [task2]. Success criteria: [criterion1]. Complexity: [trivial|simple|moderate|complex]"
 ```
 
 **Log:**
 ```bash
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [REQUEST] id=[request_id] hint=[complexity_hint] \"[description]\"" >> .claude/logs/activity.log
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [REQUEST] \"[description]\"" >> .claude/logs/activity.log
 ```
 
-Say: "Request '[request_id]' sent to Master-2. Complexity hint: [trivial/simple/moderate/complex]. Master-2 will triage and act."
+Say: "Request submitted to Master-2. Complexity hint: [trivial/simple/moderate/complex]. Master-2 will triage and act."
 
 **Complexity hints** (help Master-2 triage faster, but Master-2 makes the final call):
 - trivial: "change button color", "fix typo" → likely Tier 1
@@ -109,31 +85,15 @@ Say: "Request '[request_id]' sent to Master-2. Complexity hint: [trivial/simple/
 User says: "fix worker-1: the button still doesn't work"
 
 **Action:**
-1. Create fix task (URGENT priority)
-2. Add lesson to knowledge/mistakes.md
-3. Append lesson to CLAUDE.md (high-visibility)
-4. Signal Master-3
+1. Submit fix via mac10 (creates URGENT priority task in coordinator)
+2. Record lesson in knowledge system
 
-**Step 1 - Create fix task:**
+**Step 1 — Submit fix:**
 ```bash
-bash .claude/scripts/state-lock.sh .claude/state/fix-queue.json 'cat > .claude/state/fix-queue.json << FIX
-{
-  "worker": "worker-N",
-  "task": {
-    "subject": "FIX: [brief description]",
-    "description": "PRIORITY: URGENT\nDOMAIN: [same as their current domain]\n\nOriginal issue: [what user described]\n\nFix required immediately before any other tasks.",
-    "request_id": "fix-[timestamp]"
-  }
-}
-FIX'
+mac10 fix "worker-N: [brief description]. Original issue: [what user described]. Fix required immediately."
 ```
 
-**Signal Master-3:**
-```bash
-touch .claude/signals/.fix-signal
-```
-
-**Step 2 - Add lesson to knowledge/mistakes.md:**
+**Step 2 — Add lesson to knowledge/mistakes.md:**
 ```bash
 bash .claude/scripts/state-lock.sh .claude/knowledge/mistakes.md 'cat >> .claude/knowledge/mistakes.md << LESSON
 
@@ -145,70 +105,65 @@ bash .claude/scripts/state-lock.sh .claude/knowledge/mistakes.md 'cat >> .claude
 LESSON'
 ```
 
-**Step 3 - Append lesson to CLAUDE.md (high-visibility for all agents):**
+**Step 3 — Log:**
 ```bash
-cat >> CLAUDE.md << 'LESSON'
-
-### [Date] - [Brief description]
-- **What went wrong:** [description from user]
-- **How to prevent:** [infer a rule from the mistake]
-LESSON
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [FIX_CREATED] worker=[worker-N] \"[description]\"" >> .claude/logs/activity.log
 ```
 
-**Step 4 - Also append to legacy worker-lessons.md for backward compat:**
-```bash
-bash .claude/scripts/state-lock.sh .claude/state/worker-lessons.md 'cat >> .claude/state/worker-lessons.md << WLESSON
-
-### [Date] - [Brief description]
-- **What went wrong:** [description from user]
-- **How to prevent:** [infer a rule from the mistake]
-- **Worker:** [worker-N]
-WLESSON'
-```
-
-Say: "Fix task created for Worker-N. Lesson recorded in knowledge system and CLAUDE.md. Worker will pick this up as priority."
+Say: "Fix task created for Worker-N. Lesson recorded in knowledge system. Worker will pick this up as priority."
 
 ### Type 3: Status Check
 User says: "status" / "what's happening" / "show workers"
 
-**Action:** Read and display:
-1. `.claude/state/worker-status.json` - worker states
-2. `.claude/state/handoff.json` - request queue (array of all requests with their statuses)
-3. `.claude/state/task-queue.json` - decomposed tasks
-3b. `.claude/state/integration-log.json` - completed integrations
-4. `.claude/state/agent-health.json` - agent health
-5. `TaskList()` - all tasks
-6. `.claude/logs/activity.log` - recent activity (last 15 lines)
+**Action:** Use mac10 to get comprehensive status:
 
-Format output clearly with agent health and tier information.
+```bash
+mac10 status
+```
+
+For additional detail, also show recent activity:
+```bash
+mac10 log 15
+```
+
+Format output clearly with worker states, task progress, and tier information.
 
 ### Type 4: Clarification from Master-2
 **Poll this EVERY cycle** (before waiting for user input):
 
 ```bash
-cat .claude/state/clarification-queue.json
+mac10 inbox master-1 --peek
 ```
 
-If there are questions with `"status": "pending"`, surface to user, relay answer back.
+If there are pending clarification questions, surface to user. When user replies:
+
+```bash
+mac10 clarify <request_id> "[user's answer]"
+```
+
+**Log:**
+```bash
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [CLARIFICATION_SURFACED] request=[request_id]" >> .claude/logs/activity.log
+```
 
 ### Type 5: Help
 Repeat startup message.
 
-## Signal-Based Waiting
+## Message-Based Waiting
 
-Instead of fixed sleep, wait for signals between user interactions:
+Instead of fixed sleep, wait for incoming messages between user interactions:
 ```bash
-# Wait for any relevant signal (clarifications, status changes) with 20s timeout
-bash .claude/scripts/signal-wait.sh .claude/signals/.handoff-signal 20
+# Wait for messages (clarifications, status changes) with blocking
+mac10 inbox master-1 --block
 ```
 
-If no signal arrives within timeout, check clarification-queue and continue waiting for user input.
+If no message arrives within timeout, continue waiting for user input.
 
 ## Pre-Reset Distillation
 
 Before running `/clear`, ALWAYS distill first:
 ```bash
-bash .claude/scripts/state-lock.sh .claude/knowledge/user-preferences.md 'cat > .claude/knowledge/user-preferences.md << PREFS
+cat > .claude/knowledge/user-preferences.md << 'PREFS'
 # User Preferences
 <!-- Updated [ISO timestamp] by Master-1 -->
 
@@ -223,7 +178,7 @@ bash .claude/scripts/state-lock.sh .claude/knowledge/user-preferences.md 'cat > 
 
 ## Session Summary
 [2-3 sentence summary of this session for continuity on next startup]
-PREFS'
+PREFS
 ```
 
 Log: `echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [DISTILL] user preferences updated" >> .claude/logs/activity.log`
@@ -232,7 +187,7 @@ Log: `echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-1] [DISTILL] user preferenc
 - NEVER read code files
 - NEVER investigate or implement yourself
 - Keep context clean for prompt quality
-- Always touch signal files after writing state
-- Poll clarification-queue.json before each wait cycle
+- Use `mac10` CLI for all coordination — never write state files directly
+- Poll `mac10 inbox master-1 --peek` before each wait cycle
 - **Log every action** to activity.log
 - Read instruction-patches.md on startup — apply any patches targeted at Master-1
