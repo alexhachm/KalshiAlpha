@@ -503,3 +503,77 @@
 .at-notif-permit-btn:hover {
   opacity: 0.8;
 }
+
+/* Notes/TTL form inputs */
+.at-input-notes {
+  width: 110px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.at-input-notes:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.at-input-notes::placeholder {
+  color: var(--text-muted);
+}
+
+.at-input-ttl {
+  width: 55px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+.at-input-ttl:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.at-input-ttl::placeholder {
+  color: var(--text-muted);
+}
+
+/* Rule notes display */
+.at-rule-notes {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  margin-top: 1px;
+}
+
+/* TTL badge */
+.at-ttl-badge {
+  display: inline-block;
+  font-size: 9px;
+  color: var(--accent-info);
+  margin-left: 4px;
+}
+
+.at-ttl-expired {
+  color: var(--accent-sell);
+}
+
+/* Staleness badge on history */
+.at-staleness-badge {
+  display: inline-block;
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}

@@ -86,6 +86,28 @@ function formatTime(isoOrTs) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
+function formatElapsed(isoOrTs) {
+  if (!isoOrTs) return ''
+  const ms = Date.now() - new Date(isoOrTs).getTime()
+  if (ms < 0) return ''
+  const mins = Math.floor(ms / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
+
+function formatTTLRemaining(expiresAt) {
+  if (!expiresAt) return null
+  const ms = new Date(expiresAt).getTime() - Date.now()
+  if (ms <= 0) return 'expired'
+  const mins = Math.floor(ms / 60000)
+  if (mins < 60) return `${mins}m left`
+  const hrs = Math.floor(mins / 60)
+  return `${hrs}h left`
+}
+
 function loadSettings(windowId) {
   try {
     const raw = localStorage.getItem(LS_KEY_PREFIX + windowId)
@@ -117,6 +139,8 @@ function AlertTrigger({ windowId }) {
   const [newType, setNewType] = useState('price_crosses')
   const [newParam1, setNewParam1] = useState(() => getRuleInputDefaults('price_crosses').param1)
   const [newParam2, setNewParam2] = useState(() => getRuleInputDefaults('price_crosses').param2)
+  const [newNotes, setNewNotes] = useState('')
+  const [newTTLHours, setNewTTLHours] = useState('')
 
   // Keep settings ref current to avoid stale closure in alert callback
   useEffect(() => {
@@ -170,6 +194,17 @@ function AlertTrigger({ windowId }) {
       flashTimersRef.current.clear()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-disable expired rules (TTL)
+  useEffect(() => {
+    if (rules.length === 0) return
+    const now = Date.now()
+    for (const rule of rules) {
+      if (rule.enabled && rule.expiresAt && new Date(rule.expiresAt).getTime() <= now) {
+        try { alertService.toggleRule(rule.id) } catch { /* ignore */ }
+      }
+    }
+  }, [rules])
 
   // Track global notification settings from settingsStore
   const [notifSettings, setNotifSettings] = useState(() => settingsStore.getNotifications())
@@ -231,15 +266,26 @@ function AlertTrigger({ windowId }) {
     }
 
     try {
-      alertService.addRule({ type: newType, ticker: newTicker.trim().toUpperCase(), params })
+      const rule = alertService.addRule({ type: newType, ticker: newTicker.trim().toUpperCase(), params })
+      // Attach optional notes and TTL via updateRule
+      const extras = {}
+      if (newNotes.trim()) extras.notes = newNotes.trim()
+      if (newTTLHours !== '' && Number(newTTLHours) > 0) {
+        extras.expiresAt = new Date(Date.now() + Number(newTTLHours) * 3600000).toISOString()
+      }
+      if (Object.keys(extras).length > 0) {
+        alertService.updateRule(rule.id, extras)
+      }
       const defaults = getRuleInputDefaults(newType)
       setNewTicker('')
       setNewParam1(defaults.param1)
       setNewParam2(defaults.param2)
+      setNewNotes('')
+      setNewTTLHours('')
     } catch (err) {
       console.error('[AlertTrigger] Failed to add rule:', err)
     }
-  }, [newTicker, newType, newParam1, newParam2])
+  }, [newTicker, newType, newParam1, newParam2, newNotes, newTTLHours])
 
   const handleToggle = useCallback((id) => {
     try { alertService.toggleRule(id) } catch { /* ignore */ }
@@ -394,6 +440,24 @@ function AlertTrigger({ windowId }) {
               ))}
             </select>
             {renderParamInputs()}
+            <input
+              className="at-input-notes"
+              type="text"
+              placeholder="Notes/thesis..."
+              value={newNotes}
+              onChange={(e) => setNewNotes(e.target.value)}
+              title="Optional: why this alert matters"
+            />
+            <input
+              className="at-input-ttl"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="TTL hrs"
+              value={newTTLHours}
+              onChange={(e) => setNewTTLHours(e.target.value)}
+              title="Optional: auto-disable after N hours"
+            />
             <button className="at-add-btn" onClick={handleAddRule}>Add</button>
           </div>
 
@@ -443,9 +507,12 @@ function AlertTrigger({ windowId }) {
                           )
                         }
                         if (col.key === 'params') {
+                          const ttlLabel = formatTTLRemaining(rule.expiresAt)
                           return (
                             <td key={col.key} className={`at-td at-align-${col.align} at-params`}>
                               {formatParams(rule.type, rule.params)}
+                              {rule.notes && <div className="at-rule-notes" title={rule.notes}>{rule.notes}</div>}
+                              {ttlLabel && <span className={`at-ttl-badge${ttlLabel === 'expired' ? ' at-ttl-expired' : ''}`}>{ttlLabel}</span>}
                             </td>
                           )
                         }
@@ -533,9 +600,11 @@ function AlertTrigger({ windowId }) {
                       >
                         {historyGrid.visibleColumns.map((col) => {
                           if (col.key === 'time') {
+                            const elapsed = formatElapsed(alert.triggeredAt || alert.ts)
                             return (
                               <td key={col.key} className={`at-td at-align-${col.align}`}>
                                 {formatTime(alert.triggeredAt || alert.ts)}
+                                {elapsed && <span className="at-staleness-badge">{elapsed}</span>}
                               </td>
                             )
                           }

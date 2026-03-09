@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { subscribeToScanner } from '../../services/dataFeed'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
+import * as settingsStore from '../../services/settingsStore'
 import GridSettingsPanel from '../GridSettingsPanel'
-import { Settings, Trash2 } from 'lucide-react'
+import { Settings, Trash2, Save, X } from 'lucide-react'
 import './LiveScanner.css'
 
 const DEFAULT_SETTINGS = {
@@ -13,6 +14,8 @@ const DEFAULT_SETTINGS = {
   filterType: 'all', // all | bull | bear | neutral
   minConviction: 1,
   showConvictionBars: true,
+  tickerFilter: '',       // substring match on ticker
+  strategyFilter: 'all',  // all | specific strategy name
 }
 
 const LS_COLUMNS = [
@@ -74,7 +77,12 @@ function LiveScanner({ windowId }) {
   const [showSettings, setShowSettings] = useState(false)
   const [paused, setPaused] = useState(false)
   const [newRowIds, setNewRowIds] = useState(new Set())
+  const [presets, setPresets] = useState(() => settingsStore.getScannerPresets('live'))
+  const [presetName, setPresetName] = useState('')
+  const [showPresetSave, setShowPresetSave] = useState(false)
   const alertsRef = useRef([])
+  const seenStrategiesRef = useRef(new Set())
+  const [strategies, setStrategies] = useState([])
   const tableBodyRef = useRef(null)
   const newRowTimersRef = useRef(new Map())
   const grid = useGridCustomization(`liveScanner-${windowId}`, LS_COLUMNS)
@@ -96,6 +104,11 @@ function LiveScanner({ windowId }) {
           ...prev,
           ...alert.capabilities,
         }))
+      }
+      // Track unique strategies for filter dropdown
+      if (alert.strategy && !seenStrategiesRef.current.has(alert.strategy)) {
+        seenStrategiesRef.current.add(alert.strategy)
+        setStrategies([...seenStrategiesRef.current].sort())
       }
       alertsRef.current = [alert, ...alertsRef.current].slice(0, settings.maxResults)
       setAlerts([...alertsRef.current])
@@ -181,7 +194,33 @@ function LiveScanner({ windowId }) {
     })
   }, [directionalSignalsEnabled, convictionRankingEnabled])
 
+  // Preset helpers
+  const handleSavePreset = useCallback(() => {
+    const name = presetName.trim()
+    if (!name) return
+    const filters = {
+      filterType: settings.filterType,
+      minConviction: settings.minConviction,
+      tickerFilter: settings.tickerFilter,
+      strategyFilter: settings.strategyFilter,
+    }
+    settingsStore.saveScannerPreset('live', name, filters)
+    setPresets(settingsStore.getScannerPresets('live'))
+    setPresetName('')
+    setShowPresetSave(false)
+  }, [presetName, settings])
+
+  const handleLoadPreset = useCallback((preset) => {
+    setSettings((prev) => ({ ...prev, ...preset.filters }))
+  }, [])
+
+  const handleDeletePreset = useCallback((name) => {
+    settingsStore.deleteScannerPreset('live', name)
+    setPresets(settingsStore.getScannerPresets('live'))
+  }, [])
+
   // Filter and sort — memoized to avoid recalculation on unrelated re-renders
+  const tickerFilterLower = settings.tickerFilter.toLowerCase()
   const sorted = useMemo(() => {
     const effectiveSortColumn = !convictionRankingEnabled && settings.sortColumn === 'conviction'
       ? 'time'
@@ -189,10 +228,12 @@ function LiveScanner({ windowId }) {
     const filtered = alerts.filter((a) => {
       if (settings.filterType !== 'all' && a.type !== settings.filterType) return false
       if (convictionRankingEnabled && a.conviction < settings.minConviction) return false
+      if (tickerFilterLower && !(a.ticker || '').toLowerCase().includes(tickerFilterLower)) return false
+      if (settings.strategyFilter !== 'all' && a.strategy !== settings.strategyFilter) return false
       return true
     })
     return sortAlerts(filtered, effectiveSortColumn, settings.sortAsc)
-  }, [alerts, convictionRankingEnabled, settings.filterType, settings.minConviction, settings.sortColumn, settings.sortAsc])
+  }, [alerts, convictionRankingEnabled, settings.filterType, settings.minConviction, settings.sortColumn, settings.sortAsc, tickerFilterLower, settings.strategyFilter])
 
   // STUB: Row virtualization — render only visible rows for large datasets
   // SOURCE: react-window or @tanstack/react-virtual
@@ -208,6 +249,13 @@ function LiveScanner({ windowId }) {
       {/* Toolbar */}
       <div className="ls-toolbar">
         <div className="ls-toolbar-left">
+          <input
+            className="ls-ticker-input"
+            type="text"
+            placeholder="Ticker..."
+            value={settings.tickerFilter}
+            onChange={(e) => updateSetting('tickerFilter', e.target.value)}
+          />
           <select
             className="ls-filter-select"
             value={settings.filterType}
@@ -218,6 +266,18 @@ function LiveScanner({ windowId }) {
             <option value="bear" disabled={!directionalSignalsEnabled}>Bear</option>
             <option value="neutral">Neutral</option>
           </select>
+          {strategies.length > 0 && (
+            <select
+              className="ls-filter-select"
+              value={settings.strategyFilter}
+              onChange={(e) => updateSetting('strategyFilter', e.target.value)}
+            >
+              <option value="all">All Strategies</option>
+              {strategies.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
           <span className={`ls-live-dot${paused ? ' ls-live-dot--paused' : ''}`} />
           <span className="ls-live-label">{paused ? 'PAUSED' : 'LIVE'}</span>
           <span className="ls-count">{sorted.length} alerts</span>
@@ -228,12 +288,55 @@ function LiveScanner({ windowId }) {
           )}
         </div>
         <div className="ls-toolbar-right">
+          {/* Presets dropdown */}
+          {presets.length > 0 && (
+            <select
+              className="ls-filter-select"
+              value=""
+              onChange={(e) => {
+                const p = presets.find((pr) => pr.name === e.target.value)
+                if (p) handleLoadPreset(p)
+              }}
+            >
+              <option value="" disabled>Presets</option>
+              {presets.map((p) => (
+                <option key={p.name} value={p.name}>{p.name}</option>
+              ))}
+            </select>
+          )}
+          {showPresetSave ? (
+            <span className="ls-preset-save">
+              <input
+                className="ls-ticker-input"
+                type="text"
+                placeholder="Preset name..."
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSavePreset() }}
+                autoFocus
+              />
+              <button className="ls-toolbar-btn" onClick={handleSavePreset} title="Save preset">
+                <Save size={12} />
+              </button>
+              <button className="ls-toolbar-btn" onClick={() => setShowPresetSave(false)} title="Cancel">
+                <X size={12} />
+              </button>
+            </span>
+          ) : (
+            <button
+              className="ls-toolbar-btn"
+              onClick={() => setShowPresetSave(true)}
+              title="Save current filters as preset"
+            >
+              <Save size={13} />
+            </button>
+          )}
           <button
             className={`ls-toolbar-btn${paused ? ' ls-toolbar-btn--active' : ''}`}
             onClick={() => setPaused((p) => !p)}
             title={paused ? 'Resume scanning' : 'Pause scanning'}
           >
-            {paused ? '▶' : '⏸'}
+            {paused ? '\u25B6' : '\u23F8'}
           </button>
           <button
             className="ls-toolbar-btn"
@@ -286,6 +389,31 @@ function LiveScanner({ windowId }) {
               onChange={(e) => updateSetting('showConvictionBars', e.target.checked)}
             />
           </div>
+          {presets.length > 0 && (
+            <div className="ls-settings-row">
+              <label>Saved Presets</label>
+              <div className="ls-preset-list">
+                {presets.map((p) => (
+                  <span key={p.name} className="ls-preset-chip">
+                    <span
+                      className="ls-preset-chip-name"
+                      onClick={() => handleLoadPreset(p)}
+                      title={`Load "${p.name}"`}
+                    >
+                      {p.name}
+                    </span>
+                    <button
+                      className="ls-preset-chip-del"
+                      onClick={() => handleDeletePreset(p.name)}
+                      title={`Delete "${p.name}"`}
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <GridSettingsPanel {...grid} />
         </div>
       )}

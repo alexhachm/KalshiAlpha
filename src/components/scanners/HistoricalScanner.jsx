@@ -2,8 +2,9 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { useHistoricalScan } from '../../hooks/useKalshiData'
 import { emitLinkedMarket } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
+import * as settingsStore from '../../services/settingsStore'
 import GridSettingsPanel from '../GridSettingsPanel'
-import { Settings, Download, Search } from 'lucide-react'
+import { Settings, Download, Search, Save, X } from 'lucide-react'
 import './HistoricalScanner.css'
 
 const PATTERNS = [
@@ -26,12 +27,22 @@ const HS_COLUMNS = [
 
 const FONT_SIZE_MAP = { small: 11, medium: 12, large: 14 }
 
+const SIGNAL_FILTERS = [
+  { key: 'all', label: 'All Signals' },
+  { key: 'bull', label: 'Bullish' },
+  { key: 'bear', label: 'Bearish' },
+  { key: 'neutral', label: 'Neutral' },
+]
+
 const DEFAULT_SETTINGS = {
   maxResults: 100,
   defaultRangeDays: 30,
   showConfidenceBars: true,
   sortColumn: 'date',
   sortAsc: false,
+  signalFilter: 'all',   // all | bull | bear | neutral
+  minRoi: '',             // '' = no filter, number = threshold
+  minConfidence: 1,       // 1-5
 }
 
 function sortResults(results, column, asc) {
@@ -128,6 +139,9 @@ function HistoricalScanner({ windowId }) {
   const [showSettings, setShowSettings] = useState(false)
   const [hasScanned, setHasScanned] = useState(false)
   const [selectedPattern, setSelectedPattern] = useState('all')
+  const [presets, setPresets] = useState(() => settingsStore.getScannerPresets('historical'))
+  const [presetName, setPresetName] = useState('')
+  const [showPresetSave, setShowPresetSave] = useState(false)
 
   const defaultRange = getDefaultDateRange(settings.defaultRangeDays)
   const [startDate, setStartDate] = useState(defaultRange.startDate)
@@ -174,10 +188,54 @@ function HistoricalScanner({ windowId }) {
     })
   }, [windowId])
 
-  const sorted = useMemo(
-    () => sortResults(results, settings.sortColumn, settings.sortAsc),
-    [results, settings.sortColumn, settings.sortAsc]
-  )
+  // Preset helpers
+  const handleSavePreset = useCallback(() => {
+    const name = presetName.trim()
+    if (!name) return
+    const filters = {
+      pattern: selectedPattern,
+      signalFilter: settings.signalFilter,
+      minRoi: settings.minRoi,
+      minConfidence: settings.minConfidence,
+      rangeDays: settings.defaultRangeDays,
+    }
+    settingsStore.saveScannerPreset('historical', name, filters)
+    setPresets(settingsStore.getScannerPresets('historical'))
+    setPresetName('')
+    setShowPresetSave(false)
+  }, [presetName, selectedPattern, settings])
+
+  const handleLoadPreset = useCallback((preset) => {
+    if (preset.filters.pattern) setSelectedPattern(preset.filters.pattern)
+    setSettings((prev) => {
+      const next = {
+        ...prev,
+        signalFilter: preset.filters.signalFilter ?? prev.signalFilter,
+        minRoi: preset.filters.minRoi ?? prev.minRoi,
+        minConfidence: preset.filters.minConfidence ?? prev.minConfidence,
+        defaultRangeDays: preset.filters.rangeDays ?? prev.defaultRangeDays,
+      }
+      localStorage.setItem(`historical-scanner-settings-${windowId}`, JSON.stringify(next))
+      return next
+    })
+  }, [windowId])
+
+  const handleDeletePreset = useCallback((name) => {
+    settingsStore.deleteScannerPreset('historical', name)
+    setPresets(settingsStore.getScannerPresets('historical'))
+  }, [])
+
+  // Filter and sort results
+  const minRoiNum = settings.minRoi !== '' ? Number(settings.minRoi) : null
+  const sorted = useMemo(() => {
+    const filtered = results.filter((r) => {
+      if (settings.signalFilter !== 'all' && normalizeSignal(r.signal) !== settings.signalFilter) return false
+      if (minRoiNum != null && Number.isFinite(minRoiNum) && r.roi < minRoiNum) return false
+      if (settings.minConfidence > 1 && r.confidence < settings.minConfidence) return false
+      return true
+    })
+    return sortResults(filtered, settings.sortColumn, settings.sortAsc)
+  }, [results, settings.sortColumn, settings.sortAsc, settings.signalFilter, minRoiNum, settings.minConfidence])
 
   return (
     <div className="historical-scanner">
@@ -210,6 +268,16 @@ function HistoricalScanner({ windowId }) {
               <option key={p.key} value={p.key}>{p.label}</option>
             ))}
           </select>
+          <label className="hs-label">Signal</label>
+          <select
+            className="hs-pattern-select"
+            value={settings.signalFilter}
+            onChange={(e) => updateSetting('signalFilter', e.target.value)}
+          >
+            {SIGNAL_FILTERS.map((s) => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
           <button
             className={`hs-scan-btn${scanning ? ' hs-scan-btn--scanning' : ''}`}
             onClick={handleScan}
@@ -220,14 +288,82 @@ function HistoricalScanner({ windowId }) {
             {scanning ? 'Scanning...' : 'Scan'}
           </button>
         </div>
+        <div className="hs-criteria-row">
+          <label className="hs-label">Min ROI %</label>
+          <input
+            type="number"
+            className="hs-roi-input"
+            placeholder="Any"
+            value={settings.minRoi}
+            onChange={(e) => updateSetting('minRoi', e.target.value)}
+            step="any"
+          />
+          <label className="hs-label">Min Conf.</label>
+          <select
+            className="hs-pattern-select"
+            value={settings.minConfidence}
+            onChange={(e) => updateSetting('minConfidence', Number(e.target.value))}
+          >
+            <option value={1}>1+</option>
+            <option value={2}>2+</option>
+            <option value={3}>3+</option>
+            <option value={4}>4+</option>
+            <option value={5}>5 only</option>
+          </select>
+        </div>
       </div>
 
       {/* Toolbar */}
       <div className="hs-toolbar">
         <span className="hs-count">
-          {results.length} result{results.length !== 1 ? 's' : ''}
+          {sorted.length !== results.length
+            ? `${sorted.length}/${results.length} results`
+            : `${results.length} result${results.length !== 1 ? 's' : ''}`}
         </span>
         <div className="hs-toolbar-right">
+          {/* Presets */}
+          {presets.length > 0 && (
+            <select
+              className="hs-preset-select"
+              value=""
+              onChange={(e) => {
+                const p = presets.find((pr) => pr.name === e.target.value)
+                if (p) handleLoadPreset(p)
+              }}
+            >
+              <option value="" disabled>Presets</option>
+              {presets.map((p) => (
+                <option key={p.name} value={p.name}>{p.name}</option>
+              ))}
+            </select>
+          )}
+          {showPresetSave ? (
+            <span className="hs-preset-save">
+              <input
+                className="hs-preset-input"
+                type="text"
+                placeholder="Preset name..."
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSavePreset() }}
+                autoFocus
+              />
+              <button className="hs-toolbar-btn" onClick={handleSavePreset} title="Save preset">
+                <Save size={12} />
+              </button>
+              <button className="hs-toolbar-btn" onClick={() => setShowPresetSave(false)} title="Cancel">
+                <X size={12} />
+              </button>
+            </span>
+          ) : (
+            <button
+              className="hs-toolbar-btn"
+              onClick={() => setShowPresetSave(true)}
+              title="Save current criteria as preset"
+            >
+              <Save size={13} />
+            </button>
+          )}
           <button
             className="hs-toolbar-btn"
             onClick={() => exportToCSV(sorted)}
@@ -277,6 +413,31 @@ function HistoricalScanner({ windowId }) {
               onChange={(e) => updateSetting('showConfidenceBars', e.target.checked)}
             />
           </div>
+          {presets.length > 0 && (
+            <div className="hs-settings-row">
+              <label>Saved Presets</label>
+              <div className="hs-preset-list">
+                {presets.map((p) => (
+                  <span key={p.name} className="hs-preset-chip">
+                    <span
+                      className="hs-preset-chip-name"
+                      onClick={() => handleLoadPreset(p)}
+                      title={`Load "${p.name}"`}
+                    >
+                      {p.name}
+                    </span>
+                    <button
+                      className="hs-preset-chip-del"
+                      onClick={() => handleDeletePreset(p.name)}
+                      title={`Delete "${p.name}"`}
+                    >
+                      &times;
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <GridSettingsPanel {...grid} />
         </div>
       )}
