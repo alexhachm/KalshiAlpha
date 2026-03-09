@@ -20,12 +20,12 @@
   },
   "worker-3": {
     "status": "busy",
-    "domain": "services",
-    "current_task": "Fix dataFeed.js processOrderbookDelta || vs ??",
+    "domain": "trade-montage",
+    "current_task": "Apply global trading settings defaults/toggles in Montage",
     "tasks_completed": 0,
     "context_budget": 0,
     "claimed_by": null,
-    "last_heartbeat": "2026-03-08T01:46:12Z"
+    "last_heartbeat": "2026-03-09T00:47:50Z"
   },
   "worker-4": {
     "status": "running",
