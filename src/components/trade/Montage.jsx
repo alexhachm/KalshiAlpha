@@ -78,6 +78,8 @@ function Montage({ windowId }) {
   const [askFlash, setAskFlash] = useState(null)
   const orderIdRef = useRef(1)
   const containerRef = useRef(null)
+  const confirmBtnRef = useRef(null)
+  const triggerBtnRef = useRef(null)
 
   // Toggle settings via right-click header event
   useEffect(() => {
@@ -134,6 +136,28 @@ function Montage({ windowId }) {
     setOrderType('limit')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticker])
+
+  // Confirm dialog: auto-focus and keyboard handling
+  useEffect(() => {
+    if (!confirmDialog) {
+      // Restore focus to triggering BUY button when dialog closes
+      triggerBtnRef.current?.focus()
+      return
+    }
+    // Focus the confirm button when dialog opens
+    requestAnimationFrame(() => confirmBtnRef.current?.focus())
+    const handleKey = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        confirmDialog.onConfirm()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setConfirmDialog(null)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [confirmDialog])
 
   // Cleanup flash timers
   useEffect(() => {
@@ -202,7 +226,8 @@ function Montage({ windowId }) {
   }, [])
 
   // Place order — with size and price validation
-  const placeOrder = (side) => {
+  const placeOrder = (side, e) => {
+    if (e?.currentTarget) triggerBtnRef.current = e.currentTarget
     const roundedSize = Math.round(orderSize)
     if (roundedSize <= 0 || roundedSize > 10000 || !Number.isInteger(roundedSize)) return
     const price = orderType === 'limit' ? Math.round(Number(limitPrice)) : (data ? data.yes.price : 0)
@@ -467,13 +492,13 @@ function Montage({ windowId }) {
             <div className="mt-buttons">
               <button
                 className="mt-btn mt-btn-buy-yes"
-                onClick={() => placeOrder('yes')}
+                onClick={(e) => placeOrder('yes', e)}
               >
                 BUY YES
               </button>
               <button
                 className="mt-btn mt-btn-buy-no"
-                onClick={() => placeOrder('no')}
+                onClick={(e) => placeOrder('no', e)}
               >
                 BUY NO
               </button>
@@ -506,7 +531,7 @@ function Montage({ windowId }) {
 
       {/* Confirm dialog */}
       {confirmDialog && (
-        <div className="mt-confirm-overlay">
+        <div className="mt-confirm-overlay" role="dialog" aria-modal="true" aria-label="Confirm Order">
           <div className="mt-confirm-dialog">
             <div className="mt-confirm-title">Confirm Order</div>
             <div className="mt-confirm-body">
@@ -519,6 +544,7 @@ function Montage({ windowId }) {
             </div>
             <div className="mt-confirm-buttons">
               <button
+                ref={confirmBtnRef}
                 className="mt-btn mt-btn-buy-yes"
                 onClick={confirmDialog.onConfirm}
               >
