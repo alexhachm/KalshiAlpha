@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { subscribe } from '../services/settingsStore'
 
 // Module-level registry of all open popout windows.
 // A single beforeunload listener on the parent window closes them all on exit.
@@ -57,6 +58,7 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
     }
     if (cssVars.length > 0) {
       const varStyle = w.document.createElement('style')
+      varStyle.id = 'popout-css-vars'
       varStyle.textContent = `:root { ${cssVars.join(' ')} }`
       w.document.head.appendChild(varStyle)
     }
@@ -81,6 +83,27 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
 
     setContainer(div)
 
+    // Subscribe to settings changes so the popout stays in sync with
+    // runtime appearance updates (theme, accent, font, opacity).
+    const unsubscribe = subscribe(() => {
+      if (w.closed) return
+      const rs = getComputedStyle(document.documentElement)
+      const vars = []
+      for (let i = 0; i < rs.length; i++) {
+        const p = rs[i]
+        if (p.startsWith('--')) {
+          vars.push(`${p}: ${rs.getPropertyValue(p)};`)
+        }
+      }
+      let el = w.document.getElementById('popout-css-vars')
+      if (!el) {
+        el = w.document.createElement('style')
+        el.id = 'popout-css-vars'
+        w.document.head.appendChild(el)
+      }
+      el.textContent = `:root { ${vars.join(' ')} }`
+    })
+
     // Handle popup close by user
     const handleUnload = () => {
       if (!closedByEffect.current) {
@@ -91,6 +114,7 @@ function PopoutWindow({ title, width = 600, height = 400, onClose, children }) {
 
     return () => {
       closedByEffect.current = true
+      unsubscribe()
       openPopouts.delete(popoutRef.current)
       if (popoutRef.current && !popoutRef.current.closed) {
         popoutRef.current.close()
