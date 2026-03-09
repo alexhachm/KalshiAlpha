@@ -199,6 +199,33 @@ function get() {
   return load()
 }
 
+function getTrading() {
+  return load().trading
+}
+
+function getTradingDefaults() {
+  return DEFAULTS.trading
+}
+
+function getNotifications() {
+  return load().notifications
+}
+
+function getNotificationDefaults() {
+  return DEFAULTS.notifications
+}
+
+function subscribeSection(section, fn) {
+  let lastSnapshot = JSON.stringify(load()[section])
+  return subscribe((settings) => {
+    const next = JSON.stringify(settings[section])
+    if (next !== lastSnapshot) {
+      lastSnapshot = next
+      fn(settings[section])
+    }
+  })
+}
+
 function update(section, key, value) {
   const s = load()
   if (s[section]) {
@@ -292,4 +319,19 @@ function deepMerge(defaults, overrides) {
 // Initialize on import
 load()
 
-export { DEFAULTS, get, update, updateSection, subscribe, reset, save, applyAppearanceSettings, initAppearanceRuntime }
+export {
+  DEFAULTS,
+  get,
+  getTrading,
+  getTradingDefaults,
+  getNotifications,
+  getNotificationDefaults,
+  subscribeSection,
+  update,
+  updateSection,
+  subscribe,
+  reset,
+  save,
+  applyAppearanceSettings,
+  initAppearanceRuntime,
+}
