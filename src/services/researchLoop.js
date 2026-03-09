@@ -3,7 +3,18 @@
 // Integrates with changeTrackingService and auditStateService
 
 import { addChange } from './changeTrackingService'
-import { registerFunction, rateFunction, getUnreviewedFunctions, getFunctionsByRating, markImproved } from './auditStateService'
+import {
+  SCORING_RUBRIC,
+  registerFunction,
+  rateFunction,
+  computeWeightedScore,
+  getUnreviewedFunctions,
+  getFunctionsByRating,
+  markImproved,
+  addImprovement,
+  getImprovements,
+  exportForPrioritization,
+} from './auditStateService'
 
 // ── Research source categories ──────────────────────────────────────────
 // Each source describes a category of external knowledge that can improve the codebase.
@@ -428,14 +439,159 @@ async function fetchResearchSuggestions(sourceId, context) {
   }
 }
 
+// ── Autonomous scoring engine pipeline ──────────────────────────────────
+
+/**
+ * Run a full inventory scan: enumerate all exported functions, register them
+ * in the audit state, and return the inventory.
+ *
+ * This is the first phase of the autonomous pipeline — it builds the feature
+ * inventory without performing any scoring.
+ *
+ * @returns {Promise<Array<{ filePath, name, type, lineCount }>>} all discovered exports
+ */
+async function runInventory() {
+  const exports = await enumerateCodebaseFunctions()
+  for (const fn of exports) {
+    registerFunction(fn.filePath, fn.name, {
+      type: fn.type,
+      lineCount: fn.lineCount,
+    })
+  }
+  return exports
+}
+
+/**
+ * Score a batch of unreviewed functions using heuristic analysis.
+ * Registers ratings and creates improvement records for each suggestion.
+ *
+ * @param {number} [batchSize=20] — max functions to score per invocation
+ * @returns {Promise<Array<{ filePath, functionName, ratings, improvements }>>} scored entries
+ */
+async function scoreBatch(batchSize = 20) {
+  const unreviewed = getUnreviewedFunctions()
+  const batch = unreviewed.slice(0, batchSize)
+  const results = []
+
+  for (const entry of batch) {
+    let audit
+    try {
+      audit = await auditFunction(entry.filePath, entry.functionName)
+    } catch {
+      // File may have been deleted or moved since inventory
+      continue
+    }
+
+    if (!audit.ratings && audit.suggestions.length === 0) {
+      // No signal — assign neutral ratings
+      rateFunction(entry.filePath, entry.functionName, {
+        completeness: 3,
+        accuracy: 3,
+        performance: 3,
+        uxQuality: 3,
+      })
+      results.push({ filePath: entry.filePath, functionName: entry.functionName, ratings: { completeness: 3, accuracy: 3, performance: 3, uxQuality: 3 }, improvements: [] })
+      continue
+    }
+
+    // Apply heuristic ratings (fill in nulls with default 3)
+    const ratings = {
+      completeness: audit.ratings?.completeness ?? 3,
+      accuracy: audit.ratings?.accuracy ?? 3,
+      performance: audit.ratings?.performance ?? 3,
+      uxQuality: audit.ratings?.uxQuality ?? 3,
+    }
+    rateFunction(entry.filePath, entry.functionName, ratings)
+
+    // Create improvement records from suggestions
+    const improvements = []
+    for (const suggestion of audit.suggestions) {
+      const dim = inferDimension(suggestion)
+      const score = computeWeightedScore(ratings)
+      const imp = addImprovement({
+        filePath: entry.filePath,
+        functionName: entry.functionName,
+        dimension: dim,
+        suggestion,
+        priority: score !== null ? Math.round((5 - score) * 20) : 50,
+        source: 'heuristic-audit',
+      })
+      improvements.push(imp)
+    }
+
+    results.push({ filePath: entry.filePath, functionName: entry.functionName, ratings, improvements })
+  }
+
+  return results
+}
+
+/**
+ * Infer which rubric dimension a suggestion maps to.
+ */
+function inferDimension(suggestion) {
+  const lower = suggestion.toLowerCase()
+  if (lower.includes('error handling') || lower.includes('try/catch') || lower.includes('bug')) return 'accuracy'
+  if (lower.includes('break') || lower.includes('lines') || lower.includes('todo') || lower.includes('fixme')) return 'completeness'
+  if (lower.includes('hardcoded') || lower.includes('constant')) return 'completeness'
+  if (lower.includes('performance') || lower.includes('render') || lower.includes('memo')) return 'performance'
+  if (lower.includes('keyboard') || lower.includes('accessibility') || lower.includes('ux') || lower.includes('feedback')) return 'uxQuality'
+  return null
+}
+
+/**
+ * Run the full autonomous pipeline: inventory → score → generate change entries → export.
+ *
+ * Returns a prioritized export suitable for the loop agent or dashboard consumption.
+ *
+ * @param {{ batchSize?: number }} [opts]
+ * @returns {Promise<{ inventory: number, scored: number, export: object }>}
+ */
+async function runScoringEngine(opts = {}) {
+  const { batchSize = 20 } = opts
+
+  // Phase 1: Inventory
+  const inventory = await runInventory()
+
+  // Phase 2: Score unreviewed functions
+  const scored = await scoreBatch(batchSize)
+
+  // Phase 3: Generate change entries for low-scoring functions
+  const lowScoring = getFunctionsByRating(2.5)
+  for (const entry of lowScoring) {
+    if (entry.improved) continue
+    const openImps = getImprovements({ filePath: entry.filePath, status: 'open' })
+    if (openImps.length === 0) continue
+    generateChangeEntry({
+      filePath: entry.filePath,
+      functionName: entry.functionName,
+      description: `Low score (${entry.avgRating.toFixed(1)}/5): ${openImps[0].suggestion}`,
+      source: 'scoring-engine',
+    })
+  }
+
+  // Phase 4: Export for prioritization
+  const exportData = exportForPrioritization()
+
+  return {
+    inventory: inventory.length,
+    scored: scored.length,
+    export: exportData,
+  }
+}
+
 // ── Exports ─────────────────────────────────────────────────────────────
 
 export {
   RESEARCH_SOURCES,
+  SCORING_RUBRIC,
   enumerateCodebaseFunctions,
   parseFunctionExports,
   auditFunction,
   prioritizeImprovements,
   generateChangeEntry,
   fetchResearchSuggestions,
+  runInventory,
+  scoreBatch,
+  runScoringEngine,
+  exportForPrioritization,
 }
