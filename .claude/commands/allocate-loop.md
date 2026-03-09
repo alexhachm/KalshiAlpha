@@ -1,394 +1,64 @@
 ---
-description: Master-3's main loop. Routes Tier 3 decomposed tasks to workers, monitors status, merges PRs.
+description: "DEPRECATED — Use mac10 CLI directly. Legacy allocator loop replaced by DB-backed coordinator."
 ---
 
-You are **Master-3: Allocator** running on **Sonnet**.
+> **DEPRECATED**: This command used file-based queues (`task-queue.json`, `fix-queue.json`,
+> `worker-status.json`) and signal files (`.task-signal`, `.fix-signal`, `.completion-signal`)
+> that conflict with the DB-backed mac10 coordinator.
+> **Do not execute the legacy steps below.** Use mac10 CLI commands instead.
 
-## Bash Health Check (MUST DO FIRST)
+## Migration: Legacy → mac10
 
-Before anything else, verify Bash works in this session:
+| Legacy operation | mac10 equivalent |
+|---|---|
+| `cat .claude/state/task-queue.json` | `mac10 ready-tasks` |
+| `cat .claude/state/fix-queue.json` | `mac10 ready-tasks` (fix tasks are in the DB) |
+| `cat .claude/state/worker-status.json` | `mac10 worker-status` |
+| Write task to `task-queue.json` | `mac10 create-task -` (pipe JSON via stdin) |
+| Write `worker-N.json` task file | `mac10 assign-task <task_id> <worker_id>` |
+| `touch .claude/signals/.task-signal` | Not needed — coordinator notifies automatically |
+| `touch .claude/signals/.fix-signal` | Not needed — coordinator notifies automatically |
+| `touch .claude/signals/.completion-signal` | Not needed — coordinator notifies automatically |
+| `bash .claude/scripts/launch-worker.sh N` | `mac10 add-worker` |
+| Check request completion | `mac10 check-completion <request_id>` |
+| Merge/integrate PRs | `mac10 integrate <request_id>` |
+| Check file overlaps | `mac10 check-overlaps <request_id>` |
+
+## How to run the allocator loop with mac10
+
+Master-3 (Allocator) should use these mac10 commands in its loop:
+
 ```bash
-echo "bash-ok"
-```
-**If the above fails** (Exit code 1, or no output), you are in **native-only mode**:
-- Use Read tool instead of `cat`
-- Use Write/Edit tools instead of heredocs
-- Use Grep/Glob instead of `find`/`grep`
-- Only use Bash for: `git`, `touch` (signals), `sleep`
-- Adapt all instructions below accordingly — replace `cat` with Read, etc.
+# Get tasks ready for assignment
+mac10 ready-tasks
 
-**If it succeeds**, proceed normally with Bash commands.
+# Assign a task to a worker (atomic — no race conditions)
+mac10 assign-task <task_id> <worker_id>
 
-**If this is a fresh start (post-reset), re-read your context:**
-```bash
-cat .claude/docs/master-3-role.md
-cat .claude/knowledge/allocation-learnings.md
-cat .claude/knowledge/codebase-insights.md
-cat .claude/knowledge/instruction-patches.md
-```
+# Check worker status
+mac10 worker-status
 
-Apply any pending instruction patches targeted at you, then clear them from the file.
+# Check if all tasks for a request are done
+mac10 check-completion <request_id>
 
-You run the fast operational loop. You read Tier 3 decomposed tasks from Master-2 and route them to workers. Tier 1 and Tier 2 tasks bypass you entirely — Master-2 handles those directly.
+# Trigger worktree merge/integration
+mac10 integrate <request_id>
 
-## Internal Counters
-```
-context_budget = 0         # Reset trigger at 5000
-started_at = now()         # Reset trigger at 20 min
-polling_cycle = 0          # For periodic health checks
-last_activity = now()      # For adaptive signal timeout
+# Create a new worker worktree
+mac10 add-worker
+
+# Send heartbeat
+mac10 heartbeat <worker_id>
+
+# Reset a stuck worker
+mac10 reset-worker <worker_id>
 ```
 
-## Native Agent Teams Burst Mode (Experimental, Narrow Use)
+## What still uses local files (NOT coordination state)
 
-Use native teammate delegation only when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set.
-
-Allowed use cases:
-- Integration failures where owner/root cause is unclear across multiple worker outputs
-- Conflicting Tier 3 dependency ordering where you need a fast allocation sanity check
-- Fast read-only scan of `change-summaries.md` and activity logs before rerouting fixes
-
-Hard limits:
-- Do not use teammates for routine task allocation
-- Max 1 teammate burst per affected request
-- Teammates must not write `worker-status.json`, `task-queue.json`, `fix-queue.json`, or `handoff.json`
-- You remain the only allocator and the only merger/integration authority
-
-Logging:
-```bash
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-3] [TEAM_BURST] id=[request_id] purpose=\"[reason]\" teammates=[N]" >> .claude/logs/activity.log
-```
-
-## Startup Message
-
-```
-████  I AM MASTER-3 — ALLOCATOR (Sonnet)  ████
-
-Monitoring for:
-• Tier 3 decomposed tasks in task-queue.json
-• Fix requests in fix-queue.json
-• Worker status and heartbeats
-• Task completion for integration
-
-Using signal-based waking (instant response).
-Adaptive fallback polling: 6s when active, 20s when idle.
-```
-
-Update agent-health.json:
-```bash
-bash .claude/scripts/state-lock.sh .claude/state/agent-health.json 'jq ".\"master-3\".status = \"active\" | .\"master-3\".started_at = \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\" | .\"master-3\".context_budget = 0" .claude/state/agent-health.json > /tmp/ah.json && mv /tmp/ah.json .claude/state/agent-health.json'
-```
-
-Then begin the loop.
-
-## The Loop (Explicit Steps)
-
-**Repeat these steps forever:**
-
-### Step 1: Wait for signals (adaptive timeout)
-
-Use a single combined poll instead of multiple background watchers (avoids spawning 3 processes and `wait -n` portability issues):
-```bash
-# Adaptive timeout: 6s if recently active, 20s if idle
-TIMEOUT=20  # Use 6 if last_activity was < 30s ago
-
-# Combined signal check: poll all three signals in one loop
-elapsed=0
-while [ "$elapsed" -lt "$TIMEOUT" ]; do
-    # Check if any signal file was touched since we last checked
-    for sig in .claude/signals/.task-signal .claude/signals/.fix-signal .claude/signals/.completion-signal; do
-        if [ -f "$sig" ]; then
-            # Signal found — break out immediately
-            elapsed=$TIMEOUT
-            break
-        fi
-    done
-    [ "$elapsed" -ge "$TIMEOUT" ] && break
-    sleep 2
-    elapsed=$((elapsed + 2))
-done
-# Clear consumed signals so we don't re-trigger
-rm -f .claude/signals/.task-signal .claude/signals/.fix-signal .claude/signals/.completion-signal 2>/dev/null || true
-```
-
-**Alternative (if Bash is healthy and fswatch/inotifywait available):**
-```bash
-bash .claude/scripts/signal-wait.sh .claude/signals/.task-signal $TIMEOUT
-```
-This watches one signal file. After waking, check the others with simple file-existence tests.
-
-`polling_cycle += 1`
-
-### Step 2: Check for fix requests (HIGHEST PRIORITY)
-```bash
-cat .claude/state/fix-queue.json
-```
-
-If file contains a fix task:
-1. Create the task with TaskCreate (ASSIGNED_TO the specified worker, PRIORITY: URGENT)
-2. **Write task file for the worker** (cross-session handoff):
-   ```bash
-   mkdir -p .claude/state/tasks
-   cat > .claude/state/tasks/worker-N.json << 'TASK'
-   {
-     "subject": "[fix task title]",
-     "description": "REQUEST_ID: [id]\nDOMAIN: [domain]\nASSIGNED_TO: worker-N\nFILES: [files]\nVALIDATION: tier3\nTIER: 3\nPRIORITY: URGENT\n\n[fix requirements]",
-     "domain": "[domain]",
-     "files": ["file1.js"],
-     "validation": "tier3",
-     "tier": 3,
-     "request_id": "[id]",
-     "priority": "urgent"
-   }
-   TASK
-   ```
-3. Clear fix-queue.json (**CRITICAL: task filename MUST be exactly `worker-N.json` — never add suffixes like `-queued` or `-fix`**)
-4. Update worker-status.json with the task assignment
-5. **Launch or signal the worker:**
-```bash
-worker_status=$(jq -r '.["worker-N"].status' .claude/state/worker-status.json)
-
-if [ "$worker_status" = "idle" ]; then
-    bash .claude/scripts/launch-worker.sh N
-    # Log: [LAUNCH_WORKER] worker=worker-N reason=fix-task
-else
-    touch .claude/signals/.worker-signal
-    # Log: [SIGNAL_WORKER] worker=worker-N reason=fix-task
-fi
-```
-6. `context_budget += 30`
-7. `last_activity = now()`
-
-### Step 3: Check for Tier 3 decomposed tasks from Master-2
-```bash
-cat .claude/state/task-queue.json
-```
-
-If there are tasks to allocate:
-1. Read each task's DOMAIN and FILES tags
-2. Check worker-status.json for available workers AND their `tasks_completed` counts
-3. **Skip workers where `claimed_by` is set** — Master-2 may be doing a Tier 2 assignment
-4. Apply allocation rules (see below)
-
-**4a. AUTO-SCALE: If no idle workers and tasks remain unassigned, create new workers (up to 8):**
-```bash
-# Count current worktrees to determine how many workers exist
-current_workers=$(ls -d .worktrees/wt-* 2>/dev/null | wc -l | tr -d ' ')
-# Count tasks still needing assignment
-unassigned_tasks=[number of tasks from queue that could not be assigned to existing workers]
-
-if [ "$unassigned_tasks" -gt 0 ] && [ "$current_workers" -lt 8 ]; then
-    # Calculate how many new workers to create (min of: unassigned tasks, remaining slots)
-    remaining_slots=$((8 - current_workers))
-    new_workers=$((unassigned_tasks < remaining_slots ? unassigned_tasks : remaining_slots))
-
-    for i in $(seq 1 $new_workers); do
-        # add-worker.sh finds the next available slot and creates worktree + launcher
-        new_worker_output=$(bash .claude/scripts/add-worker.sh 2>&1)
-        # Extract the worker number from output like "Worker 4 worktree created in slot 4"
-        new_num=$(echo "$new_worker_output" | grep -oP 'Worker \K[0-9]+')
-        if [ -n "$new_num" ]; then
-            echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [master-3] [AUTO_SCALE] Created worker-$new_num ($((current_workers + i)) of 8 slots used)" >> .claude/logs/activity.log
-        fi
-    done
-
-    # Re-read worker-status.json — it now contains the new workers as idle
-    cat .claude/state/worker-status.json
-    # Re-apply allocation rules with the newly available idle workers
-fi
-```
-**Important auto-scale rules:**
-- Only auto-scale when there are genuinely unassignable tasks (all workers busy/claimed, no idle slots)
-- Never exceed 8 workers total
-- After creating new workers, re-read worker-status.json and assign tasks to the new idle workers
-- Log every scale-up event with `[AUTO_SCALE]` tag
-
-5. Create tasks with TaskCreate, assigning to chosen workers
-6. **Write task file for each assigned worker** (cross-session handoff — workers read this on startup):
-   ```bash
-   mkdir -p .claude/state/tasks
-   cat > .claude/state/tasks/worker-N.json << 'TASK'
-   {
-     "subject": "[task title]",
-     "description": "REQUEST_ID: [id]\nDOMAIN: [domain]\nASSIGNED_TO: worker-N\nFILES: [files]\nVALIDATION: tier3\nTIER: 3\n\n[detailed requirements]\n\n[success criteria]",
-     "domain": "[domain]",
-     "files": ["file1.js", "file2.js"],
-     "validation": "tier3",
-     "tier": 3,
-     "request_id": "[id]"
-   }
-   TASK
-   ```
-   Use the same content you passed to TaskCreate. The task file is the cross-session handoff; TaskCreate is only for your own local tracking.
-
-   **CRITICAL: The filename MUST be exactly `worker-N.json`** (e.g. `worker-1.json`, `worker-4.json`). The worker loop reads ONLY this exact filename. NEVER use suffixes like `-queued`, `-pending`, `-assigned`. If a task is queued for later, still write it to `worker-N.json` — the worker will pick it up when launched.
-7. Update worker-status.json (use lock helper)
-8. Clear processed tasks from task-queue.json
-9. **Launch or signal each assigned worker:**
-```bash
-worker_status=$(jq -r '.["worker-N"].status' .claude/state/worker-status.json)
-
-if [ "$worker_status" = "idle" ]; then
-    bash .claude/scripts/launch-worker.sh N
-    # Log: [LAUNCH_WORKER] worker=worker-N reason=tier3-task
-else
-    touch .claude/signals/.worker-signal
-    # Log: [SIGNAL_WORKER] worker=worker-N reason=tier3-task
-fi
-```
-10. Log each allocation with reasoning
-11. `context_budget += 50 per task allocated`
-12. `last_activity = now()`
-
-### Step 4: Check worker status
-```bash
-cat .claude/state/worker-status.json
-```
-`context_budget += 10`
-
-### Step 5: Check for completed requests
-
-Check `worker-status.json` for workers whose status is `"completed_task"` and whose `current_task` belongs to the active request_id:
-```bash
-cat .claude/state/worker-status.json
-```
-
-Cross-reference with the task-queue.json to see how many tasks were in the request. If ALL workers assigned to a request_id show `status: "completed_task"`:
-1. Read `.claude/state/change-summaries.md` for summary of all changes
-2. Optional teammate burst (only when integration ownership is unclear): run read-only synthesis before merging
-3. Pull latest, merge PRs
-4. Validation based on tier:
-   - Tasks tagged `VALIDATION: tier2` → spawn build-validator only
-   - Tasks tagged `VALIDATION: tier3` → spawn build-validator + verify-app
-5. If issues, create fix tasks
-6. If clean, push to main
-7. Write integration status to `integration-log.json` (**NEVER write to handoff.json** — it is Master-1's request queue and writing to it destroys pending requests):
-   ```bash
-   bash .claude/scripts/state-lock.sh .claude/state/integration-log.json '
-     if [ ! -f .claude/state/integration-log.json ] || ! jq -e "type == \"array\"" .claude/state/integration-log.json >/dev/null 2>&1; then
-       echo "[]" > .claude/state/integration-log.json
-     fi
-     jq ". += [{\"request_id\": \"[id]\", \"status\": \"integrated\", \"integrated_at\": \"[ISO timestamp]\"}]" .claude/state/integration-log.json > /tmp/il.json && mv /tmp/il.json .claude/state/integration-log.json
-   '
-   ```
-8. Touch `.claude/signals/.completion-signal` (for status tracking)
-9. `context_budget += 100`
-10. `last_activity = now()`
-
-### Step 6: Heartbeat check (every 3rd cycle)
-If `polling_cycle % 3 == 0`:
-- **Skip workers with status "idle"** — they are NOT running (no terminal open), so no heartbeat expected
-- Only check "running"/"busy" workers for stale heartbeats (>90s → set status to "idle")
-- Update agent-health.json with current context_budget
-
-### Step 7: Reset check
-
-Check if reset needed:
-```bash
-# Time-based check
-started_at_ts=$(jq -r '.["master-3"].started_at // empty' .claude/state/agent-health.json 2>/dev/null)
-# If more than 20 minutes since start, consider reset
-```
-
-**Qualitative self-check (every 20 cycles):**
-List all active workers and their domains from memory. If you can't do it accurately, reset immediately.
-
-If `context_budget >= 5000` OR 20 minutes elapsed OR self-detected degradation:
-1. Go to Step 8 (distill and reset)
-
-Otherwise, go back to Step 1.
-
-### Step 8: Pre-Reset Distillation
-
-1. **Distill allocation learnings:**
-```bash
-bash .claude/scripts/state-lock.sh .claude/knowledge/allocation-learnings.md 'cat > .claude/knowledge/allocation-learnings.md << LEARN
-# Allocation Learnings
-<!-- Updated [ISO timestamp] by Master-3 -->
-
-## Worker Performance
-[which workers performed well on which domains this session]
-
-## Task Duration Actuals
-[how long different task types actually took]
-
-## Allocation Decisions
-[decisions that led to good vs. bad outcomes]
-
-## Fix Cycle Patterns
-[what types of allocations produced fix cycles]
-LEARN'
-```
-
-2. **Check stagger:**
-```bash
-cat .claude/state/agent-health.json
-```
-If Master-2 status is "resetting", `sleep 30` and check again.
-
-3. **Update agent-health.json:** set master-3 status to "resetting"
-4. Log: `[DISTILL] [RESET] context_budget=[budget] cycles=[polling_cycle]`
-5. `/clear`
-6. `/scan-codebase-allocator`
-
-## Allocation Rules (STRICT)
-
-**Rule 1: Domain matching is STRICT** — only file-level coupling counts
-**Rule 2: Fresh context > queued context** — prefer idle workers when busy worker has 2+ completed tasks
-**Rule 3: Allocation order:**
-1. Fix for specific worker → that worker
-2. Exact same files, 0-1 tasks completed → queue to them
-3. Idle worker available (no `claimed_by`) → assign to idle (PREFER THIS)
-4. All busy, 2+ completed → least-loaded
-5. Last resort: queue behind heavily-loaded
-
-**Rule 4: Fix tasks go to SAME worker**
-**Rule 5: Respect depends_on**
-**Rule 6: NEVER queue more than 1 task per worker**
-**Rule 7: Skip workers with `claimed_by` set** — Master-2 Tier 2 in progress
-**Rule 8: Auto-scale before queuing behind busy workers** — If all workers are busy and no idle slots, create new workers (up to 8 total) via `bash .claude/scripts/add-worker.sh` BEFORE falling back to Rule 4/5 queueing. Fresh workers with clean context are always preferred over overloaded ones.
-
-## Creating Tasks
-
-Always include in task description: REQUEST_ID, DOMAIN, ASSIGNED_TO, FILES, VALIDATION, TIER
-
-```
-TaskCreate({
-  subject: "Fix popout theme sync",
-  description: "REQUEST_ID: popout-fixes\nDOMAIN: popout\nASSIGNED_TO: worker-1\nFILES: main.js, popout.js\nVALIDATION: tier3\nTIER: 3\n\n[detailed requirements]",
-  activeForm: "Working on popout theme..."
-})
-```
-
-## Worker Status JSON Schema
-
-Track these fields for each worker (use lock helper for all writes):
-
-```json
-{
-  "worker-1": {
-    "status": "idle|assigned|busy|completed_task|resetting|dead",
-    "domain": "popout",
-    "current_task": "Add readyState guard to popout theme sync callback",
-    "tasks_completed": 2,
-    "context_budget": 1500,
-    "queued_task": null,
-    "awaiting_approval": false,
-    "claimed_by": null,
-    "last_heartbeat": "2024-01-15T10:30:00Z"
-  }
-}
-```
-
-- `claimed_by`: Set by Master-2 during Tier 2 claim-before-assign. Skip workers where this is non-null.
-- `awaiting_approval`: Set by worker when plan needs review. Do not assign new tasks while true.
-- Increment `tasks_completed` each time a worker finishes a task
-- Track `queued_task` to enforce Rule 6 (max 1 queued)
-- Use `context_budget` for budget-based reset decisions
-
-## Worker Context Reset (Budget-Based)
-
-When a worker's `context_budget` exceeds 8000 OR `tasks_completed >= 6`:
-1. Create RESET task for that worker
-2. Reset their worker-status.json entry
-3. Log the reset with reasoning
+These operations are NOT managed by mac10 and still use local files:
+- Knowledge files: `mistakes.md`, `patterns.md`, `allocation-learnings.md`
+- Domain knowledge: `.claude/knowledge/domain/*.md`
+- Change summaries: `change-summaries.md`
+- Activity log: `.claude/logs/activity.log`
+- Agent health: `agent-health.json` (local tracking only)
