@@ -29,7 +29,8 @@ const HEARTBEAT_INTERVAL_MS = 30000;
 const BASE_RECONNECT_DELAY_MS = 1000;
 
 // --- Subscriptions ---
-// channel -> { tickers: Set, callbacks: Set<Function> }
+// channel -> { tickers: Set, callbacks: Map<Function, Set<string>|null> }
+// Each callback maps to its ticker scope (Set of tickers) or null for channel-global.
 const subscriptions = {};
 
 // Global listeners for connection state changes
@@ -239,11 +240,14 @@ function sendCommand(cmd) {
  */
 function subscribe(channel, callback, tickers = []) {
   if (!subscriptions[channel]) {
-    subscriptions[channel] = { tickers: new Set(), callbacks: new Set() };
+    subscriptions[channel] = { tickers: new Set(), callbacks: new Map() };
   }
 
   const sub = subscriptions[channel];
-  sub.callbacks.add(callback);
+
+  // Store callback with its ticker scope (null = channel-global, receives all messages)
+  const scope = tickers.length > 0 ? new Set(tickers) : null;
+  sub.callbacks.set(callback, scope);
 
   // Track new tickers to subscribe
   const newTickers = tickers.filter((t) => !sub.tickers.has(t));
@@ -327,7 +331,16 @@ function routeMessage(type, msg, rawMsg = msg) {
 
   const sub = subscriptions[channel];
 
-  sub.callbacks.forEach((cb) => {
+  // Extract the message ticker for per-subscriber filtering
+  const msgTicker = msg.market_ticker || msg.ticker || rawMsg?.market_ticker || rawMsg?.ticker;
+
+  sub.callbacks.forEach((scope, cb) => {
+    // Channel-global (unscoped) subscribers receive all messages.
+    // Scoped subscribers only receive messages matching their ticker set.
+    // If the message has no ticker field, deliver to all (can't filter).
+    if (scope !== null && msgTicker && !scope.has(msgTicker)) {
+      return;
+    }
     try { cb(msg); } catch (err) {
       console.error(`[KalshiWS] Callback error for ${channel}:`, err);
     }
