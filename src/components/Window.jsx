@@ -101,20 +101,34 @@ function Window({
     return () => unsubscribeDrag(colorId, id)
   }, [colorIndex, id])
 
-  // Close context menu on outside click
+  // Close context menu on outside click or Escape
   useEffect(() => {
     if (!contextMenu) return
     const handleClick = () => setContextMenu(null)
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setContextMenu(null)
+    }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [contextMenu])
 
-  // Close color picker on outside click
+  // Close color picker on outside click or Escape
   useEffect(() => {
     if (!showColorPicker) return
     const handleClick = () => setShowColorPicker(false)
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowColorPicker(false)
+    }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [showColorPicker])
 
   // Clear merge highlight on any element
@@ -399,7 +413,15 @@ function Window({
               backgroundColor:
                 colorIndex >= 0 ? LINK_COLORS[colorIndex].hex : 'var(--color-chip-unlinked)',
             }}
+            role="button"
+            tabIndex={0}
             onClick={handleChipClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleChipClick(e)
+              }
+            }}
             title={
               colorIndex >= 0
                 ? `Linked: ${LINK_COLORS[colorIndex].id} (click for picker, shift+click to cycle)`
@@ -411,20 +433,38 @@ function Window({
               className="window-color-picker"
               onMouseDown={(e) => e.stopPropagation()}
             >
-              <div className="window-color-picker-swatches">
+              <div className="window-color-picker-swatches" role="group" aria-label="Link colors">
                 {LINK_COLORS.map((c, i) => (
                   <div
                     key={c.id}
                     className={`window-color-swatch${colorIndex === i ? ' window-color-swatch--active' : ''}`}
                     style={{ backgroundColor: c.hex }}
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => handleColorSelect(e, i)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleColorSelect(e, i)
+                      }
+                    }}
                     title={c.id}
+                    aria-label={`Link color: ${c.id}`}
+                    aria-pressed={colorIndex === i}
                   />
                 ))}
               </div>
               <div
                 className="window-color-unlink"
+                role="button"
+                tabIndex={0}
                 onClick={(e) => handleColorSelect(e, -1)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleColorSelect(e, -1)
+                  }
+                }}
               >
                 Unlink
               </div>
@@ -496,22 +536,32 @@ function Window({
       {contextMenu && (
         <div
           className="window-context-menu"
+          role="menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation()
+              setContextMenu(null)
+            }
+          }}
         >
-          <div className="window-context-item" onClick={handlePopOut}>
+          <div className="window-context-item" role="menuitem" tabIndex={0} onClick={handlePopOut} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePopOut() } }}>
             Pop Out
           </div>
-          <div className="window-context-item" onClick={handlePinToTop}>
+          <div className="window-context-item" role="menuitem" tabIndex={0} onClick={handlePinToTop} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePinToTop() } }}>
             {isPinned ? '✓ ' : ''}Pin to Top
           </div>
-          <div className="window-context-item" onClick={handleToggleTitlebar}>
+          <div className="window-context-item" role="menuitem" tabIndex={0} onClick={handleToggleTitlebar} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleTitlebar() } }}>
             {hideTitlebar ? '✓ ' : ''}Hide Title Bar
           </div>
-          <div className="window-context-separator" />
+          <div className="window-context-separator" role="separator" />
           <div
             className="window-context-item"
+            role="menuitem"
+            tabIndex={0}
             onClick={handleOpenSettings}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenSettings() } }}
           >
             {title} Settings…
           </div>
