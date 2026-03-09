@@ -1,8 +1,8 @@
 import React from 'react'
 import Window from './Window'
 import PopoutWindow from './PopoutWindow'
+import { getToolByType } from '../config/toolManifest'
 import MarketViewer from './MarketViewer'
-// Trade
 import Montage from './trade/Montage'
 import NewsChat from './trade/NewsChat'
 import PriceLadder from './trade/PriceLadder'
@@ -12,10 +12,8 @@ import TradeLog from './trade/TradeLog'
 import EventLog from './trade/EventLog'
 import OrderBook from './trade/OrderBook'
 import ChangesTab from './trade/ChangesTab'
-// Quotes
 import Chart from './quotes/Chart'
 import TimeSale from './quotes/TimeSale'
-// Scanners
 import LiveScanner from './scanners/LiveScanner'
 import HistoricalScanner from './scanners/HistoricalScanner'
 import MarketClock from './scanners/MarketClock'
@@ -31,11 +29,12 @@ function Placeholder({ title }) {
   )
 }
 
-// Component registry — maps window type strings to React components.
-const COMPONENT_REGISTRY = {
-  // Login
+// Component bindings — maps manifest type keys to React components.
+// Tool metadata (label, category, size, shortcut) lives in the canonical
+// manifest (src/config/toolManifest.js); this map only carries the component
+// references that the manifest intentionally does not import.
+const COMPONENTS = {
   login: Placeholder,
-  // Trade
   montage: Montage,
   'price-ladder': PriceLadder,
   accounts: Accounts,
@@ -44,17 +43,14 @@ const COMPONENT_REGISTRY = {
   'event-log': EventLog,
   'order-book': OrderBook,
   changes: ChangesTab,
-  // Quotes
   chart: Chart,
   'time-sale': TimeSale,
   'market-viewer': MarketViewer,
   'news-chat': NewsChat,
-  // Scanners
   'live-scanner': LiveScanner,
   'historical-scanner': HistoricalScanner,
   'alert-trigger': AlertTrigger,
   'market-clock': MarketClock,
-  // Setup
   'hotkey-config': HotkeyManager,
 }
 
@@ -71,9 +67,10 @@ function WindowManager({
   return (
     <>
       {Object.values(windows).map((win) => {
-        const Component = COMPONENT_REGISTRY[win.type] || Placeholder
+        const entry = getToolByType(win.type)
+        const Component = COMPONENTS[win.type] || Placeholder
         const componentProps = {
-          title: win.title,
+          title: win.title || entry?.label || win.type,
           windowId: win.tabs?.[win.activeTabIndex]?.id ?? win.id,
           hostWindowId: win.id,
           type: win.type,
