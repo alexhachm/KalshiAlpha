@@ -15,6 +15,7 @@ import {
   getImprovements,
   exportForPrioritization,
 } from './auditStateService'
+import { runInteractionAuditPipeline } from './interactionAuditService'
 
 // ── Research source categories ──────────────────────────────────────────
 // Each source describes a category of external knowledge that can improve the codebase.
@@ -569,12 +570,21 @@ async function runScoringEngine(opts = {}) {
     })
   }
 
-  // Phase 4: Export for prioritization
+  // Phase 4: Interaction audit — audit end-to-end user flows
+  let interactionAudit = null
+  try {
+    interactionAudit = await runInteractionAuditPipeline()
+  } catch {
+    // Interaction audit is non-blocking; failures don't halt the pipeline
+  }
+
+  // Phase 5: Export for prioritization
   const exportData = exportForPrioritization()
 
   return {
     inventory: inventory.length,
     scored: scored.length,
+    interactionAudit: interactionAudit?.summary || null,
     export: exportData,
   }
 }
@@ -593,5 +603,6 @@ export {
   runInventory,
   scoreBatch,
   runScoringEngine,
+  runInteractionAuditPipeline,
   exportForPrioritization,
 }
