@@ -65,7 +65,7 @@ function Window({
   const [isPinned, setIsPinned] = useState(false)
   const [hideTitlebar, setHideTitlebar] = useState(() => {
     try {
-      return localStorage.getItem(`window-hide-titlebar-${id}`) === 'true'
+      return localStorage.getItem(`window-hide-titlebar-${type}`) === 'true'
     } catch { return false }
   })
 
@@ -358,10 +358,26 @@ function Window({
     setContextMenu(null)
     setHideTitlebar((prev) => {
       const next = !prev
-      try { localStorage.setItem(`window-hide-titlebar-${id}`, String(next)) } catch {}
+      try { localStorage.setItem(`window-hide-titlebar-${type}`, String(next)) } catch {}
       return next
     })
-  }, [id])
+  }, [type])
+
+  const handleClose = useCallback(() => {
+    setContextMenu(null)
+    onClose(id)
+  }, [id, onClose])
+
+  // Context menu for recovery strip (no toggle-settings side effect)
+  const handleRecoveryContextMenu = useCallback((e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const rect = windowRef.current?.getBoundingClientRect()
+    setContextMenu({
+      x: e.clientX - (rect?.left || 0),
+      y: e.clientY - (rect?.top || 0),
+    })
+  }, [])
 
   // Double-click titlebar to pop out
   const handleTitleBarDoubleClick = useCallback(
@@ -448,6 +464,33 @@ function Window({
         </div>
       </div>
 
+      {/* Recovery strip for hidden titlebar */}
+      {hideTitlebar && (
+        <div
+          className="window-recovery-strip"
+          onMouseDown={handleTitleBarMouseDown}
+          onDoubleClick={handleTitleBarDoubleClick}
+          onContextMenu={handleRecoveryContextMenu}
+        >
+          <div className="window-recovery-controls" onMouseDown={(e) => e.stopPropagation()}>
+            <button
+              className="window-recovery-btn"
+              onClick={handleToggleTitlebar}
+              title="Show Title Bar"
+            >
+              ▾
+            </button>
+            <button
+              className="window-recovery-btn"
+              onClick={() => onClose(id)}
+              title="Close"
+            >
+              <X size={10} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tab bar for merged windows */}
       {tabs && tabs.length > 1 && (
         <div className="window-tab-bar" role="tablist">
@@ -514,6 +557,10 @@ function Window({
             onClick={handleOpenSettings}
           >
             {title} Settings…
+          </div>
+          <div className="window-context-separator" />
+          <div className="window-context-item" onClick={handleClose}>
+            Close
           </div>
         </div>
       )}
