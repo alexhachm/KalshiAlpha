@@ -116,11 +116,6 @@ function Chart({ windowId }) {
 
   const overlayTickersKey = (settings.overlayTickers || []).join(',')
 
-  // Persist settings
-  useEffect(() => {
-    saveSettings(windowId, settings)
-  }, [windowId, settings])
-
   // Toggle settings via right-click header event
   useEffect(() => {
     const el = outerRef.current
@@ -131,8 +126,18 @@ function Chart({ windowId }) {
   }, [])
 
   const updateSetting = useCallback((key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }))
-  }, [])
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value }
+      saveSettings(windowId, next)
+      return next
+    })
+  }, [windowId])
+
+  const handleSettingsSave = useCallback((newSettings) => {
+    setSettings(newSettings)
+    saveSettings(windowId, newSettings)
+    setShowSettings(false)
+  }, [windowId])
 
   // Initialize and update chart
   useEffect(() => {
@@ -550,7 +555,7 @@ function Chart({ windowId }) {
       {showSettings && (
         <ChartSettings
           settings={settings}
-          onUpdate={updateSetting}
+          onSave={handleSettingsSave}
           onClose={() => setShowSettings(false)}
           availableTickers={availableTickers}
         />
