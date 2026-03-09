@@ -10,6 +10,7 @@ import {
 } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
+import { formatCents } from '../../services/displayFormat'
 import GridSettingsPanel from '../GridSettingsPanel'
 import './TimeSale.css'
 
@@ -22,7 +23,7 @@ const TS_COLUMNS = [
   { key: 'price', label: 'Price', align: 'right', numeric: true },
   { key: 'size', label: 'Qty', align: 'right', numeric: true },
   { key: 'time', label: 'Time', align: 'left' },
-  { key: 'side', label: 'Exchange', align: 'right' },
+  { key: 'side', label: 'Side', align: 'right' },
 ]
 
 const FONT_SIZE_MAP = { small: 10, medium: 11, large: 13 }
@@ -67,9 +68,6 @@ function formatTime(ts, hideMs) {
   return `${h}:${m}:${s}.${ms}`
 }
 
-function formatPrice(price, useTwo) {
-  return useTwo ? `${Number(price).toFixed(2)}¢` : `${price}¢`
-}
 
 function formatSize(size, abbreviate) {
   if (!abbreviate || size < 1000) return size
@@ -318,7 +316,7 @@ function TimeSale({ windowId }) {
                   style={col.width ? { flex: `0 0 ${col.width}px` } : undefined}
                 >
                   {col.key === 'time' ? formatTime(trade.timestamp, settings.hideMilliseconds) :
-                   col.key === 'price' ? formatPrice(trade.price, settings.priceDecimals) :
+                   col.key === 'price' ? formatCents(trade.price, { decimals: settings.priceDecimals ? 2 : 0 }) :
                    col.key === 'size' ? formatSize(trade.size, settings.abbreviateSize) :
                    col.key === 'side' ? trade.side : null}
                 </span>

@@ -8,6 +8,7 @@ import {
 } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
+import { formatCents, sideChar } from '../../services/displayFormat'
 import PriceLadderSettings from './PriceLadderSettings'
 import './PriceLadder.css'
 
@@ -371,7 +372,7 @@ function PriceLadder({ windowId }) {
                     if (col.key === 'price') {
                       return (
                         <div key="price" className={`pl-cell pl-cell-price ${isAboveSpread ? 'pl-price-ask' : ''} ${isBelowSpread ? 'pl-price-bid' : ''}`}>
-                          {level.price}
+                          {formatCents(level.price)}
                         </div>
                       )
                     }
@@ -416,7 +417,7 @@ function PriceLadder({ windowId }) {
                           onClick={() => cancelOrder(o.id)}
                           title="Click to cancel"
                         >
-                          {o.side === 'yes' ? 'B' : 'S'}{o.size}
+                          {sideChar(o.side)}{o.size}
                         </span>
                       ))}
                     </div>
@@ -429,8 +430,8 @@ function PriceLadder({ windowId }) {
           {/* Footer info bar */}
           <div className="pl-footer">
             <div className="pl-footer-row">
-              <span>Last: <strong>{lastPrice}c</strong></span>
-              {spread !== null && <span>Spread: <strong>{spread}</strong></span>}
+              <span>Last: <strong>{formatCents(lastPrice)}</strong></span>
+              {spread !== null && <span>Spread: <strong>{formatCents(spread)}</strong></span>}
               <span>Size: </span>
               <input
                 className="pl-size-input"

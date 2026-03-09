@@ -8,6 +8,7 @@ import {
   getColorGroup,
 } from '../services/linkBus'
 import { registerWindowTicker, unregisterWindowTicker } from '../hooks/useHotkeyDispatch'
+import { formatCents, sideLabel } from '../services/displayFormat'
 import './MarketViewer.css'
 
 const TICKERS = [
@@ -182,9 +183,9 @@ function MarketViewer({ windowId }) {
           <div className="mv-header-row">
             <span className="mv-ticker-name">{data.ticker}</span>
             <span className="mv-last-trade">
-              Last: {data.lastTrade.price}c
+              Last: {formatCents(data.lastTrade.price)}
               <span className={data.lastTrade.side === 'YES' ? 'text-win' : 'text-loss'}>
-                {' '}{data.lastTrade.side}
+                {' '}{sideLabel(data.lastTrade.side)}
               </span>
               <span className="text-muted"> x{data.lastTrade.size}</span>
             </span>
@@ -193,11 +194,11 @@ function MarketViewer({ windowId }) {
           <div className="mv-prices">
             <div className={`mv-price-box mv-yes ${yesFlash === 'up' ? 'mv-flash-up' : yesFlash === 'down' ? 'mv-flash-down' : ''}`}>
               <span className="mv-price-label">YES</span>
-              <span className="mv-price-value mv-yes-price">{data.yes.price}c</span>
+              <span className="mv-price-value mv-yes-price">{formatCents(data.yes.price)}</span>
             </div>
             <div className={`mv-price-box mv-no ${noFlash === 'up' ? 'mv-flash-up' : noFlash === 'down' ? 'mv-flash-down' : ''}`}>
               <span className="mv-price-label">NO</span>
-              <span className="mv-price-value mv-no-price">{data.no.price}c</span>
+              <span className="mv-price-value mv-no-price">{formatCents(data.no.price)}</span>
             </div>
           </div>
 
@@ -214,7 +215,7 @@ function MarketViewer({ windowId }) {
               <tbody>
                 {data.yes.bids.map((level, i) => (
                   <tr key={i}>
-                    <td className="mv-bid-price">{level.price}c</td>
+                    <td className="mv-bid-price">{formatCents(level.price)}</td>
                     <td>{level.size}</td>
                     <td>{level.orders}</td>
                   </tr>

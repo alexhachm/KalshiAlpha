@@ -13,6 +13,7 @@ import {
 } from '../../services/omsService'
 import { buildSyntheticDom } from '../../services/dataFeed'
 import { subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
+import { formatCents, formatPnl, sideLabel } from '../../services/displayFormat'
 import './OrderBook.css'
 
 const LS_KEY_PREFIX = 'order-book-settings-'
@@ -88,17 +89,6 @@ function formatTime(ts) {
   const m = String(d.getMinutes()).padStart(2, '0')
   const s = String(d.getSeconds()).padStart(2, '0')
   return `${h}:${m}:${s}`
-}
-
-function formatCents(cents) {
-  if (cents == null) return '--'
-  return (cents / 100).toFixed(2)
-}
-
-function formatPnl(cents) {
-  if (cents == null) return '--'
-  const abs = Math.abs(cents / 100).toFixed(2)
-  return cents >= 0 ? `+$${abs}` : `-$${abs}`
 }
 
 function OrderBook({ windowId }) {
@@ -387,7 +377,7 @@ function OrdersPanel({ orders, grid, cancellingIds, onCancel }) {
               )}
               {visibleKeys.has('side') && (
                 <td className={`ob-td ob-align-center ob-side-${order.side}`}>
-                  {order.side?.toUpperCase()}
+                  {sideLabel(order.side)}
                 </td>
               )}
               {visibleKeys.has('type') && (
@@ -477,7 +467,7 @@ function FillsPanel({ fills, grid, flashedFills }) {
               )}
               {visibleKeys.has('side') && (
                 <td className={`ob-td ob-align-center ob-side-${fill.side || 'yes'}`}>
-                  {(fill.side || '--').toUpperCase()}
+                  {sideLabel(fill.side)}
                 </td>
               )}
               {visibleKeys.has('price') && (
@@ -534,7 +524,7 @@ function PositionsPanel({ positions, grid }) {
               )}
               {visibleKeys.has('side') && (
                 <td className={`ob-td ob-align-center ob-side-${pos.side}`}>
-                  {pos.side?.toUpperCase()}
+                  {sideLabel(pos.side)}
                 </td>
               )}
               {visibleKeys.has('contracts') && (
