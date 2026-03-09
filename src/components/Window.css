@@ -430,3 +430,23 @@
   box-shadow: 0 0 6px currentColor;
   border-color: transparent;
 }
+
+/* Active/focused window — stronger visual prominence */
+.window--focused {
+  box-shadow: var(--shadow-md);
+  border-color: color-mix(in srgb, var(--accent-highlight) 35%, transparent);
+}
+
+.window--focused .window-titlebar {
+  background: color-mix(in srgb, var(--bg-tertiary) 90%, var(--accent-highlight));
+}
+
+/* Dragging state — subtle transparency hint */
+.window--dragging {
+  opacity: 0.92;
+  cursor: grabbing;
+}
+
+.window--dragging .window-titlebar {
+  cursor: grabbing;
+}
