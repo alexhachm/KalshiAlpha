@@ -360,6 +360,11 @@ function Chart({ windowId }) {
     return unsub
   }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey])
 
+  // Emit ticker ownership update to Shell
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowId, ticker } }))
+  }, [windowId, ticker])
+
   // Color link bus integration
   const handleLinkEvent = useCallback(
     ({ ticker: linkedTicker }) => {

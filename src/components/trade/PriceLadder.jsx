@@ -146,6 +146,11 @@ function PriceLadder({ windowId }) {
     }
   }, [data, settings.centerOnTrade])
 
+  // Emit ticker ownership update to Shell
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowId, ticker } }))
+  }, [windowId, ticker])
+
   // Color link subscription
   const handleLinkEvent = useCallback(
     ({ ticker: linkedTicker }) => {

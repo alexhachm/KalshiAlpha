@@ -68,6 +68,11 @@ function MarketViewer({ windowId }) {
     }
   }, [])
 
+  // Emit ticker ownership update to Shell
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowId, ticker } }))
+  }, [windowId, ticker])
+
   // Use ref for ticker to avoid re-subscribing to link bus on every ticker change
   const tickerRef = useRef(ticker)
   useEffect(() => { tickerRef.current = ticker }, [ticker])
