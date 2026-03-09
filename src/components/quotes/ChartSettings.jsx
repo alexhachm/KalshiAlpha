@@ -1,6 +1,8 @@
 import React from 'react'
+import { useDialogFocusTrap } from '../../hooks/useDialogFocusTrap'
 
 function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
+  const { dialogProps } = useDialogFocusTrap(true, onClose, { ariaLabel: 'Chart Settings' })
   const toggleOverlayTicker = (t) => {
     const current = settings.overlayTickers || []
     if (current.includes(t)) {
@@ -11,7 +13,7 @@ function ChartSettings({ settings, onUpdate, onClose, availableTickers }) {
   }
 
   return (
-    <div className="chart-settings-panel">
+    <div className="chart-settings-panel" {...dialogProps}>
       <div className="chart-settings-header">
         <span>Chart Settings</span>
         <button className="chart-settings-close" onClick={onClose}>x</button>

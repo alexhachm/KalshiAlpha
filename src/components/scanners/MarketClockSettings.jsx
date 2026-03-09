@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { useDialogFocusTrap } from '../../hooks/useDialogFocusTrap'
 
 function MarketClockSettings({ settings, onChange, onClose }) {
   const [local, setLocal] = useState({ ...settings })
+  const { dialogProps } = useDialogFocusTrap(true, onClose, { ariaLabel: 'Clock Settings' })
 
   const update = (key, value) => {
     setLocal((prev) => ({ ...prev, [key]: value }))
@@ -14,7 +16,7 @@ function MarketClockSettings({ settings, onChange, onClose }) {
 
   return (
     <div className="mcs-overlay" onClick={onClose}>
-      <div className="mcs-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="mcs-panel" {...dialogProps} onClick={(e) => e.stopPropagation()}>
         <div className="mcs-header">
           <span>Clock Settings</span>
           <button className="mcs-close" onClick={onClose}>&times;</button>
