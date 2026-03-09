@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
 import { getPositionSummaries, on } from '../../services/omsService'
-import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
+import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink } from '../../services/linkBus'
+import useColorGroup from '../../hooks/useColorGroup'
 import './Positions.css'
 
 const LS_KEY_PREFIX = 'positions-settings-'
@@ -124,8 +125,9 @@ function Positions({ windowId }) {
   }, [])
 
   // Color link subscription
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
 
     const handler = ({ ticker }) => {
@@ -134,7 +136,7 @@ function Positions({ windowId }) {
 
     subscribeToLink(colorId, handler, windowId)
     return () => unsubscribeFromLink(colorId, handler)
-  }, [windowId])
+  }, [windowId, colorId])
 
   const handleRowClick = useCallback((market) => {
     setSelectedRow(market)

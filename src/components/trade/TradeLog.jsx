@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import TradeLogSettings from './TradeLogSettings'
-import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
+import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink } from '../../services/linkBus'
+import useColorGroup from '../../hooks/useColorGroup'
 import './TradeLog.css'
 
 const LS_KEY_PREFIX = 'trade-log-settings-'
@@ -174,13 +175,14 @@ function TradeLog({ windowId }) {
   }, [settings.refreshInterval, refreshData])
 
   // Color link
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
     const handler = ({ ticker }) => setSelectedRow(ticker)
     subscribeToLink(colorId, handler, windowId)
     return () => unsubscribeFromLink(colorId, handler)
-  }, [windowId])
+  }, [windowId, colorId])
 
   const handleRowClick = useCallback((market) => {
     setSelectedRow(market)
