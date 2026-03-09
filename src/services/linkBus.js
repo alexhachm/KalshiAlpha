@@ -173,6 +173,16 @@ function emitDragDelta(colorId, sourceWindowId, dx, dy) {
   });
 }
 
+// --- Reset (called by settings "Reset to defaults") ---
+
+function resetLinkState() {
+  windowGroups = {};
+  saveLinkState();
+  // Re-sync runtime cache from settingsStore (subscriber also handles this,
+  // but explicit read ensures deterministic state when called after settingsStore.reset())
+  linkingEnabled = !!getSettings().colorCoordination.linkingEnabled;
+}
+
 // --- Enable/Disable ---
 
 function setLinkingEnabled(enabled) {
@@ -210,6 +220,7 @@ export {
   emitDragDelta,
   loadLinkState,
   saveLinkState,
+  resetLinkState,
   setLinkingEnabled,
   isLinkingEnabled,
 };
