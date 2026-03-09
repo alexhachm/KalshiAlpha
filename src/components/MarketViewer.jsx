@@ -22,7 +22,12 @@ function MarketViewer({ windowId }) {
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const [showResults, setShowResults] = useState(false)
   const { results: searchResults, loading: searchLoading, search } = useMarketSearch()
+  const searchWrapperRef = useRef(null)
+  const inputRef = useRef(null)
+  const listboxId = `mv-search-listbox-${windowId}`
 
   // Subscribe to ticker data via hook
   const { data } = useTickerData(ticker)
@@ -92,10 +97,28 @@ function MarketViewer({ windowId }) {
     emitLinkedMarket(windowId, newTicker)
   }
 
+  // Close search results on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target)) {
+        setShowResults(false)
+        setActiveIndex(-1)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Reset activeIndex when results change
+  useEffect(() => {
+    setActiveIndex(-1)
+  }, [searchResults])
+
   // Search handler with debounce
   const handleSearchChange = (e) => {
     const q = e.target.value
     setSearchQuery(q)
+    setShowResults(true)
     clearTimeout(searchTimerRef.current)
     if (q.trim().length >= 2) {
       searchTimerRef.current = setTimeout(() => search(q.trim()), 300)
@@ -105,7 +128,36 @@ function MarketViewer({ windowId }) {
   const handleSearchSelect = (t) => {
     setTicker(t)
     setSearchQuery('')
+    setShowResults(false)
+    setActiveIndex(-1)
     emitLinkedMarket(windowId, t)
+  }
+
+  const handleSearchKeyDown = (e) => {
+    const isOpen = showResults && searchQuery.trim().length >= 2
+    const count = searchResults.length
+
+    if (e.key === 'Escape') {
+      setShowResults(false)
+      setActiveIndex(-1)
+      inputRef.current?.blur()
+      return
+    }
+
+    if (!isOpen || count === 0) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIndex((prev) => (prev < count - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : count - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (activeIndex >= 0 && activeIndex < count) {
+        handleSearchSelect(searchResults[activeIndex].ticker)
+      }
+    }
   }
 
   return (
@@ -120,24 +172,36 @@ function MarketViewer({ windowId }) {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
-        <div className="mv-search-wrapper">
+        <div className="mv-search-wrapper" ref={searchWrapperRef}>
           <input
+            ref={inputRef}
             className="mv-search-input"
             type="text"
             placeholder="Search markets..."
             value={searchQuery}
             onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
+            onFocus={() => searchQuery.trim().length >= 2 && setShowResults(true)}
+            role="combobox"
+            aria-expanded={showResults && searchQuery.trim().length >= 2}
+            aria-controls={listboxId}
+            aria-activedescendant={activeIndex >= 0 ? `mv-search-option-${windowId}-${activeIndex}` : undefined}
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
           />
-          {searchQuery.trim().length >= 2 && (
-            <div className="mv-search-results">
+          {showResults && searchQuery.trim().length >= 2 && (
+            <div className="mv-search-results" role="listbox" id={listboxId}>
               {searchLoading && <div className="mv-search-item mv-search-loading">Searching...</div>}
               {!searchLoading && searchResults.length === 0 && (
                 <div className="mv-search-item mv-search-empty">No results</div>
               )}
-              {searchResults.map((m) => (
+              {searchResults.map((m, i) => (
                 <div
                   key={m.ticker}
-                  className="mv-search-item"
+                  id={`mv-search-option-${windowId}-${i}`}
+                  className={`mv-search-item${i === activeIndex ? ' mv-search-item--active' : ''}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
                   onClick={() => handleSearchSelect(m.ticker)}
                 >
                   <span className="mv-search-ticker">{m.ticker}</span>
