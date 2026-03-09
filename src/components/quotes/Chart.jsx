@@ -7,6 +7,7 @@ import {
   emitLinkedMarket,
   getColorGroup,
 } from '../../services/linkBus'
+import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import ChartSettings from './ChartSettings'
 import './Chart.css'
 
@@ -104,6 +105,12 @@ function Chart({ windowId }) {
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const [crosshairData, setCrosshairData] = useState(null)
+
+  // Report current ticker to hotkey dispatch registry
+  useEffect(() => {
+    registerWindowTicker(windowId, ticker)
+    return () => unregisterWindowTicker(windowId)
+  }, [windowId, ticker])
 
   const overlayTickersKey = (settings.overlayTickers || []).join(',')
 

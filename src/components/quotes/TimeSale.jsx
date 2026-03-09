@@ -7,6 +7,7 @@ import {
   getColorGroup,
 } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
+import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import GridSettingsPanel from '../GridSettingsPanel'
 import './TimeSale.css'
 
@@ -75,6 +76,13 @@ function formatSize(size, abbreviate) {
 
 function TimeSale({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])
+
+  // Report current ticker to hotkey dispatch registry
+  useEffect(() => {
+    registerWindowTicker(windowId, ticker)
+    return () => unregisterWindowTicker(windowId)
+  }, [windowId, ticker])
+
   const [trades, setTrades] = useState([])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
