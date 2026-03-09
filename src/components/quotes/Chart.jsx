@@ -420,7 +420,8 @@ function Chart({ windowId }) {
   }
 
   const ohlc = crosshairData && !crosshairData.overlay ? formatOHLC(crosshairData) : null
-  const availableTickers = useMemo(() => TICKERS.filter((t) => t !== ticker), [ticker])
+  const selectorTickers = useMemo(() => TICKERS.includes(ticker) ? TICKERS : [ticker, ...TICKERS], [ticker])
+  const availableTickers = useMemo(() => selectorTickers.filter((t) => t !== ticker), [selectorTickers, ticker])
 
   // STUB: VWAP indicator — Volume Weighted Average Price overlay
   // SOURCE: "VWAP calculation for intraday trading", institutional benchmarks
@@ -458,7 +459,7 @@ function Chart({ windowId }) {
     <div ref={outerRef} className="chart-component">
       <div className="chart-toolbar">
         <select className="chart-ticker-select" value={ticker} onChange={handleTickerChange}>
-          {TICKERS.map((t) => (
+          {(TICKERS.includes(ticker) ? TICKERS : [ticker, ...TICKERS]).map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
