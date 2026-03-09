@@ -432,3 +432,115 @@
   color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
+
+/* ROI filter input */
+.hs-roi-input {
+  width: 60px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  text-align: right;
+  transition: border-color var(--transition-fast);
+}
+
+.hs-roi-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.hs-roi-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Preset controls */
+.hs-preset-select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.hs-preset-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.hs-preset-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hs-preset-input {
+  width: 90px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  transition: border-color var(--transition-fast);
+}
+
+.hs-preset-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.hs-preset-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Preset chips in settings */
+.hs-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hs-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+}
+
+.hs-preset-chip-name {
+  padding: 1px 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.hs-preset-chip-name:hover {
+  color: var(--accent-highlight);
+}
+
+.hs-preset-chip-del {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 1px 4px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.hs-preset-chip-del:hover {
+  color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+}

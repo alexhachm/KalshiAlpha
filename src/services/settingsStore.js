@@ -124,6 +124,11 @@ const DEFAULTS = {
     notifyOnConnection: true,
     notifyOnError: true,
   },
+  // Scanner Presets — saved filter configurations for live and historical scanners
+  scannerPresets: {
+    live: [],       // [{ name, filters: { filterType, minConviction, tickerFilter, strategyFilter } }]
+    historical: [], // [{ name, filters: { pattern, minRoi, minConfidence, signalFilter, rangeDays } }]
+  },
 }
 
 let _settings = null
@@ -316,6 +321,30 @@ function deepMerge(defaults, overrides) {
   return result
 }
 
+function getScannerPresets(type) {
+  return load().scannerPresets?.[type] || []
+}
+
+function saveScannerPreset(type, name, filters) {
+  const s = load()
+  const presets = [...(s.scannerPresets?.[type] || [])]
+  const idx = presets.findIndex((p) => p.name === name)
+  if (idx >= 0) {
+    presets[idx] = { name, filters }
+  } else {
+    presets.push({ name, filters })
+  }
+  s.scannerPresets = { ...s.scannerPresets, [type]: presets }
+  save({ ...s })
+}
+
+function deleteScannerPreset(type, name) {
+  const s = load()
+  const presets = (s.scannerPresets?.[type] || []).filter((p) => p.name !== name)
+  s.scannerPresets = { ...s.scannerPresets, [type]: presets }
+  save({ ...s })
+}
+
 // Initialize on import
 load()
 
@@ -326,6 +355,9 @@ export {
   getTradingDefaults,
   getNotifications,
   getNotificationDefaults,
+  getScannerPresets,
+  saveScannerPreset,
+  deleteScannerPreset,
   subscribeSection,
   update,
   updateSection,

@@ -371,3 +371,80 @@
   color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
+
+/* Ticker filter input */
+.ls-ticker-input {
+  width: 70px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  padding: 2px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  transition: border-color var(--transition-fast);
+}
+
+.ls-ticker-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.ls-ticker-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Preset save inline */
+.ls-preset-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ls-preset-save .ls-ticker-input {
+  width: 90px;
+}
+
+/* Preset chips in settings */
+.ls-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ls-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+}
+
+.ls-preset-chip-name {
+  padding: 1px 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.ls-preset-chip-name:hover {
+  color: var(--accent-highlight);
+}
+
+.ls-preset-chip-del {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 1px 4px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.ls-preset-chip-del:hover {
+  color: var(--accent-sell);
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+}
