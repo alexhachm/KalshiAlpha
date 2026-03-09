@@ -5,8 +5,8 @@ import {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
-  getColorGroup,
 } from '../../services/linkBus'
+import useColorGroup from '../../hooks/useColorGroup'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
@@ -158,12 +158,13 @@ function Montage({ windowId }) {
     [ticker]
   )
 
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
     subscribeToLink(colorId, handleLinkEvent, windowId)
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
-  }, [windowId, handleLinkEvent])
+  }, [windowId, colorId, handleLinkEvent])
 
   // Cleanup search timer on unmount
   useEffect(() => {

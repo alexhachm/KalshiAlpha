@@ -4,8 +4,8 @@ import {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
-  getColorGroup,
 } from '../../services/linkBus'
+import useColorGroup from '../../hooks/useColorGroup'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import PriceLadderSettings from './PriceLadderSettings'
@@ -168,12 +168,13 @@ function PriceLadder({ windowId }) {
     [ticker]
   )
 
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
     subscribeToLink(colorId, handleLinkEvent, windowId)
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
-  }, [windowId, handleLinkEvent])
+  }, [windowId, colorId, handleLinkEvent])
 
   // Ticker change handler
   const handleTickerChange = useCallback((e) => {

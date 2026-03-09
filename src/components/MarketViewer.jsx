@@ -5,8 +5,8 @@ import {
   subscribeToLink,
   unsubscribeFromLink,
   emitLinkedMarket,
-  getColorGroup,
 } from '../services/linkBus'
+import useColorGroup from '../hooks/useColorGroup'
 import { registerWindowTicker, unregisterWindowTicker } from '../hooks/useHotkeyDispatch'
 import './MarketViewer.css'
 
@@ -104,13 +104,14 @@ function MarketViewer({ windowId }) {
     []
   )
 
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
 
     subscribeToLink(colorId, handleLinkEvent, windowId)
     return () => unsubscribeFromLink(colorId, handleLinkEvent)
-  }, [windowId, handleLinkEvent])
+  }, [windowId, colorId, handleLinkEvent])
 
   // When user changes ticker, emit to linked windows
   const handleTickerChange = (e) => {

@@ -54,7 +54,9 @@
     "domain": "services"
   },
   "worker-7": {
-    "status": "running",
-    "last_heartbeat": "2026-03-08T23:48:25Z"
+    "status": "busy",
+    "last_heartbeat": "2026-03-09T00:27:32Z",
+    "current_task": "Resubscribe trade link consumers on runtime color-group changes",
+    "domain": "trade"
   }
 }

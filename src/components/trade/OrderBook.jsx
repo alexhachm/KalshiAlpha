@@ -12,7 +12,8 @@ import {
   ORDER_STATUS,
 } from '../../services/omsService'
 import { buildSyntheticDom } from '../../services/dataFeed'
-import { subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
+import { subscribeToLink, unsubscribeFromLink } from '../../services/linkBus'
+import useColorGroup from '../../hooks/useColorGroup'
 import './OrderBook.css'
 
 const LS_KEY_PREFIX = 'order-book-settings-'
@@ -190,13 +191,14 @@ function OrderBook({ windowId }) {
   }, [refreshData, settings.flashOnFill])
 
   // linkBus: receive ticker context
+  const colorId = useColorGroup(windowId)
+
   useEffect(() => {
-    const colorId = getColorGroup(windowId)
     if (!colorId) return
     const handler = ({ ticker }) => setLinkedTicker(ticker)
     subscribeToLink(colorId, handler, windowId)
     return () => unsubscribeFromLink(colorId, handler)
-  }, [windowId])
+  }, [windowId, colorId])
 
   // Cancel order handler
   const handleCancel = useCallback(async (orderId) => {
