@@ -40,6 +40,13 @@ const DEFAULT_BINDINGS = [
   },
 ]
 
+const DEFAULT_TEMPLATES = [
+  { id: crypto.randomUUID(), name: 'Scalp 1', size: 1, orderType: 'limit', timeInForce: 'ioc' },
+  { id: crypto.randomUUID(), name: 'Standard 10', size: 10, orderType: 'limit', timeInForce: 'gtc' },
+  { id: crypto.randomUUID(), name: 'Size 50', size: 50, orderType: 'limit', timeInForce: 'gtc' },
+  { id: crypto.randomUUID(), name: 'Max 100', size: 100, orderType: 'limit', timeInForce: 'gtc' },
+]
+
 // --- Internal state ---
 let _store = null
 const _listeners = new Set()
@@ -85,6 +92,7 @@ function _createDefaultStore() {
       Default: {
         name: 'Default',
         bindings: DEFAULT_BINDINGS.map((b) => ({ ...b, id: crypto.randomUUID() })),
+        templates: DEFAULT_TEMPLATES.map((t) => ({ ...t, id: crypto.randomUUID() })),
         createdAt: new Date().toISOString(),
       },
     },
@@ -223,6 +231,58 @@ function findBindingByKey(keyCombo) {
   return profile.bindings.find((b) => b.key === normalized && b.active) || null
 }
 
+// --- Order Template CRUD ---
+
+function getTemplates() {
+  const profile = _activeProfile()
+  return [...(profile.templates || [])]
+}
+
+function addTemplate({ name, size, orderType, timeInForce }) {
+  const store = _load()
+  const profile = store.profiles[store.activeProfile]
+  if (!profile.templates) profile.templates = []
+  const template = {
+    id: crypto.randomUUID(),
+    name: name || 'Untitled',
+    size: size || 1,
+    orderType: orderType || 'limit',
+    timeInForce: timeInForce || 'gtc',
+  }
+  profile.templates.push(template)
+  _persist()
+  return { ...template }
+}
+
+function updateTemplate(id, updates) {
+  const store = _load()
+  const profile = store.profiles[store.activeProfile]
+  if (!profile.templates) throw new Error(`Template "${id}" not found`)
+  const idx = profile.templates.findIndex((t) => t.id === id)
+  if (idx === -1) throw new Error(`Template "${id}" not found`)
+  profile.templates[idx] = { ...profile.templates[idx], ...updates }
+  _persist()
+  return { ...profile.templates[idx] }
+}
+
+function removeTemplate(id) {
+  const store = _load()
+  const profile = store.profiles[store.activeProfile]
+  if (!profile.templates) return
+  const idx = profile.templates.findIndex((t) => t.id === id)
+  if (idx === -1) return
+  profile.templates.splice(idx, 1)
+  _persist()
+}
+
+function findTemplateByName(name) {
+  const profile = _activeProfile()
+  if (!profile.templates) return null
+  return profile.templates.find(
+    (t) => t.name.toLowerCase() === name.toLowerCase()
+  ) || null
+}
+
 // --- Profile management ---
 
 function getProfiles() {
@@ -240,6 +300,7 @@ function saveProfile(name) {
   const profile = {
     name,
     bindings: current.bindings.map((b) => ({ ...b, id: crypto.randomUUID() })),
+    templates: (current.templates || []).map((t) => ({ ...t, id: crypto.randomUUID() })),
     createdAt: new Date().toISOString(),
   }
   store.profiles[name] = profile
@@ -273,7 +334,7 @@ function exportProfile(name) {
   const store = _load()
   const profile = store.profiles[name]
   if (!profile) throw new Error(`Profile "${name}" not found`)
-  return JSON.stringify({ name: profile.name, bindings: profile.bindings, createdAt: profile.createdAt })
+  return JSON.stringify({ name: profile.name, bindings: profile.bindings, templates: profile.templates || [], createdAt: profile.createdAt })
 }
 
 function importProfile(jsonString) {
@@ -297,9 +358,19 @@ function importProfile(jsonString) {
       ? b.category
       : 'custom',
   }))
+  const templates = Array.isArray(data.templates)
+    ? data.templates.map((t) => ({
+        id: crypto.randomUUID(),
+        name: String(t.name || 'Untitled'),
+        size: Number(t.size) || 1,
+        orderType: ['limit', 'market'].includes(t.orderType) ? t.orderType : 'limit',
+        timeInForce: ['gtc', 'ioc', 'day'].includes(t.timeInForce) ? t.timeInForce : 'gtc',
+      }))
+    : []
   const profile = {
     name: data.name,
     bindings,
+    templates,
     createdAt: data.createdAt || new Date().toISOString(),
   }
   const store = _load()
@@ -326,6 +397,11 @@ export {
   removeBinding,
   findBindingByKey,
   normalizeKeyCombo,
+  getTemplates,
+  addTemplate,
+  updateTemplate,
+  removeTemplate,
+  findTemplateByName,
   getProfiles,
   saveProfile,
   loadProfile,

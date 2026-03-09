@@ -8,8 +8,11 @@ import {
 } from '../../services/linkBus'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
+import { getTemplates, subscribe as subscribeHotkeys } from '../../services/hotkeyStore'
 import PriceLadderSettings from './PriceLadderSettings'
 import './PriceLadder.css'
+
+const QUICK_SIZES = [1, 5, 10, 25, 50, 100]
 
 const COLUMNS = [
   { key: 'bidSize', label: 'Bid', numeric: true },
@@ -97,6 +100,23 @@ function PriceLadder({ windowId }) {
   const [orderSize, setOrderSize] = useState(settings.defaultSize)
   const [workingOrders, setWorkingOrders] = useState([])
   const [flashPrices, setFlashPrices] = useState({})
+  const [templates, setTemplates] = useState(() => getTemplates())
+
+  // Subscribe to hotkey store changes (template CRUD)
+  useEffect(() => {
+    return subscribeHotkeys(() => setTemplates(getTemplates()))
+  }, [])
+
+  // Listen for LoadTemplate hotkey action
+  useEffect(() => {
+    const handler = (e) => {
+      const t = e.detail
+      if (!t) return
+      setOrderSize(t.size || 1)
+    }
+    window.addEventListener('load-order-template', handler)
+    return () => window.removeEventListener('load-order-template', handler)
+  }, [])
 
   const ladderRef = useRef(null)
   const lastPriceRef = useRef(null)
@@ -439,6 +459,35 @@ function PriceLadder({ windowId }) {
                 value={orderSize}
                 onChange={(e) => setOrderSize(Math.max(1, Number(e.target.value)))}
               />
+            </div>
+            {/* Quick-size buttons + template selector */}
+            <div className="pl-quick-row">
+              {QUICK_SIZES.map((s) => (
+                <button
+                  key={s}
+                  className={`pl-quick-btn${orderSize === s ? ' pl-quick-btn--active' : ''}`}
+                  onClick={() => setOrderSize(s)}
+                >
+                  {s}
+                </button>
+              ))}
+              {templates.length > 0 && (
+                <select
+                  className="pl-template-select"
+                  value=""
+                  onChange={(e) => {
+                    const t = templates.find((tpl) => tpl.id === e.target.value)
+                    if (t) setOrderSize(t.size || 1)
+                  }}
+                >
+                  <option value="" disabled>Templates</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.size})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="pl-footer-row pl-footer-totals">
               <span className="pl-total-bid">Bid: {totalBid}</span>

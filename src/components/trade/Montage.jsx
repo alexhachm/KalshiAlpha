@@ -8,9 +8,12 @@ import {
   getColorGroup,
 } from '../../services/linkBus'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
+import { getTemplates, subscribe as subscribeHotkeys } from '../../services/hotkeyStore'
 import * as settingsStore from '../../services/settingsStore'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
+
+const QUICK_SIZES = [1, 5, 10, 25, 50, 100]
 
 const TICKERS = [
   'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
@@ -66,6 +69,25 @@ function Montage({ windowId }) {
     [globalTrading, overrides]
   )
   const [showSettings, setShowSettings] = useState(false)
+  const [templates, setTemplates] = useState(() => getTemplates())
+
+  // Subscribe to hotkey store changes (template CRUD)
+  useEffect(() => {
+    return subscribeHotkeys(() => setTemplates(getTemplates()))
+  }, [])
+
+  // Listen for LoadTemplate hotkey action
+  useEffect(() => {
+    const handler = (e) => {
+      const t = e.detail
+      if (!t) return
+      setOrderSize(t.size || 1)
+      setOrderType(t.orderType || 'limit')
+      setTimeInForce(t.timeInForce || 'gtc')
+    }
+    window.addEventListener('load-order-template', handler)
+    return () => window.removeEventListener('load-order-template', handler)
+  }, [])
 
   // Report current ticker to hotkey dispatch registry
   useEffect(() => {
@@ -326,29 +348,22 @@ function Montage({ windowId }) {
     setOrderSize(newSettings.defaultOrderSize)
   }
 
-  // STUB: Smart order routing — route orders through optimal execution path
-  // SOURCE: "Smart Order Routing in electronic markets", SEC best execution requirements
-  // IMPLEMENT WHEN: Multiple execution venues available (Kalshi API + dark pools)
-  // STEPS: 1. Check available liquidity at each venue for requested size
-  //        2. Split orders across venues to minimize market impact
-  //        3. Track execution quality (fill rate, slippage) per venue
-  //        4. Display routing decision in order confirmation dialog
+  const handleApplyTemplate = useCallback((template) => {
+    setOrderSize(template.size || 1)
+    setOrderType(template.orderType || 'limit')
+    setTimeInForce(template.timeInForce || 'gtc')
+  }, [])
 
-  // STUB: Order type expansion — add stop-loss, trailing stop, bracket orders
-  // SOURCE: "Professional trading order types", thinkorswim order entry
-  // IMPLEMENT WHEN: omsService supports conditional/linked orders
-  // STEPS: 1. Add stop price input field (shown when order type = 'stop' or 'stop-limit')
-  //        2. Add bracket order mode: entry + take-profit + stop-loss in one submission
-  //        3. Implement trailing stop with configurable trail amount
-  //        4. Display active conditional orders in working orders section
-
-  // STUB: Total cost preview — show max cost/risk before order submission
-  // SOURCE: "Kalshi API order requirements", risk management best practices
-  // IMPLEMENT WHEN: Data and order entry are functional
-  // STEPS: 1. Calculate max cost = price * size for buy orders
-  //        2. Calculate max profit = (100 - price) * size
-  //        3. Display cost/profit preview below order buttons
-  //        4. Warn if order cost exceeds available balance
+  // Cost preview: max cost = price × size, max profit = (100 - price) × size
+  const costPreview = useMemo(() => {
+    const price = orderType === 'limit' ? Math.round(Number(limitPrice)) : (data?.yes?.price ?? 0)
+    const roundedSize = Math.round(orderSize)
+    if (!price || price <= 0 || price >= 100 || roundedSize <= 0) return null
+    return {
+      cost: price * roundedSize,
+      profit: (100 - price) * roundedSize,
+    }
+  }, [orderType, limitPrice, data, orderSize])
 
   const fontClass = `montage--font-${settings.fontSize}`
 
@@ -486,6 +501,35 @@ function Montage({ windowId }) {
 
           {/* Order Entry */}
           <div className="mt-order-entry">
+            {/* Quick-size buttons + template selector */}
+            <div className="mt-quick-row">
+              {QUICK_SIZES.map((s) => (
+                <button
+                  key={s}
+                  className={`mt-quick-btn${orderSize === s ? ' mt-quick-btn--active' : ''}`}
+                  onClick={() => setOrderSize(s)}
+                >
+                  {s}
+                </button>
+              ))}
+              {templates.length > 0 && (
+                <select
+                  className="mt-select mt-template-select"
+                  value=""
+                  onChange={(e) => {
+                    const t = templates.find((tpl) => tpl.id === e.target.value)
+                    if (t) handleApplyTemplate(t)
+                  }}
+                >
+                  <option value="" disabled>Templates</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.size})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div className="mt-order-row">
               <label className="mt-label">Shares</label>
               <input
@@ -532,6 +576,17 @@ function Montage({ windowId }) {
                 <option value="ioc">IOC</option>
               </select>
             </div>
+            {/* Cost preview */}
+            {costPreview && (
+              <div className="mt-cost-preview">
+                <span className="mt-cost-item">
+                  Cost: <strong>{costPreview.cost}c</strong>
+                </span>
+                <span className="mt-cost-item mt-cost-profit">
+                  Max Profit: <strong>{costPreview.profit}c</strong>
+                </span>
+              </div>
+            )}
             <div className="mt-buttons">
               <button
                 className="mt-btn mt-btn-buy-yes"
@@ -584,6 +639,12 @@ function Montage({ windowId }) {
               <span className="text-muted">
                 {ticker} | {confirmDialog.order.timeInForce.toUpperCase()}
               </span>
+              <div className="mt-confirm-cost">
+                <span>Cost: {confirmDialog.order.price * confirmDialog.order.size}c</span>
+                <span className="mt-cost-profit">
+                  Max Profit: {(100 - confirmDialog.order.price) * confirmDialog.order.size}c
+                </span>
+              </div>
             </div>
             <div className="mt-confirm-buttons">
               <button
