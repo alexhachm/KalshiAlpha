@@ -88,6 +88,7 @@ function TimeSale({ windowId }) {
   const [trades, setTrades] = useState([])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
+  const [draftSettings, setDraftSettings] = useState(null)
   const [flashedIds, setFlashedIds] = useState(new Set())
   const listRef = useRef(null)
   const containerRef = useRef(null)
@@ -99,23 +100,37 @@ function TimeSale({ windowId }) {
     [settings.maxRows]
   )
 
-  // Persist settings
-  useEffect(() => {
-    saveSettings(windowId, settings)
-  }, [windowId, settings])
+  const updateDraftSetting = useCallback((key, value) => {
+    setDraftSettings((prev) => prev ? { ...prev, [key]: value } : prev)
+  }, [])
+
+  const openSettings = useCallback(() => {
+    setDraftSettings({ ...settings })
+    setShowSettings(true)
+  }, [settings])
+
+  const handleSaveSettings = useCallback(() => {
+    if (draftSettings) {
+      setSettings(draftSettings)
+      saveSettings(windowId, draftSettings)
+    }
+    setDraftSettings(null)
+    setShowSettings(false)
+  }, [draftSettings, windowId])
+
+  const handleCancelSettings = useCallback(() => {
+    setDraftSettings(null)
+    setShowSettings(false)
+  }, [])
 
   // Toggle settings via right-click header event
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
-    const handler = () => setShowSettings((s) => !s)
+    const handler = () => openSettings()
     el.addEventListener('toggle-settings', handler)
     return () => el.removeEventListener('toggle-settings', handler)
-  }, [])
-
-  const updateSetting = useCallback((key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }))
-  }, [])
+  }, [openSettings])
 
   // Keep buffered history aligned with maxRows updates while preserving newest prints.
   useEffect(() => {
@@ -264,7 +279,7 @@ function TimeSale({ windowId }) {
           </button>
           <button
             className="ts-btn"
-            onClick={() => setShowSettings((s) => !s)}
+            onClick={openSettings}
             title="Settings"
           >
             &#9881;
@@ -332,11 +347,14 @@ function TimeSale({ windowId }) {
       </div>
 
       {/* Settings panel */}
-      {showSettings && (
+      {showSettings && draftSettings && (
         <div className="ts-settings-panel">
           <div className="ts-settings-header">
             <span>T&S Settings</span>
-            <button className="ts-settings-close" onClick={() => setShowSettings(false)}>x</button>
+            <div className="ts-settings-actions">
+              <button className="ts-settings-save" onClick={handleSaveSettings}>Save</button>
+              <button className="ts-settings-cancel" onClick={handleCancelSettings}>Cancel</button>
+            </div>
           </div>
           <div className="ts-settings-body">
             <label className="ts-setting-row">
@@ -346,8 +364,8 @@ function TimeSale({ windowId }) {
                 min={50}
                 max={1000}
                 step={50}
-                value={settings.maxRows}
-                onChange={(e) => updateSetting('maxRows', parseInt(e.target.value, 10) || 200)}
+                value={draftSettings.maxRows}
+                onChange={(e) => updateDraftSetting('maxRows', parseInt(e.target.value, 10) || 200)}
               />
             </label>
             <label className="ts-setting-row">
@@ -357,8 +375,8 @@ function TimeSale({ windowId }) {
                 min={0}
                 max={1000}
                 step={10}
-                value={settings.sizeFilter}
-                onChange={(e) => updateSetting('sizeFilter', parseInt(e.target.value, 10) || 0)}
+                value={draftSettings.sizeFilter}
+                onChange={(e) => updateDraftSetting('sizeFilter', parseInt(e.target.value, 10) || 0)}
               />
             </label>
             <label className="ts-setting-row">
@@ -368,8 +386,8 @@ function TimeSale({ windowId }) {
                 min={100}
                 max={5000}
                 step={100}
-                value={settings.largeSizeThreshold}
-                onChange={(e) => updateSetting('largeSizeThreshold', parseInt(e.target.value, 10) || 500)}
+                value={draftSettings.largeSizeThreshold}
+                onChange={(e) => updateDraftSetting('largeSizeThreshold', parseInt(e.target.value, 10) || 500)}
               />
             </label>
             <div className="ts-settings-divider" />
@@ -377,24 +395,24 @@ function TimeSale({ windowId }) {
               <span>Hide Milliseconds</span>
               <input
                 type="checkbox"
-                checked={settings.hideMilliseconds}
-                onChange={(e) => updateSetting('hideMilliseconds', e.target.checked)}
+                checked={draftSettings.hideMilliseconds}
+                onChange={(e) => updateDraftSetting('hideMilliseconds', e.target.checked)}
               />
             </label>
             <label className="ts-setting-row">
               <span>2 Decimal Price</span>
               <input
                 type="checkbox"
-                checked={settings.priceDecimals}
-                onChange={(e) => updateSetting('priceDecimals', e.target.checked)}
+                checked={draftSettings.priceDecimals}
+                onChange={(e) => updateDraftSetting('priceDecimals', e.target.checked)}
               />
             </label>
             <label className="ts-setting-row">
               <span>Abbreviate Size</span>
               <input
                 type="checkbox"
-                checked={settings.abbreviateSize}
-                onChange={(e) => updateSetting('abbreviateSize', e.target.checked)}
+                checked={draftSettings.abbreviateSize}
+                onChange={(e) => updateDraftSetting('abbreviateSize', e.target.checked)}
               />
             </label>
             <GridSettingsPanel {...grid} />
