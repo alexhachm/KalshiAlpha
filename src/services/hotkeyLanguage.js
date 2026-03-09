@@ -65,6 +65,13 @@ const COMMAND_REFERENCE = {
       examples: ['SwitchTicker=KXBTC-26FEB25', 'SwitchTicker=KXINX-26FEB25'],
       params: ['ticker'],
     },
+    {
+      name: 'LoadTemplate',
+      syntax: 'LoadTemplate=<name>',
+      description: 'Load a saved order template into the focused trading window. Sets size, order type, and time-in-force.',
+      examples: ['LoadTemplate=Scalp 1', 'LoadTemplate=Standard 10'],
+      params: ['name'],
+    },
   ],
   variables: [
     { name: 'Bid', description: 'Current best bid price' },
@@ -265,6 +272,18 @@ function parseHotkeyScript(scriptString) {
     return { action: 'SWITCH_TICKER', params: { ticker }, errors };
   }
 
+  // --- LoadTemplate command ---
+  if (commandUpper === 'LOADTEMPLATE') {
+    // Template names may contain spaces, so join remaining tokens with the first value
+    const nameParts = [initialParams._FIRST_VALUE, ...tokens.slice(1)].filter(Boolean);
+    const name = nameParts.join(' ');
+    if (!name) {
+      errors.push('LoadTemplate requires a template name (e.g. LoadTemplate=Scalp 1)');
+      return { action: 'LOAD_TEMPLATE', params: {}, errors };
+    }
+    return { action: 'LOAD_TEMPLATE', params: { name }, errors };
+  }
+
   // --- Order commands (Buy / Sell) ---
   if (ORDER_COMMANDS[commandUpper]) {
     const action = ORDER_COMMANDS[commandUpper];
@@ -343,7 +362,7 @@ function parseHotkeyScript(scriptString) {
 
   // --- Unknown command ---
   errors.push(
-    `Unknown command "${command}". Valid commands: Buy, Sell, CXL, CXLBUY, CXLSELL, Focus, SwitchTicker`
+    `Unknown command "${command}". Valid commands: Buy, Sell, CXL, CXLBUY, CXLSELL, Focus, SwitchTicker, LoadTemplate`
   );
   return { action: null, params: {}, errors };
 }

@@ -4,6 +4,10 @@ import {
   addBinding,
   updateBinding,
   removeBinding,
+  getTemplates,
+  addTemplate,
+  updateTemplate as updateStoreTemplate,
+  removeTemplate,
   getProfiles,
   saveProfile,
   loadProfile,
@@ -19,11 +23,17 @@ const CATEGORIES = ['trading', 'navigation', 'scanner', 'custom']
 
 function HotkeyManager() {
   const [bindings, setBindings] = useState(() => getAllBindings())
+  const [templates, setTemplates] = useState(() => getTemplates())
   const [profiles, setProfiles] = useState(() => getProfiles())
   const [activeProfileName, setActiveProfileName] = useState('Default')
   const [selectedId, setSelectedId] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [error, setError] = useState(null)
+  const [editingTemplate, setEditingTemplate] = useState(null)
+  const [tplName, setTplName] = useState('')
+  const [tplSize, setTplSize] = useState(1)
+  const [tplType, setTplType] = useState('limit')
+  const [tplTif, setTplTif] = useState('gtc')
 
   // Editor state
   const [editorKey, setEditorKey] = useState('')
@@ -41,6 +51,7 @@ function HotkeyManager() {
   useEffect(() => {
     return subscribe(() => {
       setBindings(getAllBindings())
+      setTemplates(getTemplates())
       setProfiles(getProfiles())
     })
   }, [])
@@ -218,6 +229,58 @@ function HotkeyManager() {
   //   3. Open in new window with print-friendly CSS
   //   4. Add "Print" button that calls window.print()
 
+  // Template handlers
+  const clearTemplateEditor = () => {
+    setEditingTemplate(null)
+    setTplName('')
+    setTplSize(1)
+    setTplType('limit')
+    setTplTif('gtc')
+  }
+
+  const handleEditTemplate = (t) => {
+    setEditingTemplate(t.id)
+    setTplName(t.name)
+    setTplSize(t.size)
+    setTplType(t.orderType)
+    setTplTif(t.timeInForce)
+  }
+
+  const handleSaveTemplate = () => {
+    if (!tplName.trim()) {
+      setError('Template name is required')
+      return
+    }
+    try {
+      if (editingTemplate) {
+        updateStoreTemplate(editingTemplate, {
+          name: tplName.trim(),
+          size: Math.max(1, Math.round(tplSize)),
+          orderType: tplType,
+          timeInForce: tplTif,
+        })
+      } else {
+        addTemplate({
+          name: tplName.trim(),
+          size: Math.max(1, Math.round(tplSize)),
+          orderType: tplType,
+          timeInForce: tplTif,
+        })
+      }
+      setTemplates(getTemplates())
+      clearTemplateEditor()
+      setError(null)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleDeleteTemplate = (id) => {
+    removeTemplate(id)
+    setTemplates(getTemplates())
+    if (editingTemplate === id) clearTemplateEditor()
+  }
+
   const handleSave = () => {
     if (!editorKey || !editorScript) {
       setError('Key combo and script are required')
@@ -390,6 +453,86 @@ function HotkeyManager() {
             disabled={!editorKey || !editorScript || (validation && !validation.valid)}
           >
             {selectedId ? 'Update Binding' : 'Add Binding'}
+          </button>
+        </div>
+      </div>
+
+      {/* Order Templates Section */}
+      <div className="hk-templates">
+        <div className="hk-bindings-header">
+          <span className="hk-bindings-title">Order Templates</span>
+          <button className="hk-btn hk-btn--accent" onClick={clearTemplateEditor}>+ Add</button>
+        </div>
+        <div className="hk-templates-list">
+          {templates.map((t) => (
+            <div
+              key={t.id}
+              className={`hk-binding-row${editingTemplate === t.id ? ' hk-binding-row--selected' : ''}`}
+              onClick={() => handleEditTemplate(t)}
+            >
+              <span className="hk-binding-key">{t.size}</span>
+              <span className="hk-binding-label">{t.name}</span>
+              <span className="hk-tpl-meta">{t.orderType} / {t.timeInForce}</span>
+              <button
+                className="hk-binding-delete"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteTemplate(t.id)
+                }}
+                title="Delete"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {templates.length === 0 && (
+            <div className="hk-empty">No templates. Click + Add to create one.</div>
+          )}
+        </div>
+        {/* Inline template editor */}
+        <div className="hk-tpl-editor">
+          <input
+            type="text"
+            className="hk-text-input"
+            placeholder="Template name"
+            value={tplName}
+            onChange={(e) => setTplName(e.target.value)}
+          />
+          <div className="hk-tpl-fields">
+            <label className="hk-field-label">Size</label>
+            <input
+              type="number"
+              className="hk-text-input hk-tpl-size-input"
+              min="1"
+              value={tplSize}
+              onChange={(e) => setTplSize(Math.max(1, Math.round(Number(e.target.value))))}
+            />
+            <label className="hk-field-label">Type</label>
+            <select
+              className="hk-category-select"
+              value={tplType}
+              onChange={(e) => setTplType(e.target.value)}
+            >
+              <option value="limit">Limit</option>
+              <option value="market">Market</option>
+            </select>
+            <label className="hk-field-label">TIF</label>
+            <select
+              className="hk-category-select"
+              value={tplTif}
+              onChange={(e) => setTplTif(e.target.value)}
+            >
+              <option value="gtc">GTC</option>
+              <option value="ioc">IOC</option>
+              <option value="day">DAY</option>
+            </select>
+          </div>
+          <button
+            className="hk-btn hk-btn--accent"
+            onClick={handleSaveTemplate}
+            disabled={!tplName.trim()}
+          >
+            {editingTemplate ? 'Update Template' : 'Add Template'}
           </button>
         </div>
       </div>

@@ -483,6 +483,69 @@
   pointer-events: none;
 }
 
+/* Quick-size buttons row */
+.mt-quick-row {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.mt-quick-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-xs);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  min-width: 28px;
+  text-align: center;
+}
+
+.mt-quick-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.mt-quick-btn--active {
+  background: var(--accent-highlight);
+  color: var(--bg-primary);
+  border-color: var(--accent-highlight);
+}
+
+.mt-template-select {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  max-width: 120px;
+}
+
+/* Cost preview */
+.mt-cost-preview {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mt-cost-profit {
+  color: var(--accent-buy);
+}
+
+/* Confirm dialog cost info */
+.mt-confirm-cost {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Flash animations for bid/ask price changes */
 .flash-up {
   animation: mt-flash-up 0.3s ease-out;

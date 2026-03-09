@@ -2,7 +2,7 @@
 // Integrates hotkeyStore (bindings) + hotkeyLanguage (parser) + dataFeed (execution)
 
 import { useEffect, useRef } from 'react'
-import { normalizeKeyCombo, findBindingByKey, subscribe } from '../services/hotkeyStore'
+import { normalizeKeyCombo, findBindingByKey, findTemplateByName, subscribe } from '../services/hotkeyStore'
 import { parseHotkeyScript } from '../services/hotkeyLanguage'
 import * as dataFeed from '../services/dataFeed'
 import { emitLinkedMarket } from '../services/linkBus'
@@ -274,6 +274,19 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
         if (focused) {
           emitLinkedMarket(String(focused.id), ticker)
         }
+        return
+      }
+
+      if (action === 'LOAD_TEMPLATE') {
+        const template = findTemplateByName(params.name)
+        if (!template) {
+          console.warn('[HotkeyDispatch] Template "%s" not found', params.name)
+          return
+        }
+        // Emit custom event for trading windows to apply the template
+        window.dispatchEvent(
+          new CustomEvent('load-order-template', { detail: template })
+        )
       }
     }
 

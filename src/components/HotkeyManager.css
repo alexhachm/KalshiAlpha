@@ -484,3 +484,41 @@
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
+
+/* Order Templates Section */
+.hk-templates {
+  border-top: 1px solid var(--border-color);
+  padding: var(--spacing-sm);
+}
+
+.hk-templates-list {
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: var(--spacing-xs);
+}
+
+.hk-tpl-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-left: auto;
+  padding-right: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.hk-tpl-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--border-color);
+}
+
+.hk-tpl-fields {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.hk-tpl-size-input {
+  width: 60px;
+}
