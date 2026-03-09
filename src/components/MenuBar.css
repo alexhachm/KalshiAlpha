@@ -191,3 +191,39 @@
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
+
+/* Dropdown section header — non-interactive label divider */
+.menu-dropdown-header {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  cursor: default;
+}
+
+/* Dropdown separator line */
+.menu-dropdown-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-xs) 0;
+}
+
+/* Submenu indicator arrow */
+.menu-dropdown-item--has-submenu::after {
+  content: '▸';
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* Danger / destructive item variant */
+.menu-dropdown-item--danger {
+  color: var(--accent-sell);
+}
+
+.menu-dropdown-item--danger:hover {
+  background: color-mix(in srgb, var(--accent-sell) 12%, transparent);
+  color: var(--accent-sell);
+}

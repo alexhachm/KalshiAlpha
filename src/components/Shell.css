@@ -91,3 +91,48 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+
+/* ── Account bar: value group alignment ── */
+.shell-account-bar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.shell-account-bar-group--right {
+  margin-left: auto;
+}
+
+/* Clickable account bar items (e.g., toggle connection) */
+.shell-account-bar-item--interactive {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0 var(--spacing-xs);
+  transition: background var(--transition-fast);
+}
+
+.shell-account-bar-item--interactive:hover {
+  background: var(--bg-hover);
+}
+
+/* Compact badge in account bar (e.g., open orders count) */
+.shell-account-bar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-sm);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.3px;
+}
+
+.shell-account-bar-badge--warn {
+  background: color-mix(in srgb, var(--accent-warning) 18%, transparent);
+  color: var(--accent-warning);
+}
+
+.shell-account-bar-badge--good {
+  background: color-mix(in srgb, var(--accent-win) 18%, transparent);
+  color: var(--accent-win);
+}
