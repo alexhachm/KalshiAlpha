@@ -202,17 +202,37 @@
   color: var(--text-primary);
 }
 
-.ts-settings-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: var(--font-size-lg);
-  padding: 0 var(--spacing-sm);
+.ts-settings-actions {
+  display: flex;
+  gap: var(--spacing-xs);
 }
 
-.ts-settings-close:hover {
+.ts-settings-save,
+.ts-settings-cancel {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: 1px var(--spacing-md);
+}
+
+.ts-settings-save {
+  color: var(--accent-win);
+  border-color: var(--accent-win);
+}
+
+.ts-settings-save:hover {
+  background: color-mix(in srgb, var(--accent-win) 15%, transparent);
+}
+
+.ts-settings-cancel {
+  color: var(--text-secondary);
+}
+
+.ts-settings-cancel:hover {
   color: var(--text-primary);
+  background: var(--bg-tertiary);
 }
 
 .ts-settings-body {
