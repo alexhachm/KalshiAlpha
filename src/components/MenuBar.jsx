@@ -355,6 +355,7 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
           tabIndex={focusedTrigger === index ? 0 : -1}
           aria-haspopup={menu.items ? 'true' : undefined}
           aria-expanded={menu.items ? activeMenu === index : undefined}
+          title={menu.action === 'settings' ? 'Open Settings' : undefined}
           onClick={() => handleMenuClick(index)}
           onMouseEnter={() => handleMenuHover(index)}
           onKeyDown={(e) => handleTriggerKeyDown(e, index)}
