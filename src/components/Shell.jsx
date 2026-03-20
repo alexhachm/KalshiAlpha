@@ -358,10 +358,14 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
 
       const focused = getFocusedWindow()
       if (!focused) return
+      // idx may be -1 if the focused window is popped out (it's excluded from
+      // windowList). Fall back to the highest-zIndex non-poppedOut window so
+      // cycling is always deterministic and no arbitrary jumps occur.
       const idx = windowList.findIndex((w) => w.id === focused.id)
+      const currentIdx = idx === -1 ? windowList.length - 1 : idx
       const nextIdx = e.shiftKey
-        ? (idx - 1 + windowList.length) % windowList.length
-        : (idx + 1) % windowList.length
+        ? (currentIdx - 1 + windowList.length) % windowList.length
+        : (currentIdx + 1) % windowList.length
       focusWindow(windowList[nextIdx].id)
     }
     document.addEventListener('keydown', handleKeyNav)
