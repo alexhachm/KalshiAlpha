@@ -424,6 +424,13 @@ function getFocusBindingMap() {
   return map
 }
 
+// --- Active profile accessor ---
+
+function getActiveProfileName() {
+  const store = _load()
+  return store.activeProfile
+}
+
 // --- Config context guard ---
 // Set to true while HotkeyManager UI is mounted so trading hotkeys are suppressed.
 
@@ -458,6 +465,7 @@ export {
   updateTemplate,
   removeTemplate,
   findTemplateByName,
+  getActiveProfileName,
   getProfiles,
   saveProfile,
   loadProfile,

@@ -8,6 +8,7 @@ import {
   addTemplate,
   updateTemplate as updateStoreTemplate,
   removeTemplate,
+  getActiveProfileName,
   getProfiles,
   saveProfile,
   loadProfile,
@@ -26,7 +27,7 @@ function HotkeyManager() {
   const [bindings, setBindings] = useState(() => getAllBindings())
   const [templates, setTemplates] = useState(() => getTemplates())
   const [profiles, setProfiles] = useState(() => getProfiles())
-  const [activeProfileName, setActiveProfileName] = useState('Default')
+  const [activeProfileName, setActiveProfileName] = useState(() => getActiveProfileName())
   const [selectedId, setSelectedId] = useState(null)
   const [helpOpen, setHelpOpen] = useState(false)
   const [error, setError] = useState(null)
@@ -60,6 +61,7 @@ function HotkeyManager() {
       setBindings(getAllBindings())
       setTemplates(getTemplates())
       setProfiles(getProfiles())
+      setActiveProfileName(getActiveProfileName())
     })
   }, [])
 
