@@ -32,9 +32,33 @@ const DEFAULT_BINDINGS = [
   },
   {
     id: crypto.randomUUID(),
-    key: 'F5',
+    key: 'Ctrl+M',
     script: 'Focus=Montage',
     label: 'Focus Montage',
+    active: true,
+    category: 'navigation',
+  },
+  {
+    id: crypto.randomUUID(),
+    key: 'Ctrl+L',
+    script: 'Focus=PriceLadder',
+    label: 'Focus Price Ladder',
+    active: true,
+    category: 'navigation',
+  },
+  {
+    id: crypto.randomUUID(),
+    key: 'Ctrl+P',
+    script: 'Focus=Positions',
+    label: 'Focus Positions',
+    active: true,
+    category: 'navigation',
+  },
+  {
+    id: crypto.randomUUID(),
+    key: 'Ctrl+K',
+    script: 'Focus=Chart',
+    label: 'Focus Chart',
     active: true,
     category: 'navigation',
   },
@@ -380,6 +404,26 @@ function importProfile(jsonString) {
   return { ...profile }
 }
 
+// --- Focus binding map ---
+
+/**
+ * Returns a map of focusTarget (lowercase) → binding key for all active FOCUS bindings.
+ * Used by MenuBar to derive shortcut badges from the live store.
+ * Example: { montage: 'Ctrl+M', priceladder: 'Ctrl+L', ... }
+ */
+function getFocusBindingMap() {
+  const bindings = getBindings()
+  const map = {}
+  for (const binding of bindings) {
+    const script = (binding.script || '').trim()
+    const m = script.match(/^Focus=(\w+)$/i)
+    if (m) {
+      map[m[1].toLowerCase()] = binding.key
+    }
+  }
+  return map
+}
+
 // --- Config context guard ---
 // Set to true while HotkeyManager UI is mounted so trading hotkeys are suppressed.
 
@@ -420,6 +464,7 @@ export {
   deleteProfile,
   exportProfile,
   importProfile,
+  getFocusBindingMap,
   subscribe,
   setConfigActive,
   isConfigActive,
