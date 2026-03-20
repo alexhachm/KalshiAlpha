@@ -2,7 +2,7 @@
 // Integrates hotkeyStore (bindings) + hotkeyLanguage (parser) + dataFeed (execution)
 
 import { useEffect, useRef } from 'react'
-import { normalizeKeyCombo, findBindingByKey, findTemplateByName, subscribe } from '../services/hotkeyStore'
+import { normalizeKeyCombo, findBindingByKey, findTemplateByName, subscribe, isConfigActive } from '../services/hotkeyStore'
 import { parseHotkeyScript } from '../services/hotkeyLanguage'
 import * as dataFeed from '../services/dataFeed'
 import { emitLinkedMarket } from '../services/linkBus'
@@ -291,6 +291,9 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
     }
 
     function handleKeyDown(event) {
+      // Config guard: skip all trading dispatches while HotkeyManager UI is active
+      if (isConfigActive()) return
+
       // Input guard: skip when typing in form elements
       const tag = document.activeElement?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
