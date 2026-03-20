@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import clsx from 'clsx'
 import { getMenuConfig } from '../config/toolManifest'
+import { getFocusBindingMap, subscribe as subscribeHotkeys } from '../services/hotkeyStore'
 import './MenuBar.css'
 
 const MENU_CONFIG = getMenuConfig()
@@ -9,10 +10,16 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
   const [activeMenu, setActiveMenu] = useState(null)
   const [focusedItem, setFocusedItem] = useState(-1)
   const [focusedTrigger, setFocusedTrigger] = useState(-1)
+  const [focusBindingMap, setFocusBindingMap] = useState(() => getFocusBindingMap())
   const menuBarRef = useRef(null)
   const triggerRefs = useRef([])
   const itemRefs = useRef([])
   const prevFocusRef = useRef(null)
+
+  // Keep shortcut badges in sync with the live hotkey store
+  useEffect(() => {
+    return subscribeHotkeys(() => setFocusBindingMap(getFocusBindingMap()))
+  }, [])
 
   // Focus the active trigger element when focusedTrigger changes
   useEffect(() => {
@@ -380,8 +387,8 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
                   onKeyDown={(e) => handleItemKeyDown(e, menu, itemIdx)}
                 >
                   <span className="menu-dropdown-label">{item.label}</span>
-                  {item.shortcut && (
-                    <span className="menu-dropdown-shortcut">{item.shortcut}</span>
+                  {item.focusTarget && focusBindingMap[item.focusTarget] && (
+                    <span className="menu-dropdown-shortcut">{focusBindingMap[item.focusTarget]}</span>
                   )}
                 </div>
               ))}

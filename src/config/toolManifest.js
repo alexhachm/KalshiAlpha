@@ -266,7 +266,7 @@ export function getMenuConfig() {
   for (const cat of categoryOrder) {
     const items = TOOL_MANIFEST.filter((e) => e.category === cat).map((e) => {
       const item = { label: e.label, type: e.type }
-      if (e.shortcut) item.shortcut = e.shortcut
+      if (e.focusTarget) item.focusTarget = e.focusTarget
       return item
     })
     if (items.length) {
