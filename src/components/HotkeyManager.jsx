@@ -15,6 +15,7 @@ import {
   importProfile,
   subscribe,
   normalizeKeyCombo,
+  setConfigActive,
 } from '../services/hotkeyStore'
 import { validateScript, COMMAND_REFERENCE } from '../services/hotkeyLanguage'
 import './HotkeyManager.css'
@@ -46,6 +47,12 @@ function HotkeyManager() {
 
   const keyInputRef = useRef(null)
   const fileInputRef = useRef(null)
+
+  // Block trading hotkeys while this config UI is mounted
+  useEffect(() => {
+    setConfigActive(true)
+    return () => setConfigActive(false)
+  }, [])
 
   // Subscribe to store changes
   useEffect(() => {

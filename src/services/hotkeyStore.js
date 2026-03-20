@@ -50,6 +50,7 @@ const DEFAULT_TEMPLATES = [
 // --- Internal state ---
 let _store = null
 const _listeners = new Set()
+let _configActive = false
 
 function _notify() {
   const bindings = getBindings()
@@ -379,6 +380,17 @@ function importProfile(jsonString) {
   return { ...profile }
 }
 
+// --- Config context guard ---
+// Set to true while HotkeyManager UI is mounted so trading hotkeys are suppressed.
+
+function setConfigActive(active) {
+  _configActive = !!active
+}
+
+function isConfigActive() {
+  return _configActive
+}
+
 // --- Subscribe ---
 
 function subscribe(callback) {
@@ -409,4 +421,6 @@ export {
   exportProfile,
   importProfile,
   subscribe,
+  setConfigActive,
+  isConfigActive,
 }
