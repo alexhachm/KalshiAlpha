@@ -294,10 +294,14 @@ function useHotkeyDispatch({ focusWindow, getFocusedWindow, windows }) {
       // Config guard: skip all trading dispatches while HotkeyManager UI is active
       if (isConfigActive()) return
 
-      // Input guard: skip when typing in form elements
-      const tag = document.activeElement?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if (document.activeElement?.isContentEditable) return
+      // Input guard: skip when typing in form elements or interacting with dropdowns/comboboxes
+      const el = document.activeElement
+      const tag = el?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      if (el?.isContentEditable) return
+      const role = el?.getAttribute?.('role')
+      if (role === 'combobox' || role === 'textbox') return
+      if (el?.closest?.('[role="listbox"]')) return
 
       const combo = normalizeKeyCombo(event)
       if (!combo) return
