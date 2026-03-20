@@ -5,10 +5,9 @@ import {
   resetLinkState,
 } from '../services/linkBus'
 import {
+  DEFAULTS,
   get as getSettings,
-  update as updateSetting,
-  reset as resetSettings,
-  subscribe as subscribeSettings,
+  save as saveSettings,
 } from '../services/settingsStore'
 import './SettingsPanel.css'
 
@@ -269,12 +268,15 @@ const SECTIONS = {
 
 function SettingsPanel({ isOpen, onClose, connectionStatus = 'mock' }) {
   const [activeTab, setActiveTab] = useState('connection')
-  const [settings, setSettings] = useState(() => getSettings())
+  const [draft, setDraft] = useState(() => getSettings())
+  const [resetPending, setResetPending] = useState(false)
 
-  useEffect(() => subscribeSettings((next) => setSettings(next)), [])
-
+  // Re-initialize draft from persisted settings each time panel opens
   useEffect(() => {
-    if (isOpen) setSettings(getSettings())
+    if (isOpen) {
+      setDraft(getSettings())
+      setResetPending(false)
+    }
   }, [isOpen])
 
   useEffect(() => {
@@ -286,13 +288,30 @@ function SettingsPanel({ isOpen, onClose, connectionStatus = 'mock' }) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [isOpen, onClose])
 
+  // Update draft state only — no persistence until Save
   const handleUpdate = useCallback((section, key, value) => {
-    updateSetting(section, key, value)
+    setDraft((prev) => ({
+      ...prev,
+      [section]: { ...prev[section], [key]: value },
+    }))
   }, [])
 
+  // Persist draft and close
+  const handleSave = useCallback(() => {
+    saveSettings(draft)
+    if (resetPending) resetLinkState()
+    onClose()
+  }, [draft, resetPending, onClose])
+
+  // Discard draft and close
+  const handleCancel = useCallback(() => {
+    onClose()
+  }, [onClose])
+
+  // Reset draft to defaults — no persistence until Save
   const handleReset = useCallback(() => {
-    resetSettings()
-    resetLinkState()
+    setDraft(structuredClone(DEFAULTS))
+    setResetPending(true)
   }, [])
 
   if (!isOpen) return null
@@ -335,12 +354,16 @@ function SettingsPanel({ isOpen, onClose, connectionStatus = 'mock' }) {
             </h3>
             {SectionComponent && (
               <SectionComponent
-                settings={settings}
+                settings={draft}
                 onUpdate={handleUpdate}
                 connectionStatus={connectionStatus}
               />
             )}
           </div>
+        </div>
+        <div className="settings-footer">
+          <button className="settings-btn settings-btn--cancel" onClick={handleCancel}>Cancel</button>
+          <button className="settings-btn settings-btn--save" onClick={handleSave}>Save</button>
         </div>
       </div>
     </div>
