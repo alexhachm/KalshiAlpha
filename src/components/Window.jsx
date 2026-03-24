@@ -270,6 +270,11 @@ function Window({
           onMerge(id, targetId)
         }
 
+        // Notify Shell of new position for layout persistence
+        window.dispatchEvent(new CustomEvent('window-bounds-update', {
+          detail: { id, x: posRef.current.x, y: posRef.current.y, width: sizeRef.current.width, height: sizeRef.current.height },
+        }))
+
         rerender((n) => n + 1)
       }
 
@@ -330,6 +335,12 @@ function Window({
       const onUp = () => {
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
+
+        // Notify Shell of new size/position for layout persistence
+        window.dispatchEvent(new CustomEvent('window-bounds-update', {
+          detail: { id, x: posRef.current.x, y: posRef.current.y, width: sizeRef.current.width, height: sizeRef.current.height },
+        }))
+
         rerender((n) => n + 1)
       }
 

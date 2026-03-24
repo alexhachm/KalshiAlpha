@@ -12,6 +12,9 @@ const DEFAULT_HEIGHT = 300
 const INITIAL_X = 50
 const INITIAL_Y = 10
 
+const LAYOUT_STORAGE_KEY = 'kalshi-window-layout'
+const LAYOUT_DEBOUNCE_MS = 500
+
 // Per-type default sizes — sourced from canonical tool manifest
 const TYPE_SIZES = getTypeSizes()
 
@@ -246,6 +249,50 @@ function windowReducer(state, action) {
       // Unknown id — no-op
       return state
     }
+    case 'UPDATE_WINDOW_BOUNDS': {
+      const { id, x, y, width, height } = action.payload
+      if (!state.windows[id]) return state
+      return {
+        ...state,
+        windows: {
+          ...state.windows,
+          [id]: {
+            ...state.windows[id],
+            initialX: x,
+            initialY: y,
+            initialWidth: width,
+            initialHeight: height,
+          },
+        },
+      }
+    }
+    case 'LOAD_LAYOUT': {
+      const savedWindows = action.payload.windows
+      if (!savedWindows || typeof savedWindows !== 'object') return state
+      let { nextId, nextZ } = state
+      const newWindows = {}
+      for (const win of Object.values(savedWindows)) {
+        if (!win.type) continue
+        const id = nextId
+        const sizes = TYPE_SIZES[win.type] || {}
+        const newWin = {
+          id,
+          settingsId: id,
+          type: win.type,
+          title: win.title || win.type,
+          initialX: win.initialX ?? INITIAL_X,
+          initialY: win.initialY ?? INITIAL_Y,
+          initialWidth: win.initialWidth || sizes.width || DEFAULT_WIDTH,
+          initialHeight: win.initialHeight || sizes.height || DEFAULT_HEIGHT,
+          zIndex: nextZ,
+        }
+        if (win.ticker) newWin.ticker = win.ticker
+        newWindows[id] = newWin
+        nextId++
+        nextZ++
+      }
+      return { ...state, windows: newWindows, nextId, nextZ }
+    }
     default:
       return state
   }
@@ -372,20 +419,65 @@ function Shell({ connected = false, connectionStatus = 'mock' }) {
     return () => document.removeEventListener('keydown', handleKeyNav)
   }, [state.windows, getFocusedWindow, focusWindow])
 
-  // STUB: Layout persistence — save/restore window arrangement
-  // SOURCE: Internal — serialize state.windows to localStorage
-  // IMPLEMENT WHEN: Users request persistent layouts
-  // STEPS:
-  //   1. On window change (open/close/move/resize), debounce-save state.windows to localStorage
-  //   2. On mount, check localStorage for saved layout and restore via OPEN_WINDOW dispatches
-  //   3. Add "Save Layout" / "Load Layout" menu items to MenuBar
-  //   4. Support named layouts (e.g. "Trading", "Analysis", "Monitoring")
+  // Restore saved layout from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LAYOUT_STORAGE_KEY)
+      if (!saved) return
+      const windows = JSON.parse(saved)
+      if (!windows || typeof windows !== 'object') return
+      dispatch({ type: 'LOAD_LAYOUT', payload: { windows } })
+    } catch (_) {
+      // Corrupted storage — ignore
+    }
+  }, [])
+
+  // Auto-save layout to localStorage on every window state change (debounced 500ms)
+  useEffect(() => {
+    if (Object.keys(state.windows).length === 0) return
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state.windows))
+      } catch (_) {
+        // Quota exceeded or private browsing — ignore
+      }
+    }, LAYOUT_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [state.windows])
+
+  // Listen for window-bounds-update events from Window components (drag/resize end)
+  useEffect(() => {
+    const handler = (e) => {
+      const { id, x, y, width, height } = e.detail || {}
+      if (id != null) {
+        dispatch({ type: 'UPDATE_WINDOW_BOUNDS', payload: { id, x, y, width, height } })
+      }
+    }
+    window.addEventListener('window-bounds-update', handler)
+    return () => window.removeEventListener('window-bounds-update', handler)
+  }, [])
+
+  const saveLayout = useCallback(() => {
+    try {
+      localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(state.windows))
+    } catch (_) {}
+  }, [state.windows])
+
+  const loadLayout = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(LAYOUT_STORAGE_KEY)
+      if (!saved) return
+      const windows = JSON.parse(saved)
+      if (!windows || typeof windows !== 'object') return
+      dispatch({ type: 'LOAD_LAYOUT', payload: { windows } })
+    } catch (_) {}
+  }, [])
 
   useHotkeyDispatch({ focusWindow, getFocusedWindow, windows: state.windows })
 
   return (
     <div className="shell">
-      <MenuBar onOpenWindow={openWindow} onOpenSettings={openSettings} />
+      <MenuBar onOpenWindow={openWindow} onOpenSettings={openSettings} onSaveLayout={saveLayout} onLoadLayout={loadLayout} />
       <div className="shell-account-bar">
         <div className="shell-account-bar-item">
           <span className={`shell-status-dot ${statusClassName}`} />
