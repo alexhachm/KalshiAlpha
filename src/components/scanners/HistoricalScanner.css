@@ -544,3 +544,11 @@
   color: var(--accent-sell);
   background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
 }
+
+.hs-error-banner {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--accent-sell);
+  font-size: var(--font-size-sm);
+  background: color-mix(in srgb, var(--accent-sell) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-sell) 20%, transparent);
+}
