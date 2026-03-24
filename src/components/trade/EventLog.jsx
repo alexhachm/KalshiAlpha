@@ -42,6 +42,20 @@ function formatTime(date) {
   return `${h}:${m}:${s}.${ms}`
 }
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightText(text, query) {
+  if (!query) return text
+  const parts = text.split(new RegExp(`(${escapeRegex(query)})`, 'gi'))
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase()
+      ? <mark key={i} className="el-search-match">{part}</mark>
+      : part
+  )
+}
+
 // Generate initial system startup events
 function getStartupEntries() {
   const now = new Date()
@@ -122,9 +136,13 @@ function EventLog({ windowId }) {
   const [entries, setEntries] = useState(() => getStartupEntries())
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [currentMatchIdx, setCurrentMatchIdx] = useState(0)
   const listRef = useRef(null)
   const autoScrollRef = useRef(true)
   const nextIdRef = useRef(8) // startup entries use 1-7
+  const matchRefsMap = useRef({})
 
   // Build a set of visible column keys for fast lookup — memoized
   const visibleKeys = useMemo(
@@ -224,13 +242,47 @@ function EventLog({ windowId }) {
     return counts
   }, [entries])
 
-  // STUB: Log search/filter — text search across log messages
-  // SOURCE: "Terminal log viewer UX patterns", Chrome DevTools console
-  // IMPLEMENT WHEN: Log volume warrants search functionality
-  // STEPS: 1. Add search input in toolbar with debounced filter
-  //        2. Highlight matching text in search results
-  //        3. Support regex search mode toggle
-  //        4. Add match count indicator and prev/next navigation
+  // Debounce search query — 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+      setCurrentMatchIdx(0)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Filter by search query — only searches message field (case-insensitive)
+  const searchResults = useMemo(() => {
+    if (!debouncedQuery) return filteredEntries
+    const q = debouncedQuery.toLowerCase()
+    return filteredEntries.filter((e) => e.message.toLowerCase().includes(q))
+  }, [filteredEntries, debouncedQuery])
+
+  // Entries shown in the list
+  const displayedEntries = debouncedQuery ? searchResults : filteredEntries
+
+  // Scroll current match into view when navigating
+  useEffect(() => {
+    if (!debouncedQuery || searchResults.length === 0) return
+    const entry = searchResults[currentMatchIdx]
+    if (entry) {
+      const el = matchRefsMap.current[entry.id]
+      if (el) el.scrollIntoView({ block: 'nearest' })
+    }
+  }, [currentMatchIdx, debouncedQuery, searchResults])
+
+  const handleSearchClear = useCallback(() => {
+    setSearchQuery('')
+    setCurrentMatchIdx(0)
+  }, [])
+
+  const handlePrevMatch = useCallback(() => {
+    setCurrentMatchIdx((i) => (i > 0 ? i - 1 : searchResults.length - 1))
+  }, [searchResults.length])
+
+  const handleNextMatch = useCallback(() => {
+    setCurrentMatchIdx((i) => (i < searchResults.length - 1 ? i + 1 : 0))
+  }, [searchResults.length])
 
   // STUB: Log persistence — persist logs across page reloads
   // SOURCE: "Application logging best practices"
@@ -266,8 +318,51 @@ function EventLog({ windowId }) {
             <option value="warn">Warn+</option>
             <option value="error">Error Only</option>
           </select>
+          <div className="el-search-wrap">
+            <input
+              className="el-search-input"
+              type="text"
+              placeholder="Search logs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {debouncedQuery && (
+              <span className="el-search-count">
+                {searchResults.length} {searchResults.length === 1 ? 'match' : 'matches'}
+              </span>
+            )}
+            {debouncedQuery && (
+              <>
+                <button
+                  className="el-tool-btn el-search-nav"
+                  onClick={handlePrevMatch}
+                  disabled={searchResults.length === 0}
+                  title="Previous match"
+                >
+                  &#8593;
+                </button>
+                <button
+                  className="el-tool-btn el-search-nav"
+                  onClick={handleNextMatch}
+                  disabled={searchResults.length === 0}
+                  title="Next match"
+                >
+                  &#8595;
+                </button>
+              </>
+            )}
+            {searchQuery && (
+              <button
+                className="el-tool-btn el-search-clear"
+                onClick={handleSearchClear}
+                title="Clear search"
+              >
+                &#215;
+              </button>
+            )}
+          </div>
           <span className="el-count">
-            {filteredEntries.length} entries
+            {displayedEntries.length} entries
             {levelCounts.error > 0 && <span className="el-level--error"> ({levelCounts.error} err)</span>}
             {levelCounts.warn > 0 && <span className="el-level--warn"> ({levelCounts.warn} warn)</span>}
           </span>
@@ -291,31 +386,42 @@ function EventLog({ windowId }) {
 
       {/* Log entries */}
       <div className="el-entries" ref={listRef} onScroll={handleListScroll} onDoubleClick={handleListDoubleClick}>
-        {filteredEntries.length === 0 ? (
-          <div className="el-empty">No log entries</div>
+        {displayedEntries.length === 0 ? (
+          <div className="el-empty">
+            {debouncedQuery ? 'No matches found' : 'No log entries'}
+          </div>
         ) : (
-          filteredEntries.map((entry) => (
-            <div
-              key={entry.id}
-              className={`el-entry el-entry--${entry.level}`}
-              style={{ height: grid.rowHeight }}
-            >
-              {visibleKeys.has('time') && (
-                <span className="el-time">{formatTime(entry.time)}</span>
-              )}
-              {visibleKeys.has('level') && (
-                <span className={`el-level el-level--${entry.level}`}>
-                  {entry.level.toUpperCase()}
-                </span>
-              )}
-              {visibleKeys.has('source') && (
-                <span className="el-source">[{entry.source}]</span>
-              )}
-              {visibleKeys.has('message') && (
-                <span className="el-message">{entry.message}</span>
-              )}
-            </div>
-          ))
+          displayedEntries.map((entry, idx) => {
+            const isCurrentMatch = debouncedQuery && entry === searchResults[currentMatchIdx]
+            return (
+              <div
+                key={entry.id}
+                ref={(el) => {
+                  if (el) matchRefsMap.current[entry.id] = el
+                  else delete matchRefsMap.current[entry.id]
+                }}
+                className={`el-entry el-entry--${entry.level}${isCurrentMatch ? ' el-entry--current-match' : ''}`}
+                style={{ height: grid.rowHeight }}
+              >
+                {visibleKeys.has('time') && (
+                  <span className="el-time">{formatTime(entry.time)}</span>
+                )}
+                {visibleKeys.has('level') && (
+                  <span className={`el-level el-level--${entry.level}`}>
+                    {entry.level.toUpperCase()}
+                  </span>
+                )}
+                {visibleKeys.has('source') && (
+                  <span className="el-source">[{entry.source}]</span>
+                )}
+                {visibleKeys.has('message') && (
+                  <span className="el-message">
+                    {highlightText(entry.message, debouncedQuery)}
+                  </span>
+                )}
+              </div>
+            )
+          })
         )}
       </div>
 
