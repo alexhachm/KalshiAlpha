@@ -124,31 +124,6 @@ export function useOHLCV(ticker, timeframe = '1h') {
 }
 
 /**
- * Get connection status and control.
- * @returns {{ connected: boolean, initialize: Function, disconnect: Function }}
- */
-export function useKalshiConnection() {
-  const [connected, setConnected] = useState(dataFeed.isConnected());
-
-  useEffect(() => {
-    const unsub = dataFeed.onConnectionChange((isConn) => {
-      setConnected(isConn);
-    });
-    return unsub;
-  }, []);
-
-  const initialize = useCallback(async (opts) => {
-    await dataFeed.initialize(opts);
-  }, []);
-
-  const disconnect = useCallback(() => {
-    dataFeed.disconnectFeed();
-  }, []);
-
-  return { connected, initialize, disconnect };
-}
-
-/**
  * Portfolio data: balance, positions, orders.
  * Fetches on mount and periodically refreshes.
  *
