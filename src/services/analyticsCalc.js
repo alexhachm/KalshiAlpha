@@ -184,7 +184,7 @@ export function sharpeRatio(trades, riskFreeRate = 0) {
     }
   }
 
-  const rfPerTrade = riskFreeRate / (annualizationFactor ** 2 / n || 1);
+  const rfPerTrade = riskFreeRate / (annualizationFactor ** 2 || 1);
   return ((mean - rfPerTrade) / stdDev) * annualizationFactor;
 }
 
