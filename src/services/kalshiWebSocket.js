@@ -1,11 +1,6 @@
 // Kalshi WebSocket Client
 // Handles connection, authentication, channel subscriptions, heartbeat, and auto-reconnect.
 
-// STUB: Command acknowledgement tracking — requires mapping sent command IDs to pending promises
-// SOURCE: Kalshi WS returns { id, type: 'ack' } for subscribe/unsubscribe commands
-// IMPLEMENT: Track pending commands in a Map<id, {resolve, reject, timeout}>, resolve on ack,
-//   reject on error response or timeout (10s), surface failures to callers
-
 import { getWsUrl, generateAuthHeaders, isConfigured } from './kalshiApi';
 
 // --- Connection state ---
@@ -22,6 +17,10 @@ let reconnectAttempt = 0;
 let reconnectTimer = null;
 let heartbeatTimer = null;
 let sequenceId = 0;
+
+// --- Pending command acknowledgements ---
+// Maps commandId -> { resolve, reject, timeout }
+const pendingCommands = new Map();
 
 // Max reconnect: 5 attempts, then stop
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -101,7 +100,7 @@ async function handleOpen() {
         timestamp: authHeaders['KALSHI-ACCESS-TIMESTAMP'],
         signature: authHeaders['KALSHI-ACCESS-SIGNATURE'],
       },
-    });
+    }).catch(() => {});
     setState(STATE.CONNECTED);
     startHeartbeat();
     resubscribeAll();
@@ -125,6 +124,21 @@ function handleMessage(event) {
   if (rawMsg.type === 'heartbeat' || event.data === 'heartbeat') {
     sendRaw('heartbeat');
     return;
+  }
+
+  // Resolve or reject pending command promises on ack/error responses
+  if (rawMsg.id !== undefined && (rawMsg.type === 'ack' || rawMsg.type === 'error')) {
+    const pending = pendingCommands.get(rawMsg.id);
+    if (pending) {
+      clearTimeout(pending.timeout);
+      pendingCommands.delete(rawMsg.id);
+      if (rawMsg.type === 'ack') {
+        pending.resolve(rawMsg);
+      } else {
+        pending.reject(rawMsg);
+      }
+      return;
+    }
   }
 
   const msg = normalizeMessageEnvelope(rawMsg);
@@ -167,8 +181,17 @@ function disconnect() {
   setState(STATE.DISCONNECTED);
 }
 
+function clearPendingCommands() {
+  pendingCommands.forEach(({ reject: rej, timeout }, id) => {
+    clearTimeout(timeout);
+    rej(new Error(`Command ${id} cancelled: WebSocket disconnected`));
+  });
+  pendingCommands.clear();
+}
+
 function cleanup() {
   stopHeartbeat();
+  clearPendingCommands();
 }
 
 // --- Reconnect ---
@@ -226,7 +249,17 @@ function sendRaw(data) {
 }
 
 function sendCommand(cmd) {
-  sendRaw(JSON.stringify(cmd));
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (pendingCommands.has(cmd.id)) {
+        pendingCommands.delete(cmd.id);
+        console.warn('[KalshiWS] Command timed out:', cmd);
+        reject(new Error(`Command ${cmd.id} (${cmd.cmd}) timed out`));
+      }
+    }, 10000);
+    pendingCommands.set(cmd.id, { resolve, reject, timeout });
+    sendRaw(JSON.stringify(cmd));
+  });
 }
 
 // --- Channel subscriptions ---
@@ -256,7 +289,7 @@ function subscribe(channel, callback, tickers = []) {
 
   // Send subscribe command if connected and there are new tickers
   if (state === STATE.CONNECTED && (newTickers.length > 0 || tickers.length === 0)) {
-    sendSubscribeCommand(channel, newTickers.length > 0 ? newTickers : undefined);
+    sendSubscribeCommand(channel, newTickers.length > 0 ? newTickers : undefined).catch(() => {});
   }
 
   return () => {
@@ -265,7 +298,7 @@ function subscribe(channel, callback, tickers = []) {
     // If no more callbacks, unsubscribe from the channel entirely
     if (sub.callbacks.size === 0) {
       if (state === STATE.CONNECTED) {
-        sendUnsubscribeCommand(channel, Array.from(sub.tickers));
+        sendUnsubscribeCommand(channel, Array.from(sub.tickers)).catch(() => {});
       }
       delete subscriptions[channel];
     }
@@ -277,7 +310,7 @@ function sendSubscribeCommand(channel, tickers) {
   if (tickers && tickers.length > 0) {
     params.market_tickers = tickers;
   }
-  sendCommand({ id: nextId(), cmd: 'subscribe', params });
+  return sendCommand({ id: nextId(), cmd: 'subscribe', params });
 }
 
 function sendUnsubscribeCommand(channel, tickers) {
@@ -285,14 +318,14 @@ function sendUnsubscribeCommand(channel, tickers) {
   if (tickers && tickers.length > 0) {
     params.market_tickers = tickers;
   }
-  sendCommand({ id: nextId(), cmd: 'unsubscribe', params });
+  return sendCommand({ id: nextId(), cmd: 'unsubscribe', params });
 }
 
 /** Re-subscribe to all channels after reconnect */
 function resubscribeAll() {
   Object.entries(subscriptions).forEach(([channel, sub]) => {
     const tickers = Array.from(sub.tickers);
-    sendSubscribeCommand(channel, tickers.length > 0 ? tickers : undefined);
+    sendSubscribeCommand(channel, tickers.length > 0 ? tickers : undefined).catch(() => {});
   });
 }
 
