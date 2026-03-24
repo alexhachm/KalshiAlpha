@@ -111,7 +111,11 @@ function OrderBook({ windowId }) {
   const [flashedFills, setFlashedFills] = useState(new Set())
   const [linkedTicker, setLinkedTicker] = useState(null)
   const [cancellingIds, setCancellingIds] = useState(new Set())
+  const [showCancelAllConfirm, setShowCancelAllConfirm] = useState(false)
+  const [cancellingAll, setCancellingAll] = useState(false)
+  const [cancelAllToast, setCancelAllToast] = useState(null)
   const intervalRef = useRef(null)
+  const cancelAllConfirmBtnRef = useRef(null)
 
   const gridOrders = useGridCustomization('order-book-orders-' + windowId, ORDER_COLUMNS)
   const gridFills = useGridCustomization('order-book-fills-' + windowId, FILL_COLUMNS)
@@ -260,13 +264,45 @@ function OrderBook({ windowId }) {
   //        3. Add depth bars proportional to size
   //        4. Color-code by bid/ask side
 
-  // STUB: Cancel-all button — batch cancel all open orders with single click
-  // SOURCE: "Trading terminal UX best practices"
-  // IMPLEMENT WHEN: omsService supports batch cancel
-  // STEPS: 1. Add "Cancel All" button in tab bar when orders tab active
-  //        2. Confirm dialog before executing
-  //        3. Call cancelOrder for each open order in parallel
-  //        4. Show progress/result toast
+  // Keyboard handler for cancel-all confirmation dialog
+  useEffect(() => {
+    if (!showCancelAllConfirm) return
+    requestAnimationFrame(() => cancelAllConfirmBtnRef.current?.focus())
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setShowCancelAllConfirm(false)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [showCancelAllConfirm])
+
+  // Cancel-all handler — cancels all currently visible open orders in parallel
+  const handleCancelAll = useCallback(async () => {
+    setShowCancelAllConfirm(false)
+    setCancellingAll(true)
+    const toCancel = openOrders
+    let successCount = 0
+    let errorCount = 0
+    await Promise.all(
+      toCancel.map(async (order) => {
+        try {
+          await cancelOrder(order.clientOrderId)
+          successCount++
+        } catch {
+          errorCount++
+        }
+      })
+    )
+    setCancellingAll(false)
+    const msg =
+      errorCount === 0
+        ? `Cancelled ${successCount} order${successCount !== 1 ? 's' : ''}`
+        : `Cancelled ${successCount}, ${errorCount} failed`
+    setCancelAllToast({ message: msg, type: errorCount === 0 ? 'success' : 'error' })
+    setTimeout(() => setCancelAllToast(null), 3000)
+  }, [openOrders])
 
   return (
     <div className={`order-book ob--font-${activeGrid.fontSize}`}>
@@ -287,6 +323,16 @@ function OrderBook({ windowId }) {
           ))}
         </div>
         <div className="ob-tab-actions">
+          {activeTab === 'orders' && openOrders.length > 0 && (
+            <button
+              className="ob-cancel-all-btn"
+              onClick={() => setShowCancelAllConfirm(true)}
+              disabled={cancellingAll}
+              title="Cancel all open orders"
+            >
+              {cancellingAll ? 'Cancelling…' : 'Cancel All'}
+            </button>
+          )}
           {linkedTicker && (
             <span className="ob-linked-ticker">{linkedTicker}</span>
           )}
@@ -341,6 +387,40 @@ function OrderBook({ windowId }) {
           onChange={handleSettingsChange}
           onClose={() => setShowSettings(false)}
         />
+      )}
+
+      {/* Cancel-All confirmation dialog */}
+      {showCancelAllConfirm && (
+        <div className="ob-confirm-overlay" onClick={() => setShowCancelAllConfirm(false)}>
+          <div className="ob-confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="ob-confirm-title">Cancel All Orders</div>
+            <div className="ob-confirm-msg">
+              Cancel {openOrders.length} open order{openOrders.length !== 1 ? 's' : ''}?
+            </div>
+            <div className="ob-confirm-actions">
+              <button
+                ref={cancelAllConfirmBtnRef}
+                className="ob-confirm-btn ob-confirm-btn-danger"
+                onClick={handleCancelAll}
+              >
+                Cancel All
+              </button>
+              <button
+                className="ob-confirm-btn ob-confirm-btn-secondary"
+                onClick={() => setShowCancelAllConfirm(false)}
+              >
+                Keep Orders
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel-All result toast */}
+      {cancelAllToast && (
+        <div className={`ob-toast ob-toast-${cancelAllToast.type}`}>
+          {cancelAllToast.message}
+        </div>
       )}
     </div>
   )

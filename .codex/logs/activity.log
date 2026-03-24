@@ -1,0 +1,20 @@
+[2026-03-24T01:12:59Z] [master-3] [STATUS] All 4 tasks assigned by coordinator. worker-1→task1(PriceLadder), worker-2→task2(research-CLI), worker-3→task3(EMA/SMA), worker-4→task4(Sharpe-ratio). No ready tasks remaining.
+[2026-03-24T01:14:48Z] [master-3] [MERGE_PR] integrate triggered for req-6f1a750c (Fix Sharpe ratio rfPerTrade). 0 merges queued.
+[2026-03-24T01:15:06Z] [master-3] [IGNORE] merge_failed (DEPRECATED) for req-6f1a750c task:4 branch:agent-4. Rebase conflict in hotkeyStore.js. Ignoring — merge-prep handles git conflicts at worker level.
+[2026-03-24T01:15:44Z] [master-3] [MERGE_PR] integrate --retry-terminal for req-6f1a750c. Conflict on agent-4 branch (hotkeyStore.js rebase conflict vs origin/main). 1 merge queued.
+[2026-03-24T01:16:13Z] [master-3] [IGNORE] merge_failed #2 (DEPRECATED) req-6f1a750c branch:agent-4. Same hotkeyStore.js rebase conflict. Merger owns resolution.
+[2026-03-24T01:23:53Z] [master-3] [INCIDENT] Coordinator process died ~01:16. Restarted with empty state. All 4 tasks were completed in branches before crash: agent-1(PriceLadder done), agent-3(EMA/SMA done), agent-4(Sharpe ratio done+PR#207), agent-2(research CLI auto-save). Workers re-created (wt-1 through wt-4). Requests need re-queueing.
+[2026-03-24T01:31:22Z] [master-3] [DISTILL] [RESET] context_budget=220 cycles=23 elapsed=20m. Pre-reset distillation complete. allocation-learnings.md updated. Relaunching /scan-codebase-allocator.
+[2026-03-24T01:36:15Z] [master-3] [ALLOCATE] Fix tasks created and assigned after worker_liveness_stale failures: task5→worker-1(trading-ui/PriceLadder), task6→worker-2(coordinator/research-CLI), task7→worker-3(quotes-chart/EMA-SMA), task8→worker-4(analytics/Sharpe). Workers idle, assignments pending session launch.
+[2026-03-24T01:39:48Z] [master-3] [IGNORE] merge_failed (DEPRECATED) req-91cb1f22 task:7 branch:agent-3. Error: spawnSync gh ENOENT (gh CLI not available in merger). Not creating fix tasks.
+[2026-03-24T01:40:11Z] [master-3] [MERGE_PR] integrate triggered for req-91cb1f22 (EMA/SMA chart overlays, PR#205). 0 merges queued.
+[2026-03-24T01:40:33Z] [master-3] [IGNORE] merge_failed (DEPRECATED) req-8feca638 task:8 branch:agent-4. spawnSync gh ENOENT.
+[2026-03-24T01:40:53Z] [master-3] [MERGE_PR] integrate triggered for req-8feca638 (Sharpe ratio fix, PR#207). 0 merges queued.
+[2026-03-24T01:42:04Z] [master-3] [IGNORE] merge_failed (DEPRECATED) req-d5ea91ab task:6 branch:agent-2. spawnSync gh ENOENT.
+[2026-03-24T01:42:39Z] [master-3] [MERGE_PR] integrate triggered for req-d5ea91ab (research CLI cases, PR#311 in setup-agents-codex10). 0 merges queued.
+[2026-03-24T01:42:58Z] [master-3] [IGNORE] merge_failed (DEPRECATED) req-c06d9b62 task:5 branch:agent-1. Rebase conflict on auto-save commit b6ec93d1 vs origin/main.
+[2026-03-24T01:43:17Z] [master-3] [MERGE_PR] integrate triggered for req-c06d9b62 (PriceLadder click-to-trade, PR#209). 0 merges queued.
+[2026-03-24T01:43:55Z] [master-3] [IGNORE] merge_failed #2 (DEPRECATED) req-c06d9b62 branch:agent-1. Rebase conflict in .codex/knowledge files from auto-save b6ec93d1. Not PriceLadder code.
+[2026-03-24T01:52:23Z] [master-3] [DISTILL] [RESET] context_budget=680 cycles=45 elapsed=20m2s. All 4 requests completed (PRs #205, #207, #209, #311). Merges stuck on deprecated gh/git conflicts. Relaunching.
+[2026-03-24T01:53:47Z] [master-3] [ALLOCATE] task9→worker-3 (Bollinger Bands / quotes-chart). Domain match: Chart.jsx+ChartSettings.jsx. Worker-3 has quotes-chart context from prior EMA/SMA work.
+[2026-03-24T01:54:00Z] [master-3] [ALLOCATE] task10→worker-1 (React ErrorBoundary / trading-ui). Domain tag: trading-ui, wraps Window panels.

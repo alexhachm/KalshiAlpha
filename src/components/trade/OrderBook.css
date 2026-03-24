@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--text-primary);
@@ -287,4 +288,129 @@
   100% {
     background: transparent;
   }
+}
+
+/* Cancel-All button in tab bar */
+.ob-cancel-all-btn {
+  background: none;
+  border: 1px solid var(--accent-sell);
+  color: var(--accent-sell);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 1px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: background var(--transition-normal), color var(--transition-normal);
+}
+
+.ob-cancel-all-btn:hover {
+  background: color-mix(in srgb, var(--accent-sell) 20%, transparent);
+}
+
+.ob-cancel-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cancel-All confirmation dialog */
+.ob-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.ob-confirm-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 16px;
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ob-confirm-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ob-confirm-msg {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.ob-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ob-confirm-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--transition-normal);
+}
+
+.ob-confirm-btn:hover {
+  opacity: 0.85;
+}
+
+.ob-confirm-btn-danger {
+  background: var(--accent-sell);
+  color: var(--bg-primary);
+}
+
+.ob-confirm-btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* Cancel-All result toast */
+.ob-toast {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  z-index: 30;
+  pointer-events: none;
+  animation: ob-toast-in 0.2s ease-out;
+}
+
+.ob-toast-success {
+  background: color-mix(in srgb, var(--accent-win) 20%, var(--bg-secondary));
+  color: var(--accent-win);
+  border: 1px solid var(--accent-win);
+}
+
+.ob-toast-error {
+  background: color-mix(in srgb, var(--accent-sell) 20%, var(--bg-secondary));
+  color: var(--accent-sell);
+  border: 1px solid var(--accent-sell);
+}
+
+@keyframes ob-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
