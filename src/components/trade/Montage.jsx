@@ -12,13 +12,9 @@ import { getTemplates, subscribe as subscribeHotkeys } from '../../services/hotk
 import * as settingsStore from '../../services/settingsStore'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
+import { TICKERS } from '../../constants/tickers'
 
 const QUICK_SIZES = [1, 5, 10, 25, 50, 100]
-
-const TICKERS = [
-  'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
-  'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
-]
 
 const LS_KEY_PREFIX = 'montage-settings-'
 
