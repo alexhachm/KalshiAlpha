@@ -136,16 +136,38 @@ async function generateAuthHeaders(method, fullPath) {
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
 
-// STUB: Token-bucket rate limiter — requires a shared rate limit budget (e.g., 10 req/sec for Kalshi)
-// SOURCE: Kalshi API docs specify per-second rate limits; current code relies on 429 retry only
-// IMPLEMENT: Create a TokenBucket class with `consume()` that delays requests when bucket is empty,
-//   initialize with Kalshi's documented rate (10 req/s default), apply before each fetch() call
+class TokenBucket {
+  constructor(capacity, refillRate) {
+    this.capacity = capacity;
+    this.refillRate = refillRate;
+    this.tokens = capacity;
+    this.lastRefill = Date.now();
+  }
+
+  consume() {
+    const now = Date.now();
+    const elapsed = (now - this.lastRefill) / 1000;
+    this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate);
+    this.lastRefill = now;
+
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return Promise.resolve();
+    }
+
+    const waitMs = ((1 - this.tokens) / this.refillRate) * 1000;
+    return new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
+const bucket = new TokenBucket(10, 10);
 
 function isRetryable(status) {
   return status === 429 || (status >= 500 && status < 600);
 }
 
 async function request(method, path, body = null, params = null) {
+  await bucket.consume();
   const base = getBaseUrl();
   let url = base + path;
 
