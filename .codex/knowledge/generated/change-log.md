@@ -1,4 +1,10 @@
 
+## [35] Fix stale lastTrade data in dataFeed.js subscribeToTicker — 2026-03-24
+- Domain: api-layer
+- Files: src/services/dataFeed.js
+- What changed: Added `wrappedCallback()` invocation after `lastTickerData` update in the `subscribeTicker` handler so trade data propagates to consumers immediately instead of waiting for the next orderbook change.
+- PR: https://github.com/alexhachm/KalshiAlpha/pull/229
+
 ## [19] Fix WebSocket auth failure silently ignored in handleOpen() — 2026-03-24
 - Domain: trading-ui
 - Files: src/services/kalshiWebSocket.js
