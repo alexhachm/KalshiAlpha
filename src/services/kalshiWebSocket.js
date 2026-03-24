@@ -102,13 +102,14 @@ async function handleOpen() {
         signature: authHeaders['KALSHI-ACCESS-SIGNATURE'],
       },
     });
+    setState(STATE.CONNECTED);
+    startHeartbeat();
+    resubscribeAll();
   } catch (err) {
     console.error('[KalshiWS] Auth failed:', err);
+    scheduleReconnect();
+    return;
   }
-
-  setState(STATE.CONNECTED);
-  startHeartbeat();
-  resubscribeAll();
 }
 
 function handleMessage(event) {
