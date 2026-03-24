@@ -354,15 +354,16 @@ function PriceLadder({ windowId }) {
         <>
           {/* Column headers */}
           <div className="pl-header-row">
-            {grid.visibleColumns.map((col, idx) => {
-              const isOver = grid.dragState.dragging && grid.dragState.overIndex === idx
+            {grid.visibleColumns.map((col) => {
+              const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+              const isOver = grid.dragState.dragging && grid.dragState.overIndex === fullIdx
               return (
                 <span
                   key={col.key}
                   className={`pl-col pl-col-${col.key}${isOver ? ' drag-over' : ''}`}
                   draggable
-                  onDragStart={() => grid.onDragStart(idx)}
-                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
+                  onDragStart={() => grid.onDragStart(fullIdx)}
+                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
                   onDragEnd={grid.onDragEnd}
                 >
                   {col.label}

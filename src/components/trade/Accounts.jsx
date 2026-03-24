@@ -170,25 +170,28 @@ function Accounts({ windowId }) {
         <table className="acct-table">
           <thead>
             <tr>
-              {grid.visibleColumns.map((col, idx) => (
-                <th
-                  key={col.key}
-                  className={`acct-th acct-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
-                  onClick={() => handleSort(col.key)}
-                  draggable
-                  onDragStart={() => grid.onDragStart(idx)}
-                  onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
-                  onDragEnd={grid.onDragEnd}
-                  style={{ width: col.width || 'auto', cursor: 'grab' }}
-                >
-                  {col.label}
-                  {sort.col === col.key && (
-                    <span className="acct-sort-arrow">
-                      {sort.dir === 'asc' ? ' \u25B2' : ' \u25BC'}
-                    </span>
-                  )}
-                </th>
-              ))}
+              {grid.visibleColumns.map((col) => {
+                const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+                return (
+                  <th
+                    key={col.key}
+                    className={`acct-th acct-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
+                    onClick={() => handleSort(col.key)}
+                    draggable
+                    onDragStart={() => grid.onDragStart(fullIdx)}
+                    onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                    onDragEnd={grid.onDragEnd}
+                    style={{ width: col.width || 'auto', cursor: 'grab' }}
+                  >
+                    {col.label}
+                    {sort.col === col.key && (
+                      <span className="acct-sort-arrow">
+                        {sort.dir === 'asc' ? ' \u25B2' : ' \u25BC'}
+                      </span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>

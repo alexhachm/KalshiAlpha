@@ -440,19 +440,22 @@ function OrdersPanel({ orders, grid, cancellingIds, onCancel }) {
     <table className="ob-table">
       <thead>
         <tr>
-          {grid.visibleColumns.map((col, idx) => (
-            <th
-              key={col.key}
-              className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
-              draggable
-              onDragStart={() => grid.onDragStart(idx)}
-              onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
-              onDragEnd={grid.onDragEnd}
-              style={{ width: col.width || 'auto', cursor: 'grab' }}
-            >
-              {col.label}
-            </th>
-          ))}
+          {grid.visibleColumns.map((col) => {
+            const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+            return (
+              <th
+                key={col.key}
+                className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
+                draggable
+                onDragStart={() => grid.onDragStart(fullIdx)}
+                onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                onDragEnd={grid.onDragEnd}
+                style={{ width: col.width || 'auto', cursor: 'grab' }}
+              >
+                {col.label}
+              </th>
+            )
+          })}
         </tr>
       </thead>
       <tbody>
@@ -527,19 +530,22 @@ function FillsPanel({ fills, grid, flashedFills }) {
     <table className="ob-table">
       <thead>
         <tr>
-          {grid.visibleColumns.map((col, idx) => (
-            <th
-              key={col.key}
-              className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
-              draggable
-              onDragStart={() => grid.onDragStart(idx)}
-              onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
-              onDragEnd={grid.onDragEnd}
-              style={{ width: col.width || 'auto', cursor: 'grab' }}
-            >
-              {col.label}
-            </th>
-          ))}
+          {grid.visibleColumns.map((col) => {
+            const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+            return (
+              <th
+                key={col.key}
+                className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
+                draggable
+                onDragStart={() => grid.onDragStart(fullIdx)}
+                onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                onDragEnd={grid.onDragEnd}
+                style={{ width: col.width || 'auto', cursor: 'grab' }}
+              >
+                {col.label}
+              </th>
+            )
+          })}
         </tr>
       </thead>
       <tbody>
@@ -588,19 +594,22 @@ function PositionsPanel({ positions, grid }) {
     <table className="ob-table">
       <thead>
         <tr>
-          {grid.visibleColumns.map((col, idx) => (
-            <th
-              key={col.key}
-              className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === idx ? ' drag-over' : ''}`}
-              draggable
-              onDragStart={() => grid.onDragStart(idx)}
-              onDragOver={(e) => { e.preventDefault(); grid.onDragOver(idx) }}
-              onDragEnd={grid.onDragEnd}
-              style={{ width: col.width || 'auto', cursor: 'grab' }}
-            >
-              {col.label}
-            </th>
-          ))}
+          {grid.visibleColumns.map((col) => {
+            const fullIdx = grid.columns.findIndex((c) => c.key === col.key)
+            return (
+              <th
+                key={col.key}
+                className={`ob-th ob-align-${col.align}${grid.dragState.dragging && grid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
+                draggable
+                onDragStart={() => grid.onDragStart(fullIdx)}
+                onDragOver={(e) => { e.preventDefault(); grid.onDragOver(fullIdx) }}
+                onDragEnd={grid.onDragEnd}
+                style={{ width: col.width || 'auto', cursor: 'grab' }}
+              >
+                {col.label}
+              </th>
+            )
+          })}
         </tr>
       </thead>
       <tbody>
