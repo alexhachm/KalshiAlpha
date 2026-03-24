@@ -49,6 +49,7 @@ const DEFAULT_SETTINGS = {
     { type: 'EMA', period: 20, color: '#ffd93d', enabled: true },
   ],
   bollinger: { enabled: false, period: 20, multiplier: 2, color: '#a855f7', squeezeThreshold: 0.05 },
+  vwap: { enabled: false, color: '#ff8c42' },
 }
 
 // Read CSS custom property values for chart canvas theming
@@ -141,6 +142,20 @@ function calcBollingerBands(candles, period, multiplier) {
   return { middle, upper, lower }
 }
 
+function calcVWAP(candles) {
+  if (!candles || !candles.length) return []
+  const result = []
+  let cumPV = 0
+  let cumV = 0
+  for (const c of candles) {
+    const typicalPrice = (c.high + c.low + c.close) / 3
+    cumPV += typicalPrice * c.volume
+    cumV += c.volume
+    result.push({ time: c.time, value: cumV > 0 ? cumPV / cumV : typicalPrice })
+  }
+  return result
+}
+
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
@@ -160,6 +175,7 @@ function Chart({ windowId }) {
   const indicatorSeriesRef = useRef([])
   const indicatorCandlesRef = useRef([])
   const bbSeriesRef = useRef(null)
+  const vwapSeriesRef = useRef(null)
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
@@ -175,6 +191,7 @@ function Chart({ windowId }) {
   const overlayTickersKey = (settings.overlayTickers || []).join(',')
   const indicatorsKey = JSON.stringify(settings.indicators || [])
   const bollingerKey = JSON.stringify(settings.bollinger || {})
+  const vwapKey = JSON.stringify(settings.vwap || {})
 
   // Toggle settings via right-click header event
   useEffect(() => {
@@ -210,6 +227,9 @@ function Chart({ windowId }) {
       mainSeriesRef.current = null
       volumeSeriesRef.current = null
       overlaySeriesRef.current = []
+      indicatorSeriesRef.current = []
+      bbSeriesRef.current = null
+      vwapSeriesRef.current = null
     }
 
     const isOverlay = settings.overlayMode
@@ -443,6 +463,26 @@ function Chart({ windowId }) {
         }
       }
 
+      // VWAP overlay
+      const vwapSettings = settings.vwap || {}
+      vwapSeriesRef.current = null
+      if (vwapSettings.enabled) {
+        const vwapData = calcVWAP(candles)
+        if (vwapData.length) {
+          const vwapColor = vwapSettings.color || '#ff8c42'
+          const vwapSeries = chart.addSeries(LineSeries, {
+            color: vwapColor,
+            lineWidth: 2,
+            title: 'VWAP',
+            priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+            lastValueVisible: false,
+            priceLineVisible: false,
+          })
+          vwapSeries.setData(vwapData)
+          vwapSeriesRef.current = vwapSeries
+        }
+      }
+
       // Crosshair move handler for data display
       chart.subscribeCrosshairMove((param) => {
         if (!param.time || !param.seriesData) {
@@ -467,8 +507,9 @@ function Chart({ windowId }) {
       overlaySeriesRef.current = []
       indicatorSeriesRef.current = []
       bbSeriesRef.current = null
+      vwapSeriesRef.current = null
     }
-  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey, indicatorsKey, bollingerKey])
+  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey, indicatorsKey, bollingerKey, vwapKey])
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -545,10 +586,19 @@ function Chart({ windowId }) {
             lower.update({ time: bar.time, value: sma - bbMult * std })
           }
         }
+
+        // VWAP incremental update
+        const vwapSeries = vwapSeriesRef.current
+        if (vwapSeries) {
+          const vwapData = calcVWAP(buf)
+          if (vwapData.length) {
+            vwapSeries.update(vwapData[vwapData.length - 1])
+          }
+        }
       }
     })
     return unsub
-  }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey, bollingerKey])
+  }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey, bollingerKey, vwapKey])
 
   // Emit ticker ownership update to Shell
   useEffect(() => {
@@ -603,30 +653,6 @@ function Chart({ windowId }) {
   const ohlc = crosshairData && !crosshairData.overlay ? formatOHLC(crosshairData) : null
   const selectorTickers = useMemo(() => TICKERS.includes(ticker) ? TICKERS : [ticker, ...TICKERS], [ticker])
   const availableTickers = useMemo(() => selectorTickers.filter((t) => t !== ticker), [selectorTickers, ticker])
-
-  // STUB: VWAP indicator — Volume Weighted Average Price overlay
-  // SOURCE: "VWAP calculation for intraday trading", institutional benchmarks
-  // IMPLEMENT WHEN: Volume data is available per candle from dataFeed
-  // STEPS: 1. Compute cumulative (price * volume) / cumulative volume
-  //        2. Add LineSeries overlay in chart initialization effect
-  //        3. Update VWAP line on each new bar
-  //        4. Add VWAP toggle in chart toolbar, persist in settings
-
-  // STUB: EMA/SMA indicators — Exponential/Simple Moving Average overlays
-  // SOURCE: "Technical analysis moving averages", standard TA library
-  // IMPLEMENT WHEN: Chart settings support indicator configuration
-  // STEPS: 1. Compute EMA(period) = price * k + prev_ema * (1-k), where k = 2/(period+1)
-  //        2. Support multiple periods (9, 21, 50, 200) with distinct colors
-  //        3. Add/remove indicator LineSeries dynamically
-  //        4. Add indicator panel in settings with period/color picker
-
-  // STUB: Bollinger Bands — volatility band overlay
-  // SOURCE: "Bollinger Bands calculation", John Bollinger's technical analysis
-  // IMPLEMENT WHEN: EMA indicator is implemented (prerequisite)
-  // STEPS: 1. Compute SMA(20) as middle band
-  //        2. Upper = SMA + 2 * stddev(20), Lower = SMA - 2 * stddev(20)
-  //        3. Render as AreaSeries (shaded band) + LineSeries (middle)
-  //        4. Add squeeze detection (bandwidth < threshold) with visual indicator
 
   // STUB: Data gap handling — detect and mark gaps in OHLCV data
   // SOURCE: "Financial chart data gap visualization", TradingView gap handling
