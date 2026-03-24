@@ -20,14 +20,10 @@ Deep documentation for the four service layers: analytics calculations, audit st
 | `categoryAttribution(trades)` | `[{pnlCents, category}]` → `Object` | `{[cat]: {pnl, count, winRate}}` | Groups by category field |
 | `equityCurve(trades)` | `[{pnlCents, timestamp}]` → `Array` | `[{timestamp, equity}]` | Cumulative P&L sorted by time |
 | `dailyPnL(trades)` | `[{pnlCents, timestamp}]` → `Array` | `[{date, pnl, count}]` | Aggregated by calendar day |
-| `sharpeRatio(trades, riskFreeRate=0)` | `[{pnlCents, timestamp}]` → `number` | Annualized Sharpe | **BUG:** rfPerTrade formula wrong when riskFreeRate!=0 (see Bugs section) |
+| `sharpeRatio(trades, riskFreeRate=0)` | `[{pnlCents, timestamp}]` → `number` | Annualized Sharpe | `rfPerTrade = riskFreeRate / (annualizationFactor ** 2 \|\| 1)` — standard per-period rf rate |
 | `maxDrawdown(trades)` | `[{pnlCents, timestamp}]` → `Object` | `{maxDrawdown, maxDrawdownPct, peakTimestamp, troughTimestamp}` | Peak-to-trough decline |
 | `profitFactor(trades)` | `[{pnlCents}]` → `number` | Gross profit / gross loss | Infinity if no losses |
 | `markToMarket(positions, currentPrices)` | `[{ticker, side, count, avgPriceCents}], {ticker: yesPriceCents}` → `Object` | `{totalMtm, positions: [...]}` | YES: (current - avg) * count; NO: ((100 - current) - avg) * count |
-
-### Known Bug
-
-**sharpeRatio line 187:** `rfPerTrade = riskFreeRate / (annualizationFactor ** 2 / n || 1)` computes to `riskFreeRate * n / tradesPerYear` instead of `riskFreeRate / tradesPerYear`. The risk-free adjustment scales with sample size, which is mathematically incorrect. Effect: Sharpe ratio with non-zero riskFreeRate is wrong by factor of n. Benign when default `riskFreeRate=0` is used.
 
 ---
 
