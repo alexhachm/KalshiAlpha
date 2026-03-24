@@ -229,14 +229,100 @@ function HotkeyManager() {
     return () => document.removeEventListener('keydown', handleGlobalKey)
   })
 
-  // STUB: Hotkey documentation export — generate printable reference card
-  // SOURCE: Internal — getAllBindings() data
-  // IMPLEMENT WHEN: Users request printable hotkey reference
-  // STEPS:
-  //   1. Group bindings by category
-  //   2. Generate HTML table with key combo, label, script columns
-  //   3. Open in new window with print-friendly CSS
-  //   4. Add "Print" button that calls window.print()
+  const handleExportReference = () => {
+    const all = getAllBindings()
+
+    // Group by category
+    const grouped = {}
+    for (const b of all) {
+      const cat = b.category || 'custom'
+      if (!grouped[cat]) grouped[cat] = []
+      grouped[cat].push(b)
+    }
+
+    // Plain-text version for clipboard
+    const textLines = []
+    for (const [cat, items] of Object.entries(grouped)) {
+      textLines.push(`=== ${cat.toUpperCase()} ===`)
+      for (const b of items) {
+        textLines.push(`${b.key.padEnd(20)} ${(b.label || '').padEnd(30)} ${b.script}`)
+      }
+      textLines.push('')
+    }
+    const plainText = textLines.join('\n')
+
+    // Build HTML table rows per category
+    let tableHtml = ''
+    for (const [cat, items] of Object.entries(grouped)) {
+      tableHtml += `<tr class="cat-header"><td colspan="3">${cat.charAt(0).toUpperCase() + cat.slice(1)}</td></tr>`
+      for (const b of items) {
+        const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        tableHtml += `<tr><td class="key">${esc(b.key)}</td><td>${esc(b.label || '')}</td><td class="script">${esc(b.script)}</td></tr>`
+      }
+    }
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hotkey Reference Card</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; font-size: 13px; color: #111; background: #fff; padding: 24px; }
+  h1 { font-size: 18px; margin-bottom: 16px; }
+  .actions { margin-bottom: 16px; display: flex; gap: 8px; }
+  button { padding: 6px 14px; border: 1px solid #999; background: #f5f5f5; cursor: pointer; border-radius: 3px; font-size: 13px; }
+  button:hover { background: #e0e0e0; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f0f0f0; text-align: left; padding: 6px 8px; border: 1px solid #ccc; font-weight: 600; }
+  td { padding: 5px 8px; border: 1px solid #ddd; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  tr.cat-header td { background: #e8e8e8; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+  td.key { font-family: monospace; white-space: nowrap; font-weight: 600; }
+  td.script { font-family: monospace; font-size: 11px; color: #444; }
+  @media print {
+    .actions { display: none; }
+    body { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<h1>Hotkey Reference Card</h1>
+<div class="actions">
+  <button onclick="window.print()">Print</button>
+  <button id="copyBtn">Copy to Clipboard</button>
+</div>
+<table>
+  <thead><tr><th>Key Combo</th><th>Label</th><th>Action / Script</th></tr></thead>
+  <tbody>${tableHtml}</tbody>
+</table>
+<script>
+  document.getElementById('copyBtn').addEventListener('click', function() {
+    const text = ${JSON.stringify(plainText)};
+    navigator.clipboard.writeText(text).then(function() {
+      document.getElementById('copyBtn').textContent = 'Copied!';
+      setTimeout(function() { document.getElementById('copyBtn').textContent = 'Copy to Clipboard'; }, 2000);
+    }).catch(function() {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      document.getElementById('copyBtn').textContent = 'Copied!';
+      setTimeout(function() { document.getElementById('copyBtn').textContent = 'Copy to Clipboard'; }, 2000);
+    });
+  });
+</script>
+</body>
+</html>`
+
+    const win = window.open('', '_blank', 'width=800,height=600')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+    }
+  }
 
   // Template handlers
   const clearTemplateEditor = () => {
@@ -342,6 +428,7 @@ function HotkeyManager() {
         <button className="hk-btn" onClick={handleSaveProfile}>Save As</button>
         <button className="hk-btn" onClick={handleExport}>Export</button>
         <button className="hk-btn" onClick={handleImport}>Import</button>
+        <button className="hk-btn" onClick={handleExportReference}>Export Reference</button>
         <input
           ref={fileInputRef}
           type="file"
