@@ -10,19 +10,15 @@ const DEFAULT_SETTINGS = {
   fontSize: 32,
 }
 
-// Kalshi markets are open Mon-Fri (limited hours vary by market type).
+// Kalshi trades nearly 24/7 including weekends (prediction markets, not stock exchange).
 // DST-aware via toLocaleString with America/New_York timezone.
 function getMarketSession(date) {
-  const etStr = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false, weekday: 'short' })
-  const parts = etStr.split(' ')
-  const day = parts[0]?.replace(',', '')
-  const hour = parseInt(parts[1] || date.getHours(), 10)
+  const etStr = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false })
+  const hour = parseInt(etStr, 10)
 
-  if (day === 'Sat' || day === 'Sun') return { label: 'CLOSED', status: 'closed' }
-  if (hour >= 4 && hour < 9) return { label: 'PRE-MKT', status: 'pre' }
-  if (hour >= 9 && hour < 18) return { label: 'OPEN', status: 'open' }
-  if (hour >= 18 && hour < 20) return { label: 'POST-MKT', status: 'post' }
-  return { label: 'CLOSED', status: 'closed' }
+  // Late-night window (midnight–6 AM ET): most markets still active but reduced volume
+  if (hour >= 0 && hour < 6) return { label: 'REDUCED', status: 'pre' }
+  return { label: 'OPEN', status: 'open' }
 }
 
 // STUB: Exchange calendar — holidays, half-days, special sessions
