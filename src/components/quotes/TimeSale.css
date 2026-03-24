@@ -383,6 +383,27 @@
   animation: cvd-flash 0.8s ease-out;
 }
 
+/* Large trade highlighting by relative size category */
+.ts-trade-large {
+  border-left: 2px solid rgba(245, 158, 11, 0.45);
+}
+
+.ts-trade-block {
+  border-left: 2px solid #f59e0b;
+  background: color-mix(in srgb, #f59e0b 9%, transparent) !important;
+}
+
+.ts-trade-block:hover {
+  background: color-mix(in srgb, #f59e0b 16%, transparent) !important;
+}
+
+.ts-size-badge {
+  font-size: 0.75em;
+  margin-left: 2px;
+  color: #f59e0b;
+  vertical-align: middle;
+}
+
 /* Flash animation on new trades — yellow highlight fading out */
 @keyframes row-flash {
   0% { background: color-mix(in srgb, var(--accent-highlight) 30%, transparent); }
