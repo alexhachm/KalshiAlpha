@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useTickerData } from '../../hooks/useKalshiData'
+import { useTickerData, useOrderEntry } from '../../hooks/useKalshiData'
 import {
   subscribeToLink,
   unsubscribeFromLink,
@@ -89,6 +89,7 @@ function PriceLadder({ windowId }) {
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const { data } = useTickerData(ticker)
+  const { submitOrder, cancelOrder: cancelApiOrder } = useOrderEntry()
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
 
   // Report current ticker to hotkey dispatch registry
@@ -206,8 +207,9 @@ function PriceLadder({ windowId }) {
   // Click-to-trade: place limit order at clicked price
   const handleLevelClick = useCallback((price, side) => {
     if (settings.clickAction !== 'limit') return
+    const localId = orderIdRef.current++
     const order = {
-      id: orderIdRef.current++,
+      id: localId,
       side,
       size: orderSize,
       price,
@@ -216,11 +218,36 @@ function PriceLadder({ windowId }) {
       time: new Date().toLocaleTimeString(),
     }
     setWorkingOrders((prev) => [...prev, order])
-  }, [settings.clickAction, orderSize, ticker])
+    submitOrder({
+      ticker,
+      action: 'buy',
+      side,
+      type: 'limit',
+      price,
+      size: orderSize,
+      timeInForce: 'gtc',
+    }).then((result) => {
+      const exchangeId = result?.order?.order_id ?? result?.order_id ?? null
+      if (exchangeId) {
+        setWorkingOrders((prev) =>
+          prev.map((o) => (o.id === localId ? { ...o, exchangeId } : o))
+        )
+      }
+    }).catch((err) => {
+      console.error('[PriceLadder] Order placement failed:', err)
+      setWorkingOrders((prev) => prev.filter((o) => o.id !== localId))
+    })
+  }, [settings.clickAction, orderSize, ticker, submitOrder])
 
-  const cancelOrder = useCallback((orderId) => {
+  const cancelOrder = useCallback(async (orderId) => {
+    const order = workingOrders.find((o) => o.id === orderId)
+    if (order?.exchangeId) {
+      cancelApiOrder(order.exchangeId).catch((err) =>
+        console.error('[PriceLadder] Cancel failed:', err)
+      )
+    }
     setWorkingOrders((prev) => prev.filter((o) => o.id !== orderId))
-  }, [])
+  }, [cancelApiOrder, workingOrders])
 
   const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
