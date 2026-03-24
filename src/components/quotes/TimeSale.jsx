@@ -276,13 +276,22 @@ function TimeSale({ windowId }) {
     [filteredTrades, settings.maxRows]
   )
 
-  // STUB: Large trade highlighting enhancement — categorize prints by relative size
-  // SOURCE: "Tape reading techniques", Level II/Time & Sales analysis
-  // IMPLEMENT WHEN: Historical trade distribution data is available
-  // STEPS: 1. Compute rolling average trade size over last N trades
-  //        2. Categorize: small (< 0.5x avg), normal, large (> 2x avg), block (> 5x avg)
-  //        3. Apply escalating highlight intensity by category
-  //        4. Add sound alerts for block trades (configurable)
+  // Rolling average trade size from last 50 visible trades for large-print categorization
+  const sizeCategory = useMemo(() => {
+    const sample = visibleTrades.slice(-50)
+    if (sample.length < 10) return null
+    const avg = sample.reduce((sum, t) => sum + t.size, 0) / sample.length
+    const map = new Map()
+    for (const t of displayTrades) {
+      const ratio = t.size / avg
+      let cat = 'normal'
+      if (ratio > 5) cat = 'block'
+      else if (ratio > 2) cat = 'large'
+      else if (ratio < 0.5) cat = 'small'
+      map.set(t.id, cat)
+    }
+    return map
+  }, [visibleTrades, displayTrades])
 
   // CVD: Cumulative volume delta — implemented via cumBuyVolRef/cumSellVolRef accumulators
   // updated on each trade in the subscription handler above; resets on ticker change.
@@ -374,12 +383,16 @@ function TimeSale({ windowId }) {
       >
         {displayTrades.map((trade) => {
           const rowStyle = grid.getRowStyle(trade) || {}
+          const category = sizeCategory?.get(trade.id) ?? 'normal'
           return (
             <div
               key={trade.id}
+              data-size-category={category}
               className={`ts-row ${trade.side === 'BUY' ? 'ts-row--buy' : 'ts-row--sell'}${
                 trade.size >= (settings.largeSizeThreshold || 500) ? ' ts-row--large' : ''
-              }${flashedIds.has(trade.id) ? ` ts-row--flash-${trade.side === 'BUY' ? 'buy' : 'sell'}` : ''}`}
+              }${category === 'large' ? ' ts-trade-large' : ''}${category === 'block' ? ' ts-trade-block' : ''}${
+                flashedIds.has(trade.id) ? ` ts-row--flash-${trade.side === 'BUY' ? 'buy' : 'sell'}` : ''
+              }`}
               style={{ ...rowStyle, height: grid.rowHeight }}
             >
               {grid.visibleColumns.map((col) => (
@@ -390,7 +403,12 @@ function TimeSale({ windowId }) {
                 >
                   {col.key === 'time' ? formatTime(trade.timestamp, settings.hideMilliseconds) :
                    col.key === 'price' ? formatPrice(trade.price, settings.priceDecimals) :
-                   col.key === 'size' ? formatSize(trade.size, settings.abbreviateSize) :
+                   col.key === 'size' ? (
+                     <>
+                       {formatSize(trade.size, settings.abbreviateSize)}
+                       {category === 'block' && <span className="ts-size-badge">⚡</span>}
+                     </>
+                   ) :
                    col.key === 'side' ? trade.side : null}
                 </span>
               ))}
