@@ -82,6 +82,7 @@ function TimeSale({ windowId }) {
   }, [windowId, ticker])
 
   const [trades, setTrades] = useState([])
+  const [tradeFilter, setTradeFilter] = useState('ALL') // 'ALL' | 'BUY' | 'SELL'
   const [settings, setSettings] = useState(() => loadSettings(windowId))
   const [showSettings, setShowSettings] = useState(false)
   const [draftSettings, setDraftSettings] = useState(null)
@@ -224,10 +225,26 @@ function TimeSale({ windowId }) {
     [trades, settings.sizeFilter]
   )
 
+  // Buy/sell stats computed from size-filtered trades (before type filter)
+  const tradeStats = useMemo(() => {
+    let buys = 0, sells = 0, buyVol = 0, sellVol = 0
+    for (const t of visibleTrades) {
+      if (t.side === 'BUY') { buys++; buyVol += t.size }
+      else { sells++; sellVol += t.size }
+    }
+    return { buys, sells, buyVol, sellVol, total: visibleTrades.length }
+  }, [visibleTrades])
+
+  // Apply type filter on top of size filter
+  const filteredTrades = useMemo(() => {
+    if (tradeFilter === 'ALL') return visibleTrades
+    return visibleTrades.filter((t) => t.side === tradeFilter)
+  }, [visibleTrades, tradeFilter])
+
   // Trim to maxRows for display — memoized
   const displayTrades = useMemo(
-    () => visibleTrades.slice(-settings.maxRows),
-    [visibleTrades, settings.maxRows]
+    () => filteredTrades.slice(-settings.maxRows),
+    [filteredTrades, settings.maxRows]
   )
 
   // STUB: Large trade highlighting enhancement — categorize prints by relative size
@@ -237,14 +254,6 @@ function TimeSale({ windowId }) {
   //        2. Categorize: small (< 0.5x avg), normal, large (> 2x avg), block (> 5x avg)
   //        3. Apply escalating highlight intensity by category
   //        4. Add sound alerts for block trades (configurable)
-
-  // STUB: Print filter by trade type — filter buys, sells, or crosses
-  // SOURCE: "Time and sales tape reading", order flow analysis
-  // IMPLEMENT WHEN: Trade side data is reliable
-  // STEPS: 1. Add filter buttons (All | Buys | Sells) in toolbar
-  //        2. Filter displayTrades by side before rendering
-  //        3. Show buy/sell/total counts in toolbar
-  //        4. Add visual buy/sell pressure indicator bar
 
   // STUB: Cumulative volume delta — running total of buy vs sell volume
   // SOURCE: "Order flow trading with cumulative delta", Bookmap analysis
@@ -263,7 +272,23 @@ function TimeSale({ windowId }) {
           ))}
         </select>
 
-        <span className="ts-trade-count">{trades.length} trades</span>
+        <div className="ts-filter-group">
+          {['ALL', 'BUY', 'SELL'].map((f) => (
+            <button
+              key={f}
+              className={`ts-filter-btn ts-filter-btn--${f.toLowerCase()}${tradeFilter === f ? ' ts-filter-btn--active' : ''}`}
+              onClick={() => setTradeFilter(f)}
+            >
+              {f === 'ALL' ? 'All' : f === 'BUY' ? 'Buys' : 'Sells'}
+            </button>
+          ))}
+        </div>
+
+        <span className="ts-flow-counts">
+          <span className="ts-flow-count--buy">B:{tradeStats.buys}</span>
+          <span className="ts-flow-count--sep"> / </span>
+          <span className="ts-flow-count--sell">S:{tradeStats.sells}</span>
+        </span>
 
         <div className="ts-toolbar-right">
           <button
@@ -282,6 +307,17 @@ function TimeSale({ windowId }) {
           </button>
         </div>
       </div>
+
+      {/* Buy/sell pressure bar */}
+      {tradeStats.total > 0 && (() => {
+        const totalVol = tradeStats.buyVol + tradeStats.sellVol
+        const buyPct = totalVol > 0 ? (tradeStats.buyVol / totalVol) * 100 : 50
+        return (
+          <div className="ts-pressure-bar" title={`Buys ${buyPct.toFixed(1)}% / Sells ${(100 - buyPct).toFixed(1)}%`}>
+            <div className="ts-pressure-fill-buy" style={{ width: `${buyPct}%` }} />
+          </div>
+        )
+      })()}
 
       {/* Column headers */}
       <div className="ts-header" style={{ fontSize: fontSizePx }}>
