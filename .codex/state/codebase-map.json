@@ -1,0 +1,43 @@
+{
+  "domains": {
+    "trade": ["src/components/trade/", "src/services/omsEngine.js", "src/services/omsService.js"],
+    "quotes": ["src/components/quotes/", "src/components/MarketViewer.jsx"],
+    "scanners": ["src/components/scanners/", "src/services/alertService.js", "src/services/alertEngine.worker.js"],
+    "data": ["src/services/dataFeed.js", "src/services/kalshiApi.js", "src/services/kalshiWebSocket.js", "src/services/mockData.js"],
+    "settings": ["src/services/settingsStore.js", "src/services/hotkeyStore.js", "src/services/hotkeyLanguage.js", "src/services/linkBus.js"],
+    "analytics": ["src/services/analyticsService.js", "src/services/analyticsCalc.js"],
+    "shell": ["src/components/Shell.jsx", "src/components/Window.jsx", "src/components/WindowManager.jsx", "src/components/MenuBar.jsx", "src/components/TitleBar.jsx", "src/components/PopoutWindow.jsx", "src/components/SnapManager.jsx", "src/components/GridSettingsPanel.jsx", "src/components/HotkeyManager.jsx"],
+    "electron": ["electron/main.js", "electron/preload.js"],
+    "config": ["src/config/toolManifest.js"],
+    "hooks": ["src/hooks/"],
+    "audit": ["src/services/interactionAuditService.js", "src/services/auditStateService.js", "src/services/changeTrackingService.js"]
+  },
+  "coupling_hotspots": [
+    ["src/services/hotkeyStore.js", "src/hooks/useHotkeyDispatch.js", "src/components/HotkeyManager.jsx"],
+    ["src/services/alertService.js", "src/components/scanners/AlertTrigger.jsx"],
+    ["src/services/settingsStore.js", "src/components/SettingsPanel.jsx", "src/components/trade/Montage.jsx"],
+    ["src/services/dataFeed.js", "src/services/kalshiApi.js", "src/services/kalshiWebSocket.js"]
+  ],
+  "large_files": [
+    "src/services/dataFeed.js",
+    "src/components/trade/Montage.jsx",
+    "src/components/scanners/AlertTrigger.jsx",
+    "src/components/Window.jsx",
+    "src/components/trade/OrderBook.jsx",
+    "src/components/quotes/Chart.jsx",
+    "src/services/interactionAuditService.js",
+    "src/services/researchLoop.js",
+    "src/components/HotkeyManager.jsx",
+    "src/services/alertService.js",
+    "src/components/trade/PriceLadder.jsx",
+    "src/services/omsEngine.js"
+  ],
+  "launch_commands": {
+    "build": "vite build",
+    "dev": "vite",
+    "electron:dev": "cross-env ELECTRON=1 vite",
+    "electron:build": "cross-env ELECTRON=1 vite build && electron-builder"
+  },
+  "entry_points": ["src/main.jsx", "src/App.jsx", "electron/main.js"],
+  "scanned_at": "2026-03-23T00:00:00Z"
+}

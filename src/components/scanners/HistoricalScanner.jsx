@@ -125,7 +125,7 @@ function exportToCSV(results) {
 }
 
 function HistoricalScanner({ windowId }) {
-  const { results, scanning, scan } = useHistoricalScan()
+  const { results, scanning, scan, error } = useHistoricalScan()
   const grid = useGridCustomization(`histScanner-${windowId}`, HS_COLUMNS)
   const fontSizePx = FONT_SIZE_MAP[grid.fontSize] || 12
   const [settings, setSettings] = useState(() => {
@@ -439,6 +439,13 @@ function HistoricalScanner({ windowId }) {
             </div>
           )}
           <GridSettingsPanel {...grid} />
+        </div>
+      )}
+
+      {/* Error banner */}
+      {error && (
+        <div className="hs-error-banner">
+          {error}
         </div>
       )}
 
