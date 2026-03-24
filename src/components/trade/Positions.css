@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
   font-family: var(--font-mono);
   font-size: var(--font-size-md);
   color: var(--text-primary);
@@ -201,4 +202,137 @@
   padding: var(--spacing-xl) var(--spacing-sm);
   color: var(--text-muted);
   font-style: italic;
+}
+
+/* Flatten All button */
+.pos-flatten-btn {
+  background: color-mix(in srgb, var(--accent-sell) 15%, transparent);
+  color: var(--accent-sell);
+  border: 1px solid color-mix(in srgb, var(--accent-sell) 40%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.pos-flatten-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-sell) 30%, transparent);
+  color: var(--text-primary);
+}
+
+.pos-flatten-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Flatten confirmation overlay */
+.pos-flatten-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.pos-flatten-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  min-width: 280px;
+  max-width: 360px;
+}
+
+.pos-flatten-dialog-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-sell);
+  margin-bottom: var(--spacing-sm);
+}
+
+.pos-flatten-dialog-body {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+}
+
+.pos-flatten-dialog-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.pos-flatten-cancel-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-fast);
+}
+
+.pos-flatten-cancel-btn:hover {
+  color: var(--text-primary);
+}
+
+.pos-flatten-confirm-btn {
+  background: var(--accent-sell);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  transition: opacity var(--transition-fast);
+}
+
+.pos-flatten-confirm-btn:hover {
+  opacity: 0.85;
+}
+
+/* Flatten progress panel */
+.pos-flatten-progress {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
+}
+
+.pos-flatten-progress-header {
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.pos-flatten-progress-errors {
+  color: var(--accent-sell);
+}
+
+.pos-flatten-result {
+  padding: 1px 0;
+}
+
+.pos-flatten-ok {
+  color: var(--accent-buy);
+}
+
+.pos-flatten-err {
+  color: var(--accent-sell);
+}
+
+.pos-flatten-err-msg {
+  color: var(--text-muted);
 }
