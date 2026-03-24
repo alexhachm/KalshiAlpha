@@ -55,57 +55,41 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 21
-**Request ID:** req-4b094d96
-**Subject:** Implement cumulative volume delta (CVD) display in TimeSale.jsx
+**Task ID:** 22
+**Request ID:** req-135491b7
+**Subject:** Implement structured JSON log export in EventLog.jsx
 **Tier:** 2
 **Priority:** normal
-**Domain:** quotes-chart
+**Domain:** trading-ui
 
 ## Description
 
-DOMAIN: quotes-chart
-FILES: src/components/quotes/TimeSale.jsx
+DOMAIN: trading-ui
+FILES: src/components/trade/EventLog.jsx
 VALIDATION: tier2
 TIER: 2
 
-Implement cumulative volume delta display:
+Implement structured JSON log export:
 
-1. Add running cumBuyVol and cumSellVol state (useState or useRef)
-2. On each new trade print, update cumBuyVol or cumSellVol based on trade side
-3. Compute delta = cumBuyVol - cumSellVol
-4. Display a CVD indicator at the bottom of the time & sales list showing "CVD: +1,234" or "CVD: -567"
-5. Color green for positive delta, red for negative
-6. Flash/highlight when delta changes by > 10x the average trade size (track running avg trade size)
-7. Reset CVD state when ticker changes
-8. Implement the STUB around line 253 in TimeSale.jsx
+1. Find the "Structured log output" STUB around line 295 in EventLog.jsx
+2. Add a "JSON" export button in the toolbar alongside existing export button
+3. On click, generate a JSON array of log entries with fields: { timestamp, level, source, message, metadata }
+4. If a search filter is active, only export filtered/visible entries
+5. Copy the JSON array to clipboard using navigator.clipboard.writeText()
+6. Show brief feedback (e.g. toast or button text change) on successful copy
+7. Style the JSON button as small/secondary, matching existing export button style
 
 SUCCESS CRITERIA:
-- CVD number displayed at bottom of TimeSale panel
-- Green when positive, red when negative
-- Updates on each new trade
-- Resets on ticker change
-- Flash effect on large delta shifts
+- JSON export button visible in EventLog toolbar
+- Clicking copies structured JSON to clipboard
+- Respects active search filter (exports only visible entries)
+- Each entry has timestamp, level, source, message, metadata fields
+- Visual feedback on copy success
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/components/quotes/TimeSale.jsx
-
-## Domain Knowledge
-
-# quotes-chart Domain Knowledge
-
-## Bollinger Bands (2026-03-23)
-- calcBollingerBands(candles, period, multiplier) returns { middle, upper, lower } arrays of { time, value }
-- hexToRgba(hex, alpha) helper converts #rrggbb to rgba() string for lightweight-charts color props
-- BB AreaSeries (upper fill) + two LineSeries (lower dashed, middle dashed) added after main series
-- Squeeze detection: markers on lowerSeries via setMarkers() — works in lightweight-charts v5
-- bbSeriesRef.current stores { upper, lower, middle, period, multiplier } for real-time incremental updates
-- bollingerKey = JSON.stringify(settings.bollinger) used in both useEffect dep arrays
-- ChartSettings.jsx: updateBollinger() helper pattern mirrors updateIndicator()
-- Period/multiplier/color/squeeze fields shown conditionally only when bollinger.enabled is true
-- Settings persist automatically through existing handleSettingsSave -> saveSettings flow
+- src/components/trade/EventLog.jsx
 
 ## Known Pitfalls
 
@@ -118,9 +102,9 @@ Mistakes made by workers. Read before starting any task to avoid repeating them.
 
 ## Worker Info
 
-- Worker ID: 1
-- Branch: agent-1
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-1
+- Worker ID: 3
+- Branch: agent-3
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-3
 
 ## Protocol
 

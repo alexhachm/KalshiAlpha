@@ -1,9 +1,9 @@
 
-## [18] Remove dead useKalshiConnection export from useKalshiData — 2026-03-23
+## [19] Fix WebSocket auth failure silently ignored in handleOpen() — 2026-03-24
 - Domain: trading-ui
-- Files: src/hooks/useKalshiData.js
-- What changed: Deleted 25-line duplicate `useKalshiConnection` export (JSDoc + function). Canonical version in useKalshiConnection.js is untouched.
-- PR: https://github.com/alexhachm/KalshiAlpha/pull/217
+- Files: src/services/kalshiWebSocket.js
+- What changed: Moved setState(CONNECTED)/startHeartbeat/resubscribeAll inside try block; catch block now calls scheduleReconnect() and returns instead of falling through to connected state on auth error.
+- PR: https://github.com/alexhachm/KalshiAlpha/pull/218
 
 ## [6] FIX: Add research CLI case blocks — 2026-03-23
 - Domain: coordinator

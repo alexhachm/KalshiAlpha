@@ -136,6 +136,7 @@ function EventLog({ windowId }) {
   const [entries, setEntries] = useState(() => getStartupEntries())
   const [settings, setSettings] = useState(() => loadSettings(windowId) || DEFAULT_SETTINGS)
   const [showSettings, setShowSettings] = useState(false)
+  const [jsonCopyStatus, setJsonCopyStatus] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [currentMatchIdx, setCurrentMatchIdx] = useState(0)
@@ -284,6 +285,23 @@ function EventLog({ windowId }) {
     setCurrentMatchIdx((i) => (i < searchResults.length - 1 ? i + 1 : 0))
   }, [searchResults.length])
 
+  const handleExportJsonLog = useCallback(() => {
+    const data = displayedEntries.map((e) => ({
+      timestamp: e.time.toISOString(),
+      level: e.level,
+      source: e.source,
+      message: e.message,
+      metadata: {},
+    }))
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+      setJsonCopyStatus('copied')
+      setTimeout(() => setJsonCopyStatus(null), 2000)
+    }).catch(() => {
+      setJsonCopyStatus('failed')
+      setTimeout(() => setJsonCopyStatus(null), 2000)
+    })
+  }, [displayedEntries])
+
   // STUB: Log persistence — persist logs across page reloads
   // SOURCE: "Application logging best practices"
   // IMPLEMENT WHEN: sessionStorage/IndexedDB available
@@ -291,14 +309,6 @@ function EventLog({ windowId }) {
   //        2. Load previous session logs on startup
   //        3. Add session separator marker
   //        4. Implement log rotation (max 10k entries)
-
-  // STUB: Structured log output — JSON export with filtering
-  // SOURCE: "Structured logging standards (ELK, Datadog)"
-  // IMPLEMENT WHEN: Users need machine-parseable log exports
-  // STEPS: 1. Add JSON export button alongside text export
-  //        2. Include structured fields: timestamp, level, source, message, metadata
-  //        3. Support filtered export (only errors, only specific source)
-  //        4. Add copy-to-clipboard for individual entries
 
   return (
     <div
@@ -373,6 +383,13 @@ function EventLog({ windowId }) {
           </button>
           <button className="el-tool-btn" onClick={handleExportLog} title="Export Log">
             &#8615;
+          </button>
+          <button
+            className="el-tool-btn el-tool-btn--json"
+            onClick={handleExportJsonLog}
+            title="Copy JSON to clipboard"
+          >
+            {jsonCopyStatus === 'copied' ? '✓' : jsonCopyStatus === 'failed' ? '✗' : 'JSON'}
           </button>
           <button
             className="el-tool-btn"

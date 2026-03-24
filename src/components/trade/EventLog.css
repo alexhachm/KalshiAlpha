@@ -71,6 +71,12 @@
   border-color: var(--border-color);
 }
 
+.el-tool-btn--json {
+  font-size: var(--font-size-xs, 10px);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
 /* Log entries container */
 .el-entries {
   flex: 1;
