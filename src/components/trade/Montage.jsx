@@ -10,6 +10,7 @@ import {
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import { getTemplates, subscribe as subscribeHotkeys } from '../../services/hotkeyStore'
 import * as settingsStore from '../../services/settingsStore'
+import * as omsService from '../../services/omsService'
 import MontageSettings from './MontageSettings'
 import './Montage.css'
 import { TICKERS } from '../../constants/tickers'
@@ -216,6 +217,23 @@ function Montage({ windowId }) {
     }
   }, [])
 
+  // Subscribe to OMS events to remove orders on fill/cancel/reject
+  useEffect(() => {
+    const removeByExchangeId = (order) => {
+      const exchangeId = order?.id || order?.clientOrderId
+      if (!exchangeId) return
+      setWorkingOrders(prev => prev.filter(o => o.exchangeOrderId !== exchangeId))
+    }
+    const unsubFilled = omsService.on('order:filled', removeByExchangeId)
+    const unsubCancelled = omsService.on('order:cancelled', removeByExchangeId)
+    const unsubRejected = omsService.on('order:rejected', removeByExchangeId)
+    return () => {
+      unsubFilled()
+      unsubCancelled()
+      unsubRejected()
+    }
+  }, [])
+
   // Emit ticker ownership update to Shell
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('window-ticker-update', { detail: { id: windowId, ticker } }))
@@ -305,7 +323,7 @@ function Montage({ windowId }) {
   const executeOrder = async (order) => {
     setConfirmDialog(null)
     try {
-      await submitOrder({
+      const result = await submitOrder({
         ticker: order.ticker,
         action: 'buy',
         side: order.side,
@@ -314,6 +332,14 @@ function Montage({ windowId }) {
         size: order.size,
         timeInForce: order.timeInForce,
       })
+      const exchangeOrderId = result?.order?.order_id || result?.order_id || null
+      setWorkingOrders(prev => [...prev, {
+        ...order,
+        exchangeOrderId,
+        quantity: order.size,
+        status: 'working',
+        timestamp: Date.now(),
+      }])
     } catch (err) {
       console.error('[Montage] Order placement failed:', err)
     }
@@ -322,6 +348,7 @@ function Montage({ windowId }) {
   const cancelOrder = async (orderId) => {
     try {
       await cancelApiOrder(orderId)
+      setWorkingOrders(prev => prev.filter(o => o.id !== orderId))
     } catch (err) {
       console.error('[Montage] Cancel failed:', err)
     }
