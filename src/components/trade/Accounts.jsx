@@ -15,6 +15,7 @@ const COLUMNS = [
   { key: 'type', label: 'Type', align: 'center' },
   { key: 'realizedPnl', label: 'Realized P&L', align: 'right', numeric: true },
   { key: 'unrealizedPnl', label: 'Unrealized P&L', align: 'right', numeric: true },
+  { key: 'roe', label: 'ROE', align: 'right' },
   { key: 'initEquity', label: 'Init Equity', align: 'right', numeric: true },
   { key: 'tickets', label: 'Tickets', align: 'right' },
   { key: 'shares', label: 'Shares', align: 'right' },
@@ -98,7 +99,10 @@ function Accounts({ windowId }) {
 
   // Sort accounts — memoized
   const sortedAccounts = useMemo(() => {
-    const result = [...accounts]
+    const result = accounts.map(a => ({
+      ...a,
+      roe: a.initEquity === 0 ? null : (a.realizedPnl + a.unrealizedPnl) / a.initEquity * 100,
+    }))
     if (sort.col) {
       result.sort((a, b) => {
         const va = a[sort.col]
@@ -115,23 +119,21 @@ function Accounts({ windowId }) {
   }, [accounts, sort])
 
   // Totals row — memoized
-  const totals = useMemo(() => ({
-    account: 'Total',
-    type: '',
-    realizedPnl: accounts.reduce((s, a) => s + a.realizedPnl, 0),
-    unrealizedPnl: accounts.reduce((s, a) => s + a.unrealizedPnl, 0),
-    initEquity: accounts.reduce((s, a) => s + a.initEquity, 0),
-    tickets: accounts.reduce((s, a) => s + a.tickets, 0),
-    shares: accounts.reduce((s, a) => s + a.shares, 0),
-  }), [accounts])
-
-  // STUB: Return on equity (ROE) display — calculate and show ROE per account
-  // SOURCE: "Portfolio performance metrics", GIPS standards
-  // IMPLEMENT WHEN: initEquity and realized P&L are accurate
-  // STEPS: 1. Compute ROE = (realizedPnl + unrealizedPnl) / initEquity * 100
-  //        2. Add ROE column to account grid
-  //        3. Color-code: green > 0%, red < 0%
-  //        4. Show annualized ROE if account creation date available
+  const totals = useMemo(() => {
+    const totalRealizedPnl = accounts.reduce((s, a) => s + a.realizedPnl, 0)
+    const totalUnrealizedPnl = accounts.reduce((s, a) => s + a.unrealizedPnl, 0)
+    const totalInitEquity = accounts.reduce((s, a) => s + a.initEquity, 0)
+    return {
+      account: 'Total',
+      type: '',
+      realizedPnl: totalRealizedPnl,
+      unrealizedPnl: totalUnrealizedPnl,
+      roe: totalInitEquity === 0 ? null : (totalRealizedPnl + totalUnrealizedPnl) / totalInitEquity * 100,
+      initEquity: totalInitEquity,
+      tickets: accounts.reduce((s, a) => s + a.tickets, 0),
+      shares: accounts.reduce((s, a) => s + a.shares, 0),
+    }
+  }, [accounts])
 
   // STUB: Account margin utilization — show buying power and margin usage
   // SOURCE: "Kalshi API balance endpoints", margin trading best practices
@@ -199,10 +201,13 @@ function Accounts({ windowId }) {
                 {grid.visibleColumns.map((col) => {
                   const val = acct[col.key]
                   const isPnl = col.key === 'realizedPnl' || col.key === 'unrealizedPnl'
+                  const isRoe = col.key === 'roe'
                   const pnlClass =
                     isPnl && typeof val === 'number'
                       ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
-                      : ''
+                      : isRoe && typeof val === 'number'
+                        ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
+                        : ''
                   const typeClass =
                     col.key === 'type'
                       ? acct.type === 'Paper'
@@ -213,6 +218,13 @@ function Accounts({ windowId }) {
                   if (isPnl && typeof val === 'number') {
                     const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
                     content = `${prefix}${Math.abs(val).toFixed(settings.decimalPrecision)}`
+                  } else if (isRoe) {
+                    if (val === null || val === undefined) {
+                      content = 'N/A'
+                    } else {
+                      const prefix = val > 0 ? '+' : ''
+                      content = `${prefix}${val.toFixed(2)}%`
+                    }
                   } else if (col.numeric && typeof val === 'number') {
                     content = `$${formatValue(val, settings.decimalPrecision)}`
                   } else {
@@ -234,16 +246,26 @@ function Accounts({ windowId }) {
               {grid.visibleColumns.map((col) => {
                 const val = totals[col.key]
                 const isPnl = col.key === 'realizedPnl' || col.key === 'unrealizedPnl'
+                const isRoe = col.key === 'roe'
                 const pnlClass =
                   isPnl && typeof val === 'number'
                     ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
-                    : ''
+                    : isRoe && typeof val === 'number'
+                      ? val > 0 ? 'text-win' : val < 0 ? 'text-loss' : ''
+                      : ''
                 let content
                 if (col.key === 'account') {
                   content = <strong>{val}</strong>
                 } else if (isPnl && typeof val === 'number') {
                   const prefix = val > 0 ? '+$' : val < 0 ? '-$' : '$'
                   content = <strong>{prefix}{Math.abs(val).toFixed(settings.decimalPrecision)}</strong>
+                } else if (isRoe) {
+                  if (val === null || val === undefined) {
+                    content = <strong>N/A</strong>
+                  } else {
+                    const prefix = val > 0 ? '+' : ''
+                    content = <strong>{prefix}{val.toFixed(2)}%</strong>
+                  }
                 } else if (col.numeric && typeof val === 'number') {
                   content = <strong>${formatValue(val, settings.decimalPrecision)}</strong>
                 } else {
