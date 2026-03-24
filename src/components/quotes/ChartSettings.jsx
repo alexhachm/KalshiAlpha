@@ -28,6 +28,10 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
     updateDraft('bollinger', { ...(draft.bollinger || {}), [key]: value })
   }
 
+  const updateVwap = (key, value) => {
+    updateDraft('vwap', { ...(draft.vwap || {}), [key]: value })
+  }
+
   const handleSave = () => {
     onSave(draft)
   }
@@ -202,6 +206,30 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
                 />
               </label>
             </>
+          )}
+        </div>
+
+        <div className="chart-settings-divider" />
+
+        <span className="chart-setting-label">VWAP</span>
+        <div className="chart-indicator-block">
+          <label className="chart-setting-row">
+            <span>Enabled</span>
+            <input
+              type="checkbox"
+              checked={(draft.vwap || {}).enabled || false}
+              onChange={(e) => updateVwap('enabled', e.target.checked)}
+            />
+          </label>
+          {(draft.vwap || {}).enabled && (
+            <label className="chart-setting-row">
+              <span>Color</span>
+              <input
+                type="color"
+                value={(draft.vwap || {}).color || '#ff8c42'}
+                onChange={(e) => updateVwap('color', e.target.value)}
+              />
+            </label>
           )}
         </div>
       </div>
