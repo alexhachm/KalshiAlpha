@@ -12,11 +12,7 @@ import { useGridCustomization } from '../../hooks/useGridCustomization'
 import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHotkeyDispatch'
 import GridSettingsPanel from '../GridSettingsPanel'
 import './TimeSale.css'
-
-const TICKERS = [
-  'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
-  'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
-]
+import { TICKERS } from '../../constants/tickers'
 
 const TS_COLUMNS = [
   { key: 'price', label: 'Price', align: 'right', numeric: true },

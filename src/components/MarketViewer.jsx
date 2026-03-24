@@ -9,11 +9,7 @@ import {
 } from '../services/linkBus'
 import { registerWindowTicker, unregisterWindowTicker } from '../hooks/useHotkeyDispatch'
 import './MarketViewer.css'
-
-const TICKERS = [
-  'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
-  'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
-]
+import { TICKERS } from '../constants/tickers'
 
 function MarketViewer({ windowId }) {
   const [ticker, setTicker] = useState(TICKERS[0])

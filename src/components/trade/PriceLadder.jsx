@@ -11,6 +11,7 @@ import { registerWindowTicker, unregisterWindowTicker } from '../../hooks/useHot
 import { getTemplates, subscribe as subscribeHotkeys } from '../../services/hotkeyStore'
 import PriceLadderSettings from './PriceLadderSettings'
 import './PriceLadder.css'
+import { TICKERS } from '../../constants/tickers'
 
 const QUICK_SIZES = [1, 5, 10, 25, 50, 100]
 
@@ -19,11 +20,6 @@ const COLUMNS = [
   { key: 'price', label: 'Price', numeric: true },
   { key: 'askSize', label: 'Ask', numeric: true },
   { key: 'volume', label: 'Vol', numeric: true },
-]
-
-const TICKERS = [
-  'FED-DEC23', 'CPI-NOV', 'GDP-Q4', 'NVDA-EARN', 'BTC-100K-EOY',
-  'TSLA-DELIV', 'SPX-4600-DEC', 'UNEMP-RATE', 'GOOG-ANTITRUST',
 ]
 
 function loadSettings(windowId) {
