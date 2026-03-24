@@ -1,0 +1,78 @@
+[
+  {
+    "request_id": "req-eb3755f0",
+    "timestamp": "2026-03-23T23:06:46.566Z",
+    "type": "bug-fix",
+    "description": "Bug: PriceLadder click-to-trade is broken — orders are never submitted to the exchange. In src/components/trade/PriceLadder.jsx, handleLevelClick (lines 207-219) pushes orders to local React state only, without calling any API submission function. cancelOrder (lines 221-223) similarly only filters local state. The component does not import useOrderEntry at all (line 2 only imports useTickerData). In contrast, Montage.jsx correctly imports useOrderEntry and calls submitOrder. PRODUCTION IMPACT: When users click bid/ask levels on the price ladder to trade, they see fake working order tags that create a false impression of execution — orders are never sent to Kalshi, causing silent order loss. This is a critical trading UI bug: users think they have working orders but have none. FIX: Add useOrderEntry import, call submitOrder inside handleLevelClick, and wire cancelOrder to the API cancel function. Files: src/components/trade/PriceLadder.jsx. EVIDENCE: diff of imports — PriceLadder line 2 vs Montage line 2. CONFIDENCE: 0.92",
+    "complexity_hint": "simple",
+    "routing_class": "spark",
+    "routing_model": "sonnet",
+    "routing_model_source": "fallback-default",
+    "routing_reasoning_effort": "low",
+    "routing_reason": "fallback-routing:class-default",
+    "routing_precedence": [
+      "coordinator-fallback-model-router"
+    ],
+    "budget_state": null,
+    "budget_source": "none",
+    "routing_updated_at": "2026-03-23T23:06:46.566Z",
+    "status": "pending_decomposition"
+  },
+  {
+    "request_id": "req-45c443cf",
+    "timestamp": "2026-03-24T00:33:00.223Z",
+    "type": "bug-fix",
+    "description": "Fix missing CLI client cases for all RESEARCH commands in coordinator/bin/mac10. WHAT: Add case blocks for queue-research, research-status, research-gaps, research-next, research-requeue-stale, research-start, research-complete, research-fail to the switch statement, following the send() pattern used by adjacent commands like memory-snapshots. WHERE: coordinator/bin/mac10, the main switch statement ending at line 2127 (before the default case at line 2128). WHY / PRODUCTION IMPACT: The research queue is completely non-functional from the CLI — running 'mac10 queue-research topic question' returns 'Unknown command' even though server handlers exist in cli-server.js:4452. This breaks all autonomous loops that depend on external research (competitor analysis, domain research, gap analysis). No agent can queue, monitor, or complete research items, rendering the entire RESEARCH subsystem dead. RISK: Without this fix, multiple active loops cannot fulfill their directives and will spin indefinitely without producing value. EVIDENCE: Tested 'codex10 queue-research test-topic test-question' — returns exit code 1 with 'Unknown command: queue-research'. Grepped coordinator/bin/mac10 for \"case 'research\" — zero matches. Server-side cli-server.js has all 8 handlers implemented. The help text at mac10 line 2219 lists queue-research, confirming intent to expose it. CONFIDENCE: 0.95",
+    "complexity_hint": "simple",
+    "routing_class": "spark",
+    "routing_model": "sonnet",
+    "routing_model_source": "fallback-default",
+    "routing_reasoning_effort": "low",
+    "routing_reason": "fallback-routing:class-default",
+    "routing_precedence": [
+      "coordinator-fallback-model-router"
+    ],
+    "budget_state": null,
+    "budget_source": "none",
+    "routing_updated_at": "2026-03-24T00:33:00.223Z",
+    "status": "pending_decomposition"
+  },
+  {
+    "request_id": "req-ee5c84c7",
+    "timestamp": "2026-03-24T00:36:59.092Z",
+    "type": "bug-fix",
+    "description": "Implement EMA and SMA indicator overlays in Chart.jsx (src/components/quotes/Chart.jsx, lines 439-445 STUB). WHAT: Add Exponential Moving Average and Simple Moving Average as toggleable line series overlays on the candlestick chart using lightweight-charts LineSeries. Support configurable period (default 20) and color. SMA = sum(close, N)/N. EMA = close*k + prevEMA*(1-k) where k=2/(N+1). WHERE: Chart.jsx around line 439 (STUB location), plus ChartSettings.jsx for indicator configuration UI. The chart already imports LineSeries from lightweight-charts (line 2). WHY: Competitor gap analysis shows EVERY competing platform (TradingView 100+, Bloomberg 200+, Sierra 300+, Benzinga ~20) has basic moving average indicators. Our chart has ZERO implemented indicators — all 4 are STUBs. Moving averages are the most fundamental technical indicator and prerequisite for Bollinger Bands. A trading terminal with no indicators is not credible. EVIDENCE: Chart.jsx line 439 has explicit STUB comment: 'EMA/SMA indicators — Exponential/Simple Moving Average overlays' with implementation steps documented. CONFIDENCE: 0.95. PRODUCTION IMPACT: Users cannot perform basic technical analysis. Every trader expects moving averages on charts. This is the single largest feature gap vs all 4 competitors analyzed (TradingView, Bloomberg, Sierra Chart, Benzinga Pro).",
+    "complexity_hint": "simple",
+    "routing_class": "spark",
+    "routing_model": "sonnet",
+    "routing_model_source": "fallback-default",
+    "routing_reasoning_effort": "low",
+    "routing_reason": "fallback-routing:class-default",
+    "routing_precedence": [
+      "coordinator-fallback-model-router"
+    ],
+    "budget_state": null,
+    "budget_source": "none",
+    "routing_updated_at": "2026-03-24T00:36:59.092Z",
+    "status": "pending_decomposition"
+  },
+  {
+    "request_id": "req-6f1a750c",
+    "timestamp": "2026-03-24T01:00:18.751Z",
+    "type": "bug-fix",
+    "description": "Fix incorrect per-trade risk-free rate formula in sharpeRatio() in src/services/analyticsCalc.js line 187. WHAT: Change 'const rfPerTrade = riskFreeRate / (annualizationFactor ** 2 / n || 1)' to 'const rfPerTrade = riskFreeRate / (annualizationFactor ** 2 || 1)'. The current formula computes rfPerTrade = riskFreeRate * n / tradesPerYear (scales with sample size n) instead of the correct rfPerTrade = riskFreeRate / tradesPerYear. WHERE: analyticsCalc.js:187, the sharpeRatio function. WHY: Mathematical incorrectness — with a non-zero riskFreeRate (e.g. 0.05), the risk-free adjustment is multiplied by the sample size n, making the Sharpe ratio appear much worse than reality. For n=100 trades, the error is 100x. EVIDENCE: Standard annualized Sharpe formula requires per-period rf = annual_rf / periods_per_year. The code divides by (tradesPerYear / n) instead of tradesPerYear, introducing an erroneous factor of n. The default riskFreeRate=0 masks the bug since 0*n=0. PRODUCTION IMPACT: Any analytics dashboard user who passes a non-zero risk-free rate will see dramatically wrong Sharpe ratios, potentially misguiding position sizing decisions. CONFIDENCE: 0.95",
+    "complexity_hint": "simple",
+    "routing_class": "spark",
+    "routing_model": "sonnet",
+    "routing_model_source": "fallback-default",
+    "routing_reasoning_effort": "low",
+    "routing_reason": "fallback-routing:class-default",
+    "routing_precedence": [
+      "coordinator-fallback-model-router"
+    ],
+    "budget_state": null,
+    "budget_source": "none",
+    "routing_updated_at": "2026-03-24T01:00:18.751Z",
+    "status": "pending_decomposition"
+  }
+]
