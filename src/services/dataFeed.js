@@ -347,6 +347,7 @@ function subscribeToTicker(ticker, callback) {
         side: msg.last_trade_side || 'YES',
         size: parseFloat(msg.last_trade_size_fp || '0'),
       };
+      wrappedCallback();
     }
   });
 

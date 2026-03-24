@@ -55,56 +55,54 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 22
-**Request ID:** req-135491b7
-**Subject:** Implement structured JSON log export in EventLog.jsx
+**Task ID:** 35
+**Request ID:** req-c5d98091
+**Subject:** Fix stale lastTrade data in dataFeed.js subscribeToTicker
 **Tier:** 2
 **Priority:** normal
-**Domain:** trading-ui
+**Domain:** api-layer
 
 ## Description
 
-DOMAIN: trading-ui
-FILES: src/components/trade/EventLog.jsx
+DOMAIN: api-layer
+FILES: src/services/dataFeed.js
 VALIDATION: tier2
 TIER: 2
 
-Implement structured JSON log export:
+Fix stale lastTrade data — subscribeTicker handler never calls consumer callback.
 
-1. Find the "Structured log output" STUB around line 295 in EventLog.jsx
-2. Add a "JSON" export button in the toolbar alongside existing export button
-3. On click, generate a JSON array of log entries with fields: { timestamp, level, source, message, metadata }
-4. If a search filter is active, only export filtered/visible entries
-5. Copy the JSON array to clipboard using navigator.clipboard.writeText()
-6. Show brief feedback (e.g. toast or button text change) on successful copy
-7. Style the JSON button as small/secondary, matching existing export button style
+BUG: In subscribeToTicker() (around line 286), the subscribeTicker handler (lines 343-351) updates lastTickerData with new trade info but does NOT call wrappedCallback(). The wrappedCallback is only invoked via notifyOrderbookListeners when orderbook changes arrive, not when trade data updates.
+
+FIX: Add wrappedCallback() call after line 349 (after lastTickerData update in the subscribeTicker handler). This ensures consumers see trade data immediately, not only when the next unrelated orderbook change triggers notification.
+
+CONTEXT:
+- Line 331: wrappedCallback added to store.listeners
+- Line 264: notifyOrderbookListeners iterates store.listeners - the ONLY path that triggers wrappedCallback
+- Lines 343-351: subscribeTicker handler updates lastTickerData but has no callback invocation
+- The fix is adding wrappedCallback() (or notifyOrderbookListeners(ticker)) after the lastTickerData update
+
+IMPORTANT: Make sure the callback receives the correct data format that consumers expect. Check what notifyOrderbookListeners passes to listeners and ensure the same structure.
 
 SUCCESS CRITERIA:
-- JSON export button visible in EventLog toolbar
-- Clicking copies structured JSON to clipboard
-- Respects active search filter (exports only visible entries)
-- Each entry has timestamp, level, source, message, metadata fields
-- Visual feedback on copy success
+- wrappedCallback invoked after lastTickerData update in subscribeTicker handler
+- Trade data updates propagate to PriceLadder, OrderBook, Chart immediately
+- Callback receives correct data format
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/components/trade/EventLog.jsx
+- src/services/dataFeed.js
 
-## Known Pitfalls
+## Validation
 
-# Known Pitfalls
-
-Mistakes made by workers. Read before starting any task to avoid repeating them.
-
-## Common Mistakes
-- (none yet)
+- Note: `validation` shorthand (for example `tier2` / `tier3`) is workflow metadata. Run explicit task commands only; never infer implicit `npm run build`.
+- Validation: `npm run build`
 
 ## Worker Info
 
-- Worker ID: 3
-- Branch: agent-3
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-3
+- Worker ID: 4
+- Branch: agent-4
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-4
 
 ## Protocol
 
