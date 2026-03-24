@@ -52,6 +52,7 @@ const DEFAULT_SETTINGS = {
     { type: 'SMA', period: 20, color: '#00d2ff', enabled: true },
     { type: 'EMA', period: 20, color: '#ffd93d', enabled: true },
   ],
+  bollinger: { enabled: false, period: 20, multiplier: 2, color: '#a855f7', squeezeThreshold: 0.05 },
 }
 
 // Read CSS custom property values for chart canvas theming
@@ -122,6 +123,35 @@ function calcEMA(candles, period) {
   return result
 }
 
+function calcBollingerBands(candles, period, multiplier) {
+  if (!candles || candles.length < period) return { middle: [], upper: [], lower: [] }
+  const middle = []
+  const upper = []
+  const lower = []
+  for (let i = period - 1; i < candles.length; i++) {
+    let sum = 0
+    for (let j = 0; j < period; j++) sum += candles[i - j].close
+    const sma = sum / period
+    let variance = 0
+    for (let j = 0; j < period; j++) {
+      const diff = candles[i - j].close - sma
+      variance += diff * diff
+    }
+    const std = Math.sqrt(variance / period)
+    middle.push({ time: candles[i].time, value: sma })
+    upper.push({ time: candles[i].time, value: sma + multiplier * std })
+    lower.push({ time: candles[i].time, value: sma - multiplier * std })
+  }
+  return { middle, upper, lower }
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 function Chart({ windowId }) {
   const outerRef = useRef(null)
   const chartContainerRef = useRef(null)
@@ -133,6 +163,7 @@ function Chart({ windowId }) {
   const basePricesRef = useRef({})
   const indicatorSeriesRef = useRef([])
   const indicatorCandlesRef = useRef([])
+  const bbSeriesRef = useRef(null)
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
@@ -147,6 +178,7 @@ function Chart({ windowId }) {
 
   const overlayTickersKey = (settings.overlayTickers || []).join(',')
   const indicatorsKey = JSON.stringify(settings.indicators || [])
+  const bollingerKey = JSON.stringify(settings.bollinger || {})
 
   // Toggle settings via right-click header event
   useEffect(() => {
@@ -359,6 +391,62 @@ function Chart({ windowId }) {
       })
       indicatorSeriesRef.current = indArr
 
+      // Bollinger Bands overlay
+      const bb = settings.bollinger || {}
+      bbSeriesRef.current = null
+      if (bb.enabled) {
+        const bbData = calcBollingerBands(candles, bb.period || 20, bb.multiplier || 2)
+        if (bbData.upper.length) {
+          const bbColor = bb.color || '#a855f7'
+          const upperSeries = chart.addSeries(AreaSeries, {
+            topColor: hexToRgba(bbColor, 0.12),
+            bottomColor: hexToRgba(bbColor, 0.0),
+            lineColor: hexToRgba(bbColor, 0.7),
+            lineWidth: 1,
+            title: `BB(${bb.period || 20})`,
+            lastValueVisible: false,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+          })
+          const lowerSeries = chart.addSeries(LineSeries, {
+            color: hexToRgba(bbColor, 0.7),
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            lastValueVisible: false,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+          })
+          const middleSeries = chart.addSeries(LineSeries, {
+            color: hexToRgba(bbColor, 0.5),
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            lastValueVisible: false,
+            priceLineVisible: false,
+            crosshairMarkerVisible: false,
+          })
+          upperSeries.setData(bbData.upper)
+          lowerSeries.setData(bbData.lower)
+          middleSeries.setData(bbData.middle)
+
+          // Squeeze detection: mark candles where (upper-lower)/middle < threshold
+          const threshold = bb.squeezeThreshold || 0.05
+          const squeezeMarkers = []
+          for (let i = 0; i < bbData.middle.length; i++) {
+            const m = bbData.middle[i].value
+            const u = bbData.upper[i].value
+            const l = bbData.lower[i].value
+            if (m > 0 && (u - l) / m < threshold) {
+              squeezeMarkers.push({ time: bbData.middle[i].time, position: 'belowBar', color: '#ffd93d', shape: 'circle', size: 0.5, text: '' })
+            }
+          }
+          if (squeezeMarkers.length) {
+            lowerSeries.setMarkers(squeezeMarkers)
+          }
+
+          bbSeriesRef.current = { upper: upperSeries, lower: lowerSeries, middle: middleSeries, period: bb.period || 20, multiplier: bb.multiplier || 2 }
+        }
+      }
+
       // Crosshair move handler for data display
       chart.subscribeCrosshairMove((param) => {
         if (!param.time || !param.seriesData) {
@@ -382,8 +470,9 @@ function Chart({ windowId }) {
       volumeSeriesRef.current = null
       overlaySeriesRef.current = []
       indicatorSeriesRef.current = []
+      bbSeriesRef.current = null
     }
-  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey, indicatorsKey])
+  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey, indicatorsKey, bollingerKey])
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -445,10 +534,25 @@ function Chart({ windowId }) {
             series.update({ time: bar.time, value: indEntry.lastEMA })
           }
         })
+
+        // Bollinger Bands incremental update
+        const bbEntry = bbSeriesRef.current
+        if (bbEntry) {
+          const { upper, lower, middle, period: bbPeriod, multiplier: bbMult } = bbEntry
+          if (buf.length >= bbPeriod) {
+            const slice = buf.slice(-bbPeriod)
+            const sma = slice.reduce((s, c) => s + c.close, 0) / bbPeriod
+            const variance = slice.reduce((s, c) => s + (c.close - sma) ** 2, 0) / bbPeriod
+            const std = Math.sqrt(variance)
+            middle.update({ time: bar.time, value: sma })
+            upper.update({ time: bar.time, value: sma + bbMult * std })
+            lower.update({ time: bar.time, value: sma - bbMult * std })
+          }
+        }
       }
     })
     return unsub
-  }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey])
+  }, [ticker, settings.timeframe, settings.chartType, settings.overlayMode, overlayTickersKey, bollingerKey])
 
   // Emit ticker ownership update to Shell
   useEffect(() => {

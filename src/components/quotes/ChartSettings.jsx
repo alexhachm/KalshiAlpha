@@ -24,6 +24,10 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
     updateDraft('indicators', indicators)
   }
 
+  const updateBollinger = (key, value) => {
+    updateDraft('bollinger', { ...(draft.bollinger || {}), [key]: value })
+  }
+
   const handleSave = () => {
     onSave(draft)
   }
@@ -139,6 +143,67 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
             </label>
           </div>
         ))}
+
+        <div className="chart-settings-divider" />
+
+        <span className="chart-setting-label">Bollinger Bands</span>
+        <div className="chart-indicator-block">
+          <label className="chart-setting-row">
+            <span>Enabled</span>
+            <input
+              type="checkbox"
+              checked={(draft.bollinger || {}).enabled || false}
+              onChange={(e) => updateBollinger('enabled', e.target.checked)}
+            />
+          </label>
+          {(draft.bollinger || {}).enabled && (
+            <>
+              <label className="chart-setting-row">
+                <span>Period</span>
+                <input
+                  type="number"
+                  min="2"
+                  max="200"
+                  value={(draft.bollinger || {}).period || 20}
+                  className="chart-indicator-period"
+                  onChange={(e) => updateBollinger('period', Math.max(2, parseInt(e.target.value, 10) || 20))}
+                />
+              </label>
+              <label className="chart-setting-row">
+                <span>Std Dev</span>
+                <input
+                  type="number"
+                  min="0.5"
+                  max="5"
+                  step="0.5"
+                  value={(draft.bollinger || {}).multiplier || 2}
+                  className="chart-indicator-period"
+                  onChange={(e) => updateBollinger('multiplier', Math.max(0.5, parseFloat(e.target.value) || 2))}
+                />
+              </label>
+              <label className="chart-setting-row">
+                <span>Color</span>
+                <input
+                  type="color"
+                  value={(draft.bollinger || {}).color || '#a855f7'}
+                  onChange={(e) => updateBollinger('color', e.target.value)}
+                />
+              </label>
+              <label className="chart-setting-row">
+                <span>Squeeze %</span>
+                <input
+                  type="number"
+                  min="0.01"
+                  max="0.5"
+                  step="0.01"
+                  value={(draft.bollinger || {}).squeezeThreshold || 0.05}
+                  className="chart-indicator-period"
+                  onChange={(e) => updateBollinger('squeezeThreshold', Math.max(0.01, parseFloat(e.target.value) || 0.05))}
+                />
+              </label>
+            </>
+          )}
+        </div>
       </div>
       <div className="chart-settings-footer">
         <button className="chart-settings-cancel-btn" onClick={onClose}>Cancel</button>
