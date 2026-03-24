@@ -18,6 +18,12 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
     }
   }
 
+  const updateIndicator = (idx, key, value) => {
+    const indicators = [...(draft.indicators || [])]
+    indicators[idx] = { ...indicators[idx], [key]: value }
+    updateDraft('indicators', indicators)
+  }
+
   const handleSave = () => {
     onSave(draft)
   }
@@ -98,6 +104,41 @@ function ChartSettings({ settings, onSave, onClose, availableTickers }) {
             ))}
           </div>
         )}
+
+        <div className="chart-settings-divider" />
+
+        <span className="chart-setting-label">Indicators</span>
+        {(draft.indicators || []).map((ind, idx) => (
+          <div key={idx} className="chart-indicator-block">
+            <label className="chart-setting-row">
+              <span>{ind.type}</span>
+              <input
+                type="checkbox"
+                checked={ind.enabled}
+                onChange={(e) => updateIndicator(idx, 'enabled', e.target.checked)}
+              />
+            </label>
+            <label className="chart-setting-row">
+              <span>Period</span>
+              <input
+                type="number"
+                min="2"
+                max="200"
+                value={ind.period}
+                className="chart-indicator-period"
+                onChange={(e) => updateIndicator(idx, 'period', Math.max(2, parseInt(e.target.value, 10) || 20))}
+              />
+            </label>
+            <label className="chart-setting-row">
+              <span>Color</span>
+              <input
+                type="color"
+                value={ind.color}
+                onChange={(e) => updateIndicator(idx, 'color', e.target.value)}
+              />
+            </label>
+          </div>
+        ))}
       </div>
       <div className="chart-settings-footer">
         <button className="chart-settings-cancel-btn" onClick={onClose}>Cancel</button>
