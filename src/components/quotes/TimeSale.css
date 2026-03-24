@@ -270,6 +270,89 @@
   margin: var(--spacing-sm) 0;
 }
 
+/* Trade type filter buttons */
+.ts-filter-group {
+  display: flex;
+  gap: 1px;
+}
+
+.ts-filter-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  padding: 0 var(--spacing-sm);
+  line-height: 1.6;
+  transition: all var(--transition-fast);
+}
+
+.ts-filter-btn:first-child {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.ts-filter-btn:last-child {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.ts-filter-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.ts-filter-btn--all.ts-filter-btn--active {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border-color: var(--border-focus);
+}
+
+.ts-filter-btn--buy.ts-filter-btn--active {
+  color: var(--accent-win);
+  background: color-mix(in srgb, var(--accent-win) 12%, transparent);
+  border-color: var(--accent-win);
+}
+
+.ts-filter-btn--sell.ts-filter-btn--active {
+  color: var(--accent-loss);
+  background: color-mix(in srgb, var(--accent-loss) 12%, transparent);
+  border-color: var(--accent-loss);
+}
+
+/* Buy/sell counts in toolbar */
+.ts-flow-counts {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.ts-flow-count--buy {
+  color: var(--accent-win);
+}
+
+.ts-flow-count--sell {
+  color: var(--accent-loss);
+}
+
+.ts-flow-count--sep {
+  color: var(--text-muted);
+}
+
+/* Buy/sell pressure bar */
+.ts-pressure-bar {
+  height: 3px;
+  background: var(--accent-loss);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.ts-pressure-fill-buy {
+  height: 100%;
+  background: var(--accent-win);
+  transition: width 0.3s ease;
+}
+
 /* Flash animation on new trades — yellow highlight fading out */
 @keyframes row-flash {
   0% { background: color-mix(in srgb, var(--accent-highlight) 30%, transparent); }
