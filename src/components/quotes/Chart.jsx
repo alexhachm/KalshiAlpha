@@ -48,6 +48,10 @@ const DEFAULT_SETTINGS = {
   showVolume: true,
   overlayMode: false,
   overlayTickers: [],
+  indicators: [
+    { type: 'SMA', period: 20, color: '#00d2ff', enabled: true },
+    { type: 'EMA', period: 20, color: '#ffd93d', enabled: true },
+  ],
 }
 
 // Read CSS custom property values for chart canvas theming
@@ -93,6 +97,31 @@ function saveSettings(windowId, settings) {
   }
 }
 
+function calcSMA(candles, period) {
+  if (!candles || candles.length < period) return []
+  const result = []
+  for (let i = period - 1; i < candles.length; i++) {
+    let sum = 0
+    for (let j = 0; j < period; j++) sum += candles[i - j].close
+    result.push({ time: candles[i].time, value: sum / period })
+  }
+  return result
+}
+
+function calcEMA(candles, period) {
+  if (!candles || candles.length < period) return []
+  const k = 2 / (period + 1)
+  let sum = 0
+  for (let i = 0; i < period; i++) sum += candles[i].close
+  let ema = sum / period
+  const result = [{ time: candles[period - 1].time, value: ema }]
+  for (let i = period; i < candles.length; i++) {
+    ema = candles[i].close * k + ema * (1 - k)
+    result.push({ time: candles[i].time, value: ema })
+  }
+  return result
+}
+
 function Chart({ windowId }) {
   const outerRef = useRef(null)
   const chartContainerRef = useRef(null)
@@ -102,6 +131,8 @@ function Chart({ windowId }) {
   const overlaySeriesRef = useRef([])
   const themeRef = useRef(null)
   const basePricesRef = useRef({})
+  const indicatorSeriesRef = useRef([])
+  const indicatorCandlesRef = useRef([])
 
   const [ticker, setTicker] = useState(TICKERS[0])
   const [settings, setSettings] = useState(() => loadSettings(windowId))
@@ -115,6 +146,7 @@ function Chart({ windowId }) {
   }, [windowId, ticker])
 
   const overlayTickersKey = (settings.overlayTickers || []).join(',')
+  const indicatorsKey = JSON.stringify(settings.indicators || [])
 
   // Toggle settings via right-click header event
   useEffect(() => {
@@ -306,6 +338,27 @@ function Chart({ windowId }) {
         )
       }
 
+      // EMA/SMA indicator overlays
+      indicatorCandlesRef.current = candles
+      const indicators = settings.indicators || []
+      const indArr = []
+      indicators.forEach((ind) => {
+        if (!ind.enabled) return
+        const data = ind.type === 'EMA' ? calcEMA(candles, ind.period) : calcSMA(candles, ind.period)
+        if (!data.length) return
+        const series = chart.addSeries(LineSeries, {
+          color: ind.color,
+          lineWidth: 1,
+          title: `${ind.type}(${ind.period})`,
+          priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+          lastValueVisible: false,
+          priceLineVisible: false,
+        })
+        series.setData(data)
+        indArr.push({ type: ind.type, period: ind.period, series, lastEMA: data[data.length - 1].value })
+      })
+      indicatorSeriesRef.current = indArr
+
       // Crosshair move handler for data display
       chart.subscribeCrosshairMove((param) => {
         if (!param.time || !param.seriesData) {
@@ -328,8 +381,9 @@ function Chart({ windowId }) {
       mainSeriesRef.current = null
       volumeSeriesRef.current = null
       overlaySeriesRef.current = []
+      indicatorSeriesRef.current = []
     }
-  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey])
+  }, [ticker, settings.chartType, settings.timeframe, settings.showGrid, settings.crosshairStyle, settings.upColor, settings.downColor, settings.showVolume, settings.overlayMode, overlayTickersKey, indicatorsKey])
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -368,6 +422,28 @@ function Chart({ windowId }) {
           time: bar.time,
           value: bar.volume,
           color: bar.close >= bar.open ? (t.accentWin || '#3ecf8e') + '4D' : (t.accentLoss || '#e05c5c') + '4D',
+        })
+      }
+      // Update indicator series incrementally
+      const buf = indicatorCandlesRef.current
+      if (buf.length > 0) {
+        if (bar.time === buf[buf.length - 1].time) {
+          buf[buf.length - 1] = bar
+        } else {
+          buf.push(bar)
+        }
+        indicatorSeriesRef.current.forEach((indEntry) => {
+          const { type, period, series } = indEntry
+          if (buf.length < period) return
+          if (type === 'SMA') {
+            const slice = buf.slice(-period)
+            const val = slice.reduce((s, c) => s + c.close, 0) / period
+            series.update({ time: bar.time, value: val })
+          } else {
+            const k = 2 / (period + 1)
+            indEntry.lastEMA = bar.close * k + indEntry.lastEMA * (1 - k)
+            series.update({ time: bar.time, value: indEntry.lastEMA })
+          }
         })
       }
     })
