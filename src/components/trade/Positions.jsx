@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
-import { getPositionSummaries, on } from '../../services/omsService'
+import { getPositionSummaries, on, submitOrder } from '../../services/omsService'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
 import './Positions.css'
 
@@ -67,8 +67,11 @@ function Positions({ windowId }) {
   const [positions, setPositions] = useState(fetchPositions)
   const [selectedRow, setSelectedRow] = useState(null)
   const [flashedRows, setFlashedRows] = useState(new Set())
+  const [flattenConfirm, setFlattenConfirm] = useState(false)
+  const [flattenProgress, setFlattenProgress] = useState(null)
   const intervalRef = useRef(null)
   const flashTimeoutRef = useRef(null)
+  const flattenDismissRef = useRef(null)
 
   // Persist settings
   useEffect(() => {
@@ -118,9 +121,12 @@ function Positions({ windowId }) {
     return () => unsubs.forEach((unsub) => unsub())
   }, [refreshData])
 
-  // Cleanup flash timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
-    return () => clearTimeout(flashTimeoutRef.current)
+    return () => {
+      clearTimeout(flashTimeoutRef.current)
+      clearTimeout(flattenDismissRef.current)
+    }
   }, [])
 
   // Color link subscription
@@ -144,6 +150,41 @@ function Positions({ windowId }) {
   const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings)
   }, [])
+
+  const handleFlattenAll = useCallback(async () => {
+    const posToFlatten = positions.filter((p) => p.shares > 0)
+    if (posToFlatten.length === 0) return
+
+    setFlattenConfirm(false)
+    setFlattenProgress({ total: posToFlatten.length, completed: 0, failed: 0, results: [] })
+
+    await Promise.all(posToFlatten.map(async (pos) => {
+      const side = pos.type === 'Long' ? 'yes' : 'no'
+      try {
+        await submitOrder({
+          ticker: pos.market,
+          side,
+          action: 'sell',
+          type: 'market',
+          count: pos.shares,
+        })
+        setFlattenProgress((prev) => prev ? {
+          ...prev,
+          completed: prev.completed + 1,
+          results: [...prev.results, { market: pos.market, success: true }],
+        } : prev)
+      } catch (err) {
+        setFlattenProgress((prev) => prev ? {
+          ...prev,
+          failed: prev.failed + 1,
+          results: [...prev.results, { market: pos.market, success: false, error: err.message }],
+        } : prev)
+      }
+    }))
+
+    clearTimeout(flattenDismissRef.current)
+    flattenDismissRef.current = setTimeout(() => setFlattenProgress(null), 3000)
+  }, [positions])
 
   // Sort positions — memoized
   const sortedPositions = useMemo(() => {
@@ -201,14 +242,6 @@ function Positions({ windowId }) {
       {/*        3. Add correlation matrix between positions */}
       {/*        4. Display max drawdown estimate per position */}
 
-      {/* STUB: Auto-flatten — one-click close all positions at market */}
-      {/* SOURCE: "Professional trading terminal emergency controls" */}
-      {/* IMPLEMENT WHEN: omsService supports market orders */}
-      {/* STEPS: 1. Add "Flatten All" button in header bar */}
-      {/*        2. Confirm dialog showing estimated slippage */}
-      {/*        3. Submit market orders for each position in parallel */}
-      {/*        4. Display progress and fill confirmations */}
-
       <div className="pos-header-bar">
         <span className="pos-title">Open Positions</span>
         <div className="pos-header-right">
@@ -216,6 +249,16 @@ function Positions({ windowId }) {
             P&L: {totalPnl.unrealized >= 0 ? '+' : '-'}${Math.abs(totalPnl.unrealized).toFixed(2)}
           </span>
           <span className="pos-count">{positions.length} open</span>
+          {positions.length > 0 && (
+            <button
+              className="pos-flatten-btn"
+              onClick={() => setFlattenConfirm(true)}
+              disabled={flattenProgress !== null}
+              title="Close all open positions at market"
+            >
+              Flatten All
+            </button>
+          )}
           <button
             className="pos-settings-btn"
             onClick={() => setShowSettings(true)}
@@ -225,6 +268,50 @@ function Positions({ windowId }) {
           </button>
         </div>
       </div>
+
+      {/* Flatten All — confirmation dialog */}
+      {flattenConfirm && (
+        <div className="pos-flatten-overlay">
+          <div className="pos-flatten-dialog">
+            <div className="pos-flatten-dialog-title">Flatten All Positions</div>
+            <div className="pos-flatten-dialog-body">
+              Submit market sell orders for{' '}
+              <strong>{positions.length}</strong> position{positions.length !== 1 ? 's' : ''}{' '}
+              (<strong>{totalPnl.totalShares}</strong> total contracts).
+              This cannot be undone.
+            </div>
+            <div className="pos-flatten-dialog-actions">
+              <button className="pos-flatten-cancel-btn" onClick={() => setFlattenConfirm(false)}>
+                Cancel
+              </button>
+              <button className="pos-flatten-confirm-btn" onClick={handleFlattenAll}>
+                Confirm Flatten
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Flatten All — progress indicator */}
+      {flattenProgress !== null && (
+        <div className="pos-flatten-progress">
+          <div className="pos-flatten-progress-header">
+            Flattening {flattenProgress.completed + flattenProgress.failed}/{flattenProgress.total}
+            {flattenProgress.failed > 0 && (
+              <span className="pos-flatten-progress-errors"> ({flattenProgress.failed} failed)</span>
+            )}
+          </div>
+          {flattenProgress.results.map((r) => (
+            <div
+              key={r.market}
+              className={`pos-flatten-result ${r.success ? 'pos-flatten-ok' : 'pos-flatten-err'}`}
+            >
+              {r.success ? '\u2713' : '\u2717'} {r.market}
+              {!r.success && <span className="pos-flatten-err-msg"> — {r.error}</span>}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Table */}
       <div className="pos-table-wrap" style={{ ...(grid.bgColor && { backgroundColor: grid.bgColor }), ...(grid.textColor && { color: grid.textColor }) }}>
