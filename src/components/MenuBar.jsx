@@ -6,7 +6,7 @@ import './MenuBar.css'
 
 const MENU_CONFIG = getMenuConfig()
 
-function MenuBar({ onOpenWindow, onOpenSettings }) {
+function MenuBar({ onOpenWindow, onOpenSettings, onSaveLayout, onLoadLayout }) {
   const [activeMenu, setActiveMenu] = useState(null)
   const [focusedItem, setFocusedItem] = useState(-1)
   const [focusedTrigger, setFocusedTrigger] = useState(-1)
@@ -396,6 +396,53 @@ function MenuBar({ onOpenWindow, onOpenSettings }) {
           )}
         </div>
       ))}
+      {(onSaveLayout || onLoadLayout) && (
+        <div
+          className={clsx('menu-item', activeMenu === 'layout' && 'menu-item--active')}
+          role="menuitem"
+          tabIndex={-1}
+          aria-haspopup="true"
+          aria-expanded={activeMenu === 'layout'}
+          onClick={() => setActiveMenu((prev) => (prev === 'layout' ? null : 'layout'))}
+          onMouseEnter={() => { if (activeMenu !== null) setActiveMenu('layout') }}
+        >
+          Layout
+          {activeMenu === 'layout' && (
+            <div className="menu-dropdown" role="menu" aria-label="Layout">
+              {onSaveLayout && (
+                <div
+                  className="menu-dropdown-item"
+                  role="menuitem"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSaveLayout()
+                    setActiveMenu(null)
+                    setFocusedTrigger(-1)
+                  }}
+                >
+                  <span className="menu-dropdown-label">Save Layout</span>
+                </div>
+              )}
+              {onLoadLayout && (
+                <div
+                  className="menu-dropdown-item"
+                  role="menuitem"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onLoadLayout()
+                    setActiveMenu(null)
+                    setFocusedTrigger(-1)
+                  }}
+                >
+                  <span className="menu-dropdown-label">Load Layout</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
