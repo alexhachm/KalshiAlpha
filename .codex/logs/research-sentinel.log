@@ -1,0 +1,240 @@
+[research-sentinel] Starting in /mnt/c/Users/Owner/Desktop/kalshialpha
+[research-sentinel] Launching chatgpt-driver.py (backoff=5s)...
+2026-03-23 17:23:12,901 [INFO] GitHub repo discovered: alexhachm/KalshiAlpha
+2026-03-23 17:23:12,904 [INFO] Starting ChatGPT research driver
+2026-03-23 17:23:13,050 [INFO] Startup stale requeue: mac10 — Multi-agent coordinator CLI
+
+USER:
+  request <description>          Submit a new coding request
+  fix <description>              Submit an urgent fix (priority queue)
+  status                 
+2026-03-23 17:23:13,051 [INFO] Using Linux Chrome with profile: /home/owner/.chatgpt-codex-profile
+2026-03-23 17:23:13,051 [INFO] Using Chrome: /usr/bin/google-chrome
+2026-03-23 17:23:13,051 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profile/SingletonLock
+2026-03-23 17:23:13,052 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profile/SingletonCookie
+2026-03-23 17:23:13,052 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profile/SingletonSocket
+2026-03-23 17:23:13,054 [INFO] starting
+	executable :/usr/bin/google-chrome
+
+arguments:
+--remote-allow-origins=*
+	--no-first-run
+	--no-service-autorun
+	--no-default-browser-check
+	--homepage=about:blank
+	--no-pings
+	--password-store=basic
+	--disable-infobars
+	--disable-breakpad
+	--disable-dev-shm-usage
+	--disable-session-crashed-bubble
+	--disable-search-engine-choice-screen
+	--user-data-dir=/home/owner/.chatgpt-codex-profile
+	--disable-session-crashed-bubble
+	--disable-features=IsolateOrigins,site-per-process
+	--disable-background-timer-throttling
+	--disable-renderer-backgrounding
+	--disable-backgrounding-occluded-windows
+	--no-sandbox
+	--remote-debugging-host=127.0.0.1
+	--remote-debugging-port=53041
+2026-03-23 17:23:13,323 [INFO] enabling autodiscover targets
+2026-03-23 17:23:19,349 [INFO] PageMonitor: MutationObserver injected
+2026-03-23 17:23:19,349 [INFO] Tab 0 opened (pool: 1)
+2026-03-23 17:23:19,350 [INFO] Verifying login...
+2026-03-23 17:23:19,363 [INFO] Login verified
+2026-03-23 17:23:19,363 [INFO] Session reset: N=10 (max dispatches)
+2026-03-23 17:23:19,364 [INFO] TabPool running, session N=10
+2026-03-23 17:23:51,490 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=30s
+2026-03-23 17:24:23,459 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=60s
+2026-03-23 17:24:55,428 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=90s
+2026-03-23 17:25:27,393 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=120s
+2026-03-23 17:25:57,399 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=150s
+2026-03-23 17:26:29,366 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=180s
+2026-03-23 17:27:01,336 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=210s
+2026-03-23 17:27:33,309 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=240s
+2026-03-23 17:28:05,278 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=270s
+2026-03-23 17:28:37,248 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=300s
+2026-03-23 17:29:09,260 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=330s
+2026-03-23 17:29:41,444 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=360s
+2026-03-23 17:30:13,490 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=390s
+2026-03-23 17:30:45,565 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=420s
+2026-03-23 17:31:17,599 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=450s
+2026-03-23 17:31:49,602 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=480s
+2026-03-23 17:32:21,655 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=510s
+2026-03-23 17:32:53,726 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=540s
+2026-03-23 17:33:23,737 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=570s
+2026-03-23 17:33:55,826 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=600s
+2026-03-23 17:34:27,884 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=630s
+2026-03-23 17:34:59,949 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=660s
+2026-03-23 17:35:32,026 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=690s
+2026-03-23 17:36:04,130 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=720s
+2026-03-23 17:36:36,303 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=750s
+2026-03-23 17:37:08,435 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=780s
+2026-03-23 17:37:40,752 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=810s
+2026-03-23 17:38:13,058 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=840s
+2026-03-23 17:38:45,444 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=870s
+2026-03-23 17:39:17,748 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=900s
+2026-03-23 17:39:50,256 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=930s
+2026-03-23 17:40:22,424 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=960s
+2026-03-23 17:40:54,626 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=990s
+2026-03-23 17:41:24,635 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1020s
+2026-03-23 17:41:56,903 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1050s
+2026-03-23 17:42:29,165 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1080s
+2026-03-23 17:43:01,414 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1110s
+2026-03-23 17:43:33,633 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1140s
+2026-03-23 17:44:05,799 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1170s
+2026-03-23 17:44:38,436 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1200s
+2026-03-23 17:45:10,622 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1230s
+2026-03-23 17:45:42,836 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1260s
+2026-03-23 17:46:15,038 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1290s
+2026-03-23 17:46:47,250 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1320s
+2026-03-23 17:47:19,599 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1350s
+2026-03-23 17:47:51,801 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1380s
+2026-03-23 17:48:24,015 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1410s
+2026-03-23 17:48:54,023 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=1440s
+[research-sentinel] Starting in /mnt/c/Users/Owner/Desktop/kalshialpha
+[research-sentinel] Launching chatgpt-driver.py (backoff=5s)...
+2026-03-23 17:49:13,289 [INFO] GitHub repo discovered: alexhachm/KalshiAlpha
+2026-03-23 17:49:13,292 [INFO] Starting ChatGPT research driver
+2026-03-23 17:49:13,448 [INFO] Startup stale requeue: mac10 — Multi-agent coordinator CLI
+
+USER:
+  request <description>          Submit a new coding request
+  fix <description>              Submit an urgent fix (priority queue)
+  status                 
+2026-03-23 17:49:13,449 [INFO] Using Linux Chrome with profile: /home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe
+2026-03-23 17:49:13,449 [INFO] Using Chrome: /usr/bin/google-chrome
+2026-03-23 17:49:13,451 [INFO] starting
+	executable :/usr/bin/google-chrome
+
+arguments:
+--remote-allow-origins=*
+	--no-first-run
+	--no-service-autorun
+	--no-default-browser-check
+	--homepage=about:blank
+	--no-pings
+	--password-store=basic
+	--disable-infobars
+	--disable-breakpad
+	--disable-dev-shm-usage
+	--disable-session-crashed-bubble
+	--disable-search-engine-choice-screen
+	--user-data-dir=/home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe
+	--disable-session-crashed-bubble
+	--disable-features=IsolateOrigins,site-per-process
+	--disable-background-timer-throttling
+	--disable-renderer-backgrounding
+	--disable-backgrounding-occluded-windows
+	--no-sandbox
+	--remote-debugging-host=127.0.0.1
+	--remote-debugging-port=58263
+2026-03-23 17:49:13,722 [INFO] enabling autodiscover targets
+2026-03-23 17:49:19,783 [INFO] PageMonitor: MutationObserver injected
+2026-03-23 17:49:19,783 [INFO] Tab 0 opened (pool: 1)
+2026-03-23 17:49:19,783 [INFO] Verifying login...
+2026-03-23 17:49:19,798 [INFO] Login verified
+2026-03-23 17:49:19,798 [INFO] Session reset: N=10 (max dispatches)
+2026-03-23 17:49:19,798 [INFO] TabPool running, session N=10
+2026-03-23 17:49:52,137 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=30s
+2026-03-23 17:50:24,340 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=60s
+2026-03-23 17:50:56,543 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=90s
+2026-03-23 17:51:28,722 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=120s
+2026-03-23 17:52:01,129 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=150s
+2026-03-23 17:52:33,147 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=180s
+2026-03-23 17:53:05,385 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=10 dispatched=0/10 age=210s
+[research-sentinel] Starting in /mnt/c/Users/Owner/Desktop/kalshialpha
+[research-sentinel] Launching chatgpt-driver.py (backoff=5s)...
+2026-03-23 19:35:43,024 [INFO] GitHub repo discovered: alexhachm/KalshiAlpha
+2026-03-23 19:35:43,028 [INFO] Starting ChatGPT research driver
+2026-03-23 19:35:43,157 [INFO] Startup stale requeue: mac10 — Multi-agent coordinator CLI
+
+USER:
+  request <description>          Submit a new coding request
+  fix <description>              Submit an urgent fix (priority queue)
+  status                 
+2026-03-23 19:35:43,157 [INFO] Using Linux Chrome with profile: /home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe
+2026-03-23 19:35:43,157 [INFO] Using Chrome: /usr/bin/google-chrome
+2026-03-23 19:35:43,157 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe/SingletonLock
+2026-03-23 19:35:43,157 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe/SingletonCookie
+2026-03-23 19:35:43,158 [INFO] Removed stale profile artifact: /home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe/SingletonSocket
+2026-03-23 19:35:43,159 [INFO] starting
+	executable :/usr/bin/google-chrome
+
+arguments:
+--remote-allow-origins=*
+	--no-first-run
+	--no-service-autorun
+	--no-default-browser-check
+	--homepage=about:blank
+	--no-pings
+	--password-store=basic
+	--disable-infobars
+	--disable-breakpad
+	--disable-dev-shm-usage
+	--disable-session-crashed-bubble
+	--disable-search-engine-choice-screen
+	--user-data-dir=/home/owner/.chatgpt-codex-profiles/mac10-kalshialpha-c78276cbddfe
+	--disable-session-crashed-bubble
+	--disable-features=IsolateOrigins,site-per-process
+	--disable-background-timer-throttling
+	--disable-renderer-backgrounding
+	--disable-backgrounding-occluded-windows
+	--no-sandbox
+	--remote-debugging-host=127.0.0.1
+	--remote-debugging-port=46467
+2026-03-23 19:35:43,428 [INFO] enabling autodiscover targets
+2026-03-23 19:35:49,452 [INFO] PageMonitor: MutationObserver injected
+2026-03-23 19:35:49,453 [INFO] Tab 0 opened (pool: 1)
+2026-03-23 19:35:49,453 [INFO] Verifying login...
+2026-03-23 19:35:49,466 [INFO] Login verified
+2026-03-23 19:35:49,467 [INFO] Session reset: N=7 (max dispatches)
+2026-03-23 19:35:49,467 [INFO] TabPool running, session N=7
+2026-03-23 19:36:22,534 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=30s
+2026-03-23 19:36:54,891 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=60s
+2026-03-23 19:37:27,515 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=90s
+2026-03-23 19:37:59,989 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=120s
+2026-03-23 19:38:32,514 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=150s
+2026-03-23 19:39:05,009 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=180s
+2026-03-23 19:39:37,390 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=210s
+2026-03-23 19:40:10,037 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=240s
+2026-03-23 19:40:42,678 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=270s
+2026-03-23 19:41:15,323 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=300s
+2026-03-23 19:41:47,952 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=330s
+2026-03-23 19:42:20,627 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=360s
+2026-03-23 19:42:53,241 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=390s
+2026-03-23 19:43:25,921 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=420s
+2026-03-23 19:43:55,931 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=450s
+2026-03-23 19:44:28,570 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=480s
+2026-03-23 19:45:01,216 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=510s
+2026-03-23 19:45:33,842 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=540s
+2026-03-23 19:46:06,471 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=570s
+2026-03-23 19:46:39,021 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=600s
+2026-03-23 19:47:11,606 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=630s
+2026-03-23 19:47:43,520 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=660s
+2026-03-23 19:48:16,537 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=690s
+2026-03-23 19:48:49,006 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=720s
+2026-03-23 19:49:21,598 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=750s
+2026-03-23 19:49:54,176 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=780s
+2026-03-23 19:50:26,763 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=810s
+2026-03-23 19:50:59,348 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=840s
+2026-03-23 19:51:29,356 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=870s
+2026-03-23 19:52:01,944 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=900s
+2026-03-23 19:52:34,538 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=930s
+2026-03-23 19:53:07,128 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=960s
+2026-03-23 19:53:39,724 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=990s
+2026-03-23 19:54:12,316 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1020s
+2026-03-23 19:54:44,918 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1050s
+2026-03-23 19:55:17,516 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1080s
+2026-03-23 19:55:50,122 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1110s
+2026-03-23 19:56:22,719 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1140s
+2026-03-23 19:56:55,450 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1170s
+2026-03-23 19:57:28,082 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1200s
+2026-03-23 19:58:00,775 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1230s
+2026-03-23 19:58:33,316 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1260s
+2026-03-23 19:59:03,326 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1290s
+2026-03-23 19:59:35,961 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1320s
+2026-03-23 20:00:08,605 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1350s
+2026-03-23 20:00:41,055 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1380s
+2026-03-23 20:01:13,738 [INFO] Pool health: 1 tabs, states={'idle': 1}, session N=7 dispatched=0/7 age=1410s

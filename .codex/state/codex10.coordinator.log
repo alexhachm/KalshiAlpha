@@ -1,0 +1,13 @@
+mac10 coordinator starting for: /mnt/c/Users/Owner/Desktop/kalshialpha
+Database initialized.
+tmux session "codex10-dba23f" ready.
+CLI server listening.
+Allocator running.
+Watchdog running.
+Merger running.
+Research planner running (5000ms).
+CLI TCP bridge listening on localhost:31766
+Web dashboard: http://localhost:3101
+Instance registered in shared registry.
+mac10 coordinator ready.
+Master-1 (Interface) launched.
