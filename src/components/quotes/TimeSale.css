@@ -353,6 +353,36 @@
   transition: width 0.3s ease;
 }
 
+/* CVD (Cumulative Volume Delta) indicator bar */
+.ts-cvd-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px var(--spacing-xs);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.ts-cvd--positive {
+  color: var(--accent-win);
+}
+
+.ts-cvd--negative {
+  color: var(--accent-loss);
+}
+
+@keyframes cvd-flash {
+  0% { background: color-mix(in srgb, var(--accent-highlight) 40%, transparent); }
+  100% { background: transparent; }
+}
+
+.ts-cvd-bar--flash {
+  animation: cvd-flash 0.8s ease-out;
+}
+
 /* Flash animation on new trades — yellow highlight fading out */
 @keyframes row-flash {
   0% { background: color-mix(in srgb, var(--accent-highlight) 30%, transparent); }

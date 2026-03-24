@@ -87,6 +87,13 @@ function TimeSale({ windowId }) {
   const [showSettings, setShowSettings] = useState(false)
   const [draftSettings, setDraftSettings] = useState(null)
   const [flashedIds, setFlashedIds] = useState(new Set())
+  const [cvdDelta, setCvdDelta] = useState(0)
+  const [cvdFlash, setCvdFlash] = useState(false)
+  const cumBuyVolRef = useRef(0)
+  const cumSellVolRef = useRef(0)
+  const tradeCountRef = useRef(0)
+  const totalSizeRef = useRef(0)
+  const prevDeltaRef = useRef(0)
   const listRef = useRef(null)
   const containerRef = useRef(null)
   const autoScrollRef = useRef(true)
@@ -141,6 +148,14 @@ function TimeSale({ windowId }) {
   useEffect(() => {
     setTrades([])
     setFlashedIds(new Set())
+    // Reset CVD accumulators
+    cumBuyVolRef.current = 0
+    cumSellVolRef.current = 0
+    tradeCountRef.current = 0
+    totalSizeRef.current = 0
+    prevDeltaRef.current = 0
+    setCvdDelta(0)
+    setCvdFlash(false)
   }, [ticker])
 
   // Subscribe to trade stream — uses maxRows * 2.5 as buffer to allow filtering headroom
@@ -160,6 +175,20 @@ function TimeSale({ windowId }) {
           return next
         })
       }, 800)
+      // Update CVD accumulators
+      if (trade.side === 'BUY') cumBuyVolRef.current += trade.size
+      else cumSellVolRef.current += trade.size
+      tradeCountRef.current++
+      totalSizeRef.current += trade.size
+      const newDelta = cumBuyVolRef.current - cumSellVolRef.current
+      const avgSize = tradeCountRef.current > 0 ? totalSizeRef.current / tradeCountRef.current : 1
+      const deltaShift = Math.abs(newDelta - prevDeltaRef.current)
+      prevDeltaRef.current = newDelta
+      setCvdDelta(newDelta)
+      if (deltaShift > 10 * avgSize) {
+        setCvdFlash(true)
+        setTimeout(() => setCvdFlash(false), 800)
+      }
     })
     return unsub
   }, [ticker, bufferSize])
@@ -255,13 +284,8 @@ function TimeSale({ windowId }) {
   //        3. Apply escalating highlight intensity by category
   //        4. Add sound alerts for block trades (configurable)
 
-  // STUB: Cumulative volume delta — running total of buy vs sell volume
-  // SOURCE: "Order flow trading with cumulative delta", Bookmap analysis
-  // IMPLEMENT WHEN: Accurate buy/sell classification exists
-  // STEPS: 1. Track running cumBuyVol and cumSellVol
-  //        2. Compute delta = cumBuyVol - cumSellVol
-  //        3. Display delta line/bar at bottom of time & sales
-  //        4. Flash on delta divergence (large positive or negative shift)
+  // CVD: Cumulative volume delta — implemented via cumBuyVolRef/cumSellVolRef accumulators
+  // updated on each trade in the subscription handler above; resets on ticker change.
 
   return (
     <div ref={containerRef} className="ts-component">
@@ -376,6 +400,13 @@ function TimeSale({ windowId }) {
         {displayTrades.length === 0 && (
           <div className="ts-empty">Waiting for trades...</div>
         )}
+      </div>
+
+      {/* CVD indicator */}
+      <div className={`ts-cvd-bar${cvdFlash ? ' ts-cvd-bar--flash' : ''}`}>
+        <span className={`ts-cvd-value${cvdDelta >= 0 ? ' ts-cvd--positive' : ' ts-cvd--negative'}`}>
+          CVD: {cvdDelta >= 0 ? '+' : ''}{cvdDelta.toLocaleString()}
+        </span>
       </div>
 
       {/* Settings panel */}
