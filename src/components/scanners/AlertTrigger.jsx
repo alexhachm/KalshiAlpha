@@ -466,19 +466,22 @@ function AlertTrigger({ windowId }) {
             <table className="at-table">
               <thead>
                 <tr>
-                  {rulesGrid.visibleColumns.map((col, idx) => (
+                  {rulesGrid.visibleColumns.map((col) => {
+                    const fullIdx = rulesGrid.columns.findIndex((c) => c.key === col.key)
+                    return (
                     <th
                       key={col.key}
-                      className={`at-th at-align-${col.align}${rulesGrid.dragState.dragging && rulesGrid.dragState.overIndex === idx ? ' drag-over' : ''}`}
+                      className={`at-th at-align-${col.align}${rulesGrid.dragState.dragging && rulesGrid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
                       draggable
-                      onDragStart={() => rulesGrid.onDragStart(idx)}
-                      onDragOver={(e) => { e.preventDefault(); rulesGrid.onDragOver(idx) }}
+                      onDragStart={() => rulesGrid.onDragStart(fullIdx)}
+                      onDragOver={(e) => { e.preventDefault(); rulesGrid.onDragOver(fullIdx) }}
                       onDragEnd={rulesGrid.onDragEnd}
                       style={{ width: col.width || 'auto', cursor: 'grab' }}
                     >
                       {col.label}
                     </th>
-                  ))}
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -567,19 +570,22 @@ function AlertTrigger({ windowId }) {
             <table className="at-table">
               <thead>
                 <tr>
-                  {historyGrid.visibleColumns.map((col, idx) => (
+                  {historyGrid.visibleColumns.map((col) => {
+                    const fullIdx = historyGrid.columns.findIndex((c) => c.key === col.key)
+                    return (
                     <th
                       key={col.key}
-                      className={`at-th at-align-${col.align}${historyGrid.dragState.dragging && historyGrid.dragState.overIndex === idx ? ' drag-over' : ''}`}
+                      className={`at-th at-align-${col.align}${historyGrid.dragState.dragging && historyGrid.dragState.overIndex === fullIdx ? ' drag-over' : ''}`}
                       draggable
-                      onDragStart={() => historyGrid.onDragStart(idx)}
-                      onDragOver={(e) => { e.preventDefault(); historyGrid.onDragOver(idx) }}
+                      onDragStart={() => historyGrid.onDragStart(fullIdx)}
+                      onDragOver={(e) => { e.preventDefault(); historyGrid.onDragOver(fullIdx) }}
                       onDragEnd={historyGrid.onDragEnd}
                       style={{ width: col.width || 'auto', cursor: 'grab' }}
                     >
                       {col.label}
                     </th>
-                  ))}
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody>
