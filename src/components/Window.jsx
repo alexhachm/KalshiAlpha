@@ -16,6 +16,7 @@ import {
   calculateSnap,
   findMergeTarget,
 } from './SnapManager'
+import ErrorBoundary from './ErrorBoundary'
 import './Window.css'
 
 const DEFAULT_MIN_WIDTH = 200
@@ -573,7 +574,11 @@ function Window({
         </div>
       )}
 
-      <div ref={bodyRef} className="window-body">{children}</div>
+      <div ref={bodyRef} className="window-body">
+        <ErrorBoundary componentName={type}>
+          {children}
+        </ErrorBoundary>
+      </div>
 
       {/* Right-click context menu */}
       {contextMenu && (
