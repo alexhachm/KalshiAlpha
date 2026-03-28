@@ -34,6 +34,21 @@ Read knowledge files before starting work:
 
 Then run `/worker-loop` to begin.
 
+## External Search (Research-First)
+
+**NEVER use WebSearch, WebFetch, or any browser-based lookup.** All external information goes through the research queue.
+
+Before starting implementation, always:
+1. Check `.codex/knowledge/research/topics/` for existing research on your task domain
+2. Read relevant `_rollup.md` summaries
+3. Queue new research if you have knowledge gaps, and wait for results:
+   ```bash
+   ./.claude/scripts/codex10 queue-research "<topic>" "<question>" --mode standard --priority urgent --source_task_id $TASK_ID
+   ```
+4. Results are your primary reference material — use them before writing code
+
+**Modes:** `standard` for quick factual lookups, `thinking` for design/trade-off questions, `deep_research` for comprehensive surveys.
+
 ## Rules
 
 1. **One task at a time.** Never work on multiple tasks.
@@ -42,6 +57,7 @@ Then run `/worker-loop` to begin.
 4. **Sync first.** Always `git fetch origin && git rebase origin/main` before coding.
 5. **Validate.** Tier 2: build-validator. Tier 3: build-validator + verify-app.
 6. **Exit when done.** Don't loop — the sentinel handles lifecycle.
+7. **Research first.** Consult existing research and queue new research before implementing. Never use WebSearch/WebFetch.
 
 ## Context Budget
 
@@ -55,9 +71,9 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 35
-**Request ID:** req-c5d98091
-**Subject:** Fix stale lastTrade data in dataFeed.js subscribeToTicker
+**Task ID:** 37
+**Request ID:** req-0660f890
+**Subject:** Fix real-time OHLCV candle never closing in dataFeed.js
 **Tier:** 2
 **Priority:** normal
 **Domain:** api-layer
@@ -69,24 +85,25 @@ FILES: src/services/dataFeed.js
 VALIDATION: tier2
 TIER: 2
 
-Fix stale lastTrade data — subscribeTicker handler never calls consumer callback.
+Fix real-time OHLCV candle never closing in dataFeed.js subscribeToOHLCV.
 
-BUG: In subscribeToTicker() (around line 286), the subscribeTicker handler (lines 343-351) updates lastTickerData with new trade info but does NOT call wrappedCallback(). The wrappedCallback is only invoked via notifyOrderbookListeners when orderbook changes arrive, not when trade data updates.
+ROOT CAUSE:
+- currentCandle variable (line 791) is created with a fixed timestamp on first trade (line 828)
+- Never reset when the timeframe boundary elapses
+- All subsequent trades update the same candle regardless of time passage
+- Chart shows a single ever-growing candle that never closes
 
-FIX: Add wrappedCallback() call after line 349 (after lastTickerData update in the subscribeTicker handler). This ensures consumers see trade data immediately, not only when the next unrelated orderbook change triggers notification.
-
-CONTEXT:
-- Line 331: wrappedCallback added to store.listeners
-- Line 264: notifyOrderbookListeners iterates store.listeners - the ONLY path that triggers wrappedCallback
-- Lines 343-351: subscribeTicker handler updates lastTickerData but has no callback invocation
-- The fix is adding wrappedCallback() (or notifyOrderbookListeners(ticker)) after the lastTickerData update
-
-IMPORTANT: Make sure the callback receives the correct data format that consumers expect. Check what notifyOrderbookListeners passes to listeners and ensure the same structure.
+FIX:
+1. Calculate candle time boundaries based on the selected timeframe interval
+2. The timeframeToInterval map on line 793 already has the interval values needed
+3. On each trade, check if the trade falls in a new time period
+4. If so, close the current candle (emit as a final update) and start a new one with the new periods start time
+5. Ensure proper OHLCV values: new candle starts with trade price as open, previous candle is finalized
 
 SUCCESS CRITERIA:
-- wrappedCallback invoked after lastTickerData update in subscribeTicker handler
-- Trade data updates propagate to PriceLadder, OrderBook, Chart immediately
-- Callback receives correct data format
+- Real-time candles close and advance at timeframe boundaries
+- New candle starts with correct open price at boundary crossing
+- Previous candle emits final close before new candle begins
 - Build passes (vite build)
 
 ## Files to Modify
@@ -100,9 +117,9 @@ SUCCESS CRITERIA:
 
 ## Worker Info
 
-- Worker ID: 4
-- Branch: agent-4
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-4
+- Worker ID: 3
+- Branch: agent-3
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-3
 
 ## Protocol
 

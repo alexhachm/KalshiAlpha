@@ -794,12 +794,14 @@ function subscribeToOHLCV(ticker, timeframe, callback) {
     '1m': 1, '5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1D': 1440,
   };
 
+  const intervalMins = typeof timeframe === 'number' ? timeframe : (timeframeToInterval[timeframe] || 60);
+  const intervalSecs = intervalMins * 60;
+
   async function loadCandles() {
     try {
-      const interval = typeof timeframe === 'number' ? timeframe : (timeframeToInterval[timeframe] || 60);
       const res = await kalshiApi.getMarketCandlesticks({
         tickers: ticker,
-        period_interval: interval,
+        period_interval: intervalMins,
       });
       if (res && res.candles && running) {
         const candles = res.candles.map((c) => ({
@@ -823,9 +825,23 @@ function subscribeToOHLCV(ticker, timeframe, callback) {
     const price = msg.yes_price || msg.price;
     if (!price) return;
 
+    const nowTs = Math.floor(Date.now() / 1000);
+    const candleStartTs = Math.floor(nowTs / intervalSecs) * intervalSecs;
+
     if (!currentCandle) {
       currentCandle = {
-        time: Math.floor(Date.now() / 1000),
+        time: candleStartTs,
+        open: price,
+        high: price,
+        low: price,
+        close: price,
+        volume: parseFloat(msg.count_fp || msg.count || '1'),
+      };
+    } else if (candleStartTs > currentCandle.time) {
+      // Timeframe boundary crossed — emit final close for old candle, start new one
+      callback({ type: 'update', candle: { ...currentCandle } });
+      currentCandle = {
+        time: candleStartTs,
         open: price,
         high: price,
         low: price,
