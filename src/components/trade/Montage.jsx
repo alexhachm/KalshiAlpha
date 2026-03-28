@@ -346,8 +346,11 @@ function Montage({ windowId }) {
   }
 
   const cancelOrder = async (orderId) => {
+    const order = workingOrders.find(o => o.id === orderId)
+    const exchangeId = order?.exchangeOrderId
+    if (!exchangeId) return
     try {
-      await cancelApiOrder(orderId)
+      await cancelApiOrder(exchangeId)
       setWorkingOrders(prev => prev.filter(o => o.id !== orderId))
     } catch (err) {
       console.error('[Montage] Cancel failed:', err)
