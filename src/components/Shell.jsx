@@ -274,21 +274,51 @@ function windowReducer(state, action) {
       for (const win of Object.values(savedWindows)) {
         if (!win.type) continue
         const id = nextId
-        const sizes = TYPE_SIZES[win.type] || {}
-        const newWin = {
-          id,
-          settingsId: id,
-          type: win.type,
-          title: win.title || win.type,
-          initialX: win.initialX ?? INITIAL_X,
-          initialY: win.initialY ?? INITIAL_Y,
-          initialWidth: win.initialWidth || sizes.width || DEFAULT_WIDTH,
-          initialHeight: win.initialHeight || sizes.height || DEFAULT_HEIGHT,
-          zIndex: nextZ,
+
+        // For tabbed windows, remap each tab's settingsId to a fresh nextId-based id
+        if (win.tabs && Array.isArray(win.tabs) && win.tabs.length > 1) {
+          nextId++ // consume the window's own id slot
+          const remappedTabs = win.tabs.map((tab) => {
+            const tabSettingsId = nextId
+            nextId++
+            return { ...tab, id: tabSettingsId, settingsId: tabSettingsId }
+          })
+          const activeIdx = typeof win.activeTabIndex === 'number' ? win.activeTabIndex : 0
+          const clampedIdx = Math.min(activeIdx, remappedTabs.length - 1)
+          const activeTab = remappedTabs[clampedIdx]
+          const sizes = TYPE_SIZES[activeTab.type] || {}
+          const newWin = {
+            id,
+            settingsId: id,
+            type: activeTab.type,
+            title: activeTab.title || activeTab.type,
+            tabs: remappedTabs,
+            activeTabIndex: clampedIdx,
+            initialX: win.initialX ?? INITIAL_X,
+            initialY: win.initialY ?? INITIAL_Y,
+            initialWidth: win.initialWidth || sizes.width || DEFAULT_WIDTH,
+            initialHeight: win.initialHeight || sizes.height || DEFAULT_HEIGHT,
+            zIndex: nextZ,
+          }
+          if (win.ticker) newWin.ticker = win.ticker
+          newWindows[id] = newWin
+        } else {
+          const sizes = TYPE_SIZES[win.type] || {}
+          const newWin = {
+            id,
+            settingsId: id,
+            type: win.type,
+            title: win.title || win.type,
+            initialX: win.initialX ?? INITIAL_X,
+            initialY: win.initialY ?? INITIAL_Y,
+            initialWidth: win.initialWidth || sizes.width || DEFAULT_WIDTH,
+            initialHeight: win.initialHeight || sizes.height || DEFAULT_HEIGHT,
+            zIndex: nextZ,
+          }
+          if (win.ticker) newWin.ticker = win.ticker
+          newWindows[id] = newWin
+          nextId++
         }
-        if (win.ticker) newWin.ticker = win.ticker
-        newWindows[id] = newWin
-        nextId++
         nextZ++
       }
       return { ...state, windows: newWindows, nextId, nextZ }

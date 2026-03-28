@@ -1,4 +1,10 @@
 
+## [42] FIX: merge conflict for task #41 — change-log.md dirty during rebase — 2026-03-28
+- Domain: trading-ui
+- Files: .codex/knowledge/generated/change-log.md, .codex/knowledge/domains/trading-ui/README.md, .codex/knowledge/signals/uses/2026-03.md
+- What changed: Committed uncommitted knowledge files in wt-2 (agent-2 branch), rebased agent-2 on origin/main skipping already-merged commit 18ab3ea9, pushed with force-with-lease. PR #239 is clean.
+- PR: https://github.com/alexhachm/KalshiAlpha/pull/239
+
 ## [35] Fix stale lastTrade data in dataFeed.js subscribeToTicker — 2026-03-24
 - Domain: api-layer
 - Files: src/services/dataFeed.js
