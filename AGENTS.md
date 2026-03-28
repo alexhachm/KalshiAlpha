@@ -71,9 +71,9 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 41
-**Request ID:** req-e10b9b3b
-**Subject:** Wrap popout window components with ErrorBoundary in WindowManager.jsx
+**Task ID:** 43
+**Request ID:** req-f3fb65d5
+**Subject:** Fix LOAD_LAYOUT losing tabbed window structure in Shell.jsx
 **Tier:** 2
 **Priority:** normal
 **Domain:** trading-ui
@@ -81,30 +81,38 @@ On reset: full knowledge distillation before exiting.
 ## Description
 
 DOMAIN: trading-ui
-FILES: src/components/WindowManager.jsx
+FILES: src/components/Shell.jsx
 VALIDATION: tier2
 TIER: 2
 
-Wrap popped-out window components with ErrorBoundary in WindowManager.jsx.
+Fix LOAD_LAYOUT losing tabbed window structure on page reload in Shell.jsx windowReducer.
 
-CONTEXT:
-- Window.jsx line 588 wraps all docked panel children in <ErrorBoundary componentName={type}>
-- WindowManager.jsx renders popped-out windows at lines 83-95 via PopoutWindow, but Component inside has NO ErrorBoundary
-- ErrorBoundary.jsx already exists and works
+ROOT CAUSE:
+- Shell.jsx auto-saves full window state to localStorage at line 440 including tabs array, activeTabIdx
+- LOAD_LAYOUT handler (lines 269-295) only copies type, title, position, size, ticker
+- Completely ignores the tabs and activeTabIndex fields from saved windows
 
 FIX:
-1. Import ErrorBoundary from ./ErrorBoundary in WindowManager.jsx
-2. Wrap the <Component {...componentProps} /> inside the PopoutWindow branch (line 92) with <ErrorBoundary componentName={win.type}>
-3. This matches the protection already provided by Window.jsx for docked panels
+1. In the LOAD_LAYOUT case (line 278-289), when saved window has a tabs array:
+   - Copy win.tabs into newWin.tabs (updating each tab settingsId to use new nextId-based IDs)
+   - Copy win.activeTabIndex into newWin.activeTabIndex
+   - For tabbed windows, set initial type/title from the active tab
+2. Do NOT restore poppedOut state (popouts cannot survive reload)
+
+REFERENCE:
+- MERGE_WINDOWS (line 78-109) creates tabs array and activeTabIndex
+- SET_ACTIVE_TAB (line 111-127) confirms tabs/activeTabIndex usage pattern
 
 SUCCESS CRITERIA:
-- PopoutWindow components wrapped with ErrorBoundary
-- Matches existing pattern in Window.jsx
+- Tabbed window groups persist across page reloads
+- All tabs restored with correct types and titles
+- Active tab selection restored
+- Single (non-tabbed) windows unaffected
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/components/WindowManager.jsx
+- src/components/Shell.jsx
 
 ## Validation
 
@@ -113,9 +121,9 @@ SUCCESS CRITERIA:
 
 ## Worker Info
 
-- Worker ID: 2
-- Branch: agent-2
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-2
+- Worker ID: 1
+- Branch: agent-1
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-1
 
 ## Protocol
 
