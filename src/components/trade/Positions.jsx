@@ -3,6 +3,7 @@ import { useGridCustomization } from '../../hooks/useGridCustomization'
 import PositionsSettings from './PositionsSettings'
 import { getPositionSummaries, on, submitOrder } from '../../services/omsService'
 import { emitLinkedMarket, subscribeToLink, unsubscribeFromLink, getColorGroup } from '../../services/linkBus'
+import { subscribeToTicker } from '../../services/dataFeed'
 import './Positions.css'
 
 const LS_KEY_PREFIX = 'positions-settings-'
@@ -41,8 +42,8 @@ function mapOmsPositions(summaries) {
   }))
 }
 
-function fetchPositions() {
-  const summaries = getPositionSummaries({})
+function fetchPositions(currentPrices = {}) {
+  const summaries = getPositionSummaries(currentPrices)
   return mapOmsPositions(summaries)
 }
 
@@ -72,6 +73,24 @@ function Positions({ windowId }) {
   const intervalRef = useRef(null)
   const flashTimeoutRef = useRef(null)
   const flattenDismissRef = useRef(null)
+  const currentPricesRef = useRef({})
+
+  // Unique tickers to subscribe for live prices
+  const tickersToWatch = useMemo(
+    () => [...new Set(positions.map((p) => p.market))],
+    [positions]
+  )
+
+  // Subscribe to live market prices; update currentPricesRef for PnL calculations
+  useEffect(() => {
+    const unsubs = tickersToWatch.map((ticker) =>
+      subscribeToTicker(ticker, (data) => {
+        currentPricesRef.current[`${ticker}:yes`] = data.yes.price
+        currentPricesRef.current[`${ticker}:no`] = data.no.price
+      })
+    )
+    return () => unsubs.forEach((u) => u())
+  }, [tickersToWatch])
 
   // Persist settings
   useEffect(() => {
@@ -81,7 +100,7 @@ function Positions({ windowId }) {
   // Refresh positions from OMS
   const refreshData = useCallback(() => {
     setPositions((prev) => {
-      const newPositions = fetchPositions()
+      const newPositions = fetchPositions(currentPricesRef.current)
 
       // Check for P&L changes if flash is enabled
       if (settings.flashOnChange) {
