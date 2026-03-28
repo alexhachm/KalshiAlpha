@@ -71,9 +71,9 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 40
-**Request ID:** req-1c142a91
-**Subject:** Implement log persistence in EventLog.jsx with sessionStorage
+**Task ID:** 41
+**Request ID:** req-e10b9b3b
+**Subject:** Wrap popout window components with ErrorBoundary in WindowManager.jsx
 **Tier:** 2
 **Priority:** normal
 **Domain:** trading-ui
@@ -81,35 +81,30 @@ On reset: full knowledge distillation before exiting.
 ## Description
 
 DOMAIN: trading-ui
-FILES: src/components/trade/EventLog.jsx
+FILES: src/components/WindowManager.jsx
 VALIDATION: tier2
 TIER: 2
 
-Implement sessionStorage-backed log persistence with log rotation in EventLog.jsx.
+Wrap popped-out window components with ErrorBoundary in WindowManager.jsx.
 
 CONTEXT:
-- EventLog.jsx stores entries in useState([]) with zero persistence
-- STUB at line 305-311 documents this gap
-- All entries are destroyed on page reload
+- Window.jsx line 588 wraps all docked panel children in <ErrorBoundary componentName={type}>
+- WindowManager.jsx renders popped-out windows at lines 83-95 via PopoutWindow, but Component inside has NO ErrorBoundary
+- ErrorBoundary.jsx already exists and works
 
 FIX:
-1. On log append (inside the useEffect that processes logBuffer), write entries to sessionStorage under a stable session key
-2. On component mount, load previous session entries from sessionStorage and prepend them with a session separator marker
-3. Implement log rotation capping at 10000 entries to prevent storage overflow
-4. Entries already have timestamp, level, source, message fields — just wrap the existing append logic with persistence
-5. Use a consistent sessionStorage key per window instance (windowId-based)
-
-NOTE: A previous attempt at this task (req-e6af6039) failed. Ensure the implementation is clean and builds successfully.
+1. Import ErrorBoundary from ./ErrorBoundary in WindowManager.jsx
+2. Wrap the <Component {...componentProps} /> inside the PopoutWindow branch (line 92) with <ErrorBoundary componentName={win.type}>
+3. This matches the protection already provided by Window.jsx for docked panels
 
 SUCCESS CRITERIA:
-- Log entries persist across page reloads via sessionStorage
-- Previous session entries loaded on mount with clear separator
-- Log rotation caps at 10000 entries
+- PopoutWindow components wrapped with ErrorBoundary
+- Matches existing pattern in Window.jsx
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/components/trade/EventLog.jsx
+- src/components/WindowManager.jsx
 
 ## Validation
 
@@ -118,9 +113,9 @@ SUCCESS CRITERIA:
 
 ## Worker Info
 
-- Worker ID: 1
-- Branch: agent-1
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-1
+- Worker ID: 2
+- Branch: agent-2
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-2
 
 ## Protocol
 

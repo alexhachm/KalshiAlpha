@@ -19,6 +19,7 @@ import HistoricalScanner from './scanners/HistoricalScanner'
 import MarketClock from './scanners/MarketClock'
 import AlertTrigger from './scanners/AlertTrigger'
 import HotkeyManager from './HotkeyManager'
+import ErrorBoundary from './ErrorBoundary'
 
 // Placeholder component for windows without a real implementation yet
 function Placeholder({ title }) {
@@ -89,7 +90,9 @@ function WindowManager({
               height={win.initialHeight}
               onClose={() => onPopIn(win.id)}
             >
-              <Component {...componentProps} />
+              <ErrorBoundary componentName={win.type}>
+                <Component {...componentProps} />
+              </ErrorBoundary>
             </PopoutWindow>
           )
         }
