@@ -4,6 +4,8 @@ import EventLogSettings from './EventLogSettings'
 import './EventLog.css'
 
 const LS_KEY_PREFIX = 'event-log-settings-'
+const SS_KEY_PREFIX = 'event-log-session-'
+const MAX_LOG_ENTRIES = 10000
 
 const isAtBottom = (el) => el.scrollHeight - el.scrollTop - el.clientHeight < 2
 
@@ -31,6 +33,32 @@ function loadSettings(windowId) {
 function saveSettings(windowId, settings) {
   try {
     localStorage.setItem(LS_KEY_PREFIX + windowId, JSON.stringify(settings))
+  } catch { /* ignore */ }
+}
+
+function loadSessionLog(windowId) {
+  try {
+    const raw = sessionStorage.getItem(SS_KEY_PREFIX + windowId)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return parsed.map((e) => ({ ...e, time: new Date(e.time) }))
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function saveSessionLog(windowId, entries) {
+  try {
+    const toSave = entries.length > MAX_LOG_ENTRIES
+      ? entries.slice(entries.length - MAX_LOG_ENTRIES)
+      : entries
+    sessionStorage.setItem(
+      SS_KEY_PREFIX + windowId,
+      JSON.stringify(toSave.map((e) => ({
+        ...e,
+        time: e.time instanceof Date ? e.time.toISOString() : e.time,
+      })))
+    )
   } catch { /* ignore */ }
 }
 
@@ -156,6 +184,32 @@ function EventLog({ windowId }) {
     saveSettings(windowId, settings)
   }, [windowId, settings])
 
+  // Load previous session entries on mount
+  useEffect(() => {
+    const prev = loadSessionLog(windowId)
+    if (prev && prev.length > 0) {
+      const maxId = prev.reduce((m, e) => Math.max(m, typeof e.id === 'number' ? e.id : 0), 0)
+      if (maxId >= nextIdRef.current) {
+        nextIdRef.current = maxId + 1
+      }
+      const separator = {
+        id: nextIdRef.current++,
+        time: new Date(),
+        level: 'info',
+        source: 'SYSTEM',
+        message: '--- Previous session ---',
+      }
+      setEntries((current) => [...prev, separator, ...current])
+    }
+    // windowId is stable per component instance
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist entries to sessionStorage on change
+  useEffect(() => {
+    saveSessionLog(windowId, entries)
+  }, [windowId, entries])
+
   // Auto-scroll to bottom when new entries arrive
   useEffect(() => {
     if (settings.autoScroll && autoScrollRef.current && listRef.current) {
@@ -207,7 +261,8 @@ function EventLog({ windowId }) {
   const handleClearLog = useCallback(() => {
     setEntries([])
     nextIdRef.current = 1
-  }, [])
+    try { sessionStorage.removeItem(SS_KEY_PREFIX + windowId) } catch { /* ignore */ }
+  }, [windowId])
 
   const handleExportLog = useCallback(() => {
     const lines = entries.map(
@@ -301,14 +356,6 @@ function EventLog({ windowId }) {
       setTimeout(() => setJsonCopyStatus(null), 2000)
     })
   }, [displayedEntries])
-
-  // STUB: Log persistence — persist logs across page reloads
-  // SOURCE: "Application logging best practices"
-  // IMPLEMENT WHEN: sessionStorage/IndexedDB available
-  // STEPS: 1. Write log entries to IndexedDB on append
-  //        2. Load previous session logs on startup
-  //        3. Add session separator marker
-  //        4. Implement log rotation (max 10k entries)
 
   return (
     <div
