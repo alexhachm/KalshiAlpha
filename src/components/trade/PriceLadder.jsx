@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS = {
   showWorkingOrders: true,
   clickAction: 'limit',
   defaultSize: 100,
+  showCumulativeDepth: false,
 }
 
 // Build a full price ladder from 1-99 with bid/ask sizes at each level
@@ -308,13 +309,37 @@ function PriceLadder({ windowId }) {
   //        3. Display as a new column with green/red coloring
   //        4. Update in real-time as position changes
 
-  // STUB: Cumulative depth display — show cumulative bid/ask depth at each level
-  // SOURCE: "Order book depth visualization", market microstructure analysis
-  // IMPLEMENT WHEN: Settings panel supports depth display mode toggle
-  // STEPS: 1. Add cumulative mode toggle to settings
-  //        2. In cumulative mode, sum sizes from best bid/ask outward
-  //        3. Display cumulative bars alongside individual level sizes
-  //        4. Add depth imbalance indicator (cumBid / cumAsk ratio)
+  // Cumulative depth: running sum of bid sizes from best bid downward, ask sizes from best ask upward
+  const { cumBidDepth, cumAskDepth, maxCumBid, maxCumAsk } = useMemo(() => {
+    if (!settings.showCumulativeDepth) return { cumBidDepth: {}, cumAskDepth: {}, maxCumBid: 1, maxCumAsk: 1 }
+
+    // ladder is sorted price 99→1; bids accumulate top-down from best bid
+    const cumBidDepth = {}
+    let cumBid = 0
+    let inBidRegion = false
+    for (const level of ladder) {
+      if (level.bidSize > 0) inBidRegion = true
+      if (inBidRegion) {
+        cumBid += level.bidSize
+        cumBidDepth[level.price] = cumBid
+      }
+    }
+
+    // asks accumulate bottom-up from best ask
+    const cumAskDepth = {}
+    let cumAsk = 0
+    let inAskRegion = false
+    for (let i = ladder.length - 1; i >= 0; i--) {
+      const level = ladder[i]
+      if (level.askSize > 0) inAskRegion = true
+      if (inAskRegion) {
+        cumAsk += level.askSize
+        cumAskDepth[level.price] = cumAsk
+      }
+    }
+
+    return { cumBidDepth, cumAskDepth, maxCumBid: Math.max(1, cumBid), maxCumAsk: Math.max(1, cumAsk) }
+  }, [ladder, settings.showCumulativeDepth])
 
 
   const fontClass = `pl--font-${grid.fontSize}`
@@ -400,6 +425,12 @@ function PriceLadder({ windowId }) {
                           className="pl-cell pl-cell-bid"
                           onClick={() => level.bidSize > 0 && handleLevelClick(level.price, 'yes')}
                         >
+                          {settings.showCumulativeDepth && cumBidDepth[level.price] != null && (
+                            <div
+                              className="pl-volume-bar pl-volume-bid"
+                              style={{ width: `${(cumBidDepth[level.price] / maxCumBid) * 100}%`, opacity: 0.25 }}
+                            />
+                          )}
                           {settings.showVolumeBars && level.bidSize > 0 && (
                             <div
                               className="pl-volume-bar pl-volume-bid"
@@ -426,6 +457,12 @@ function PriceLadder({ windowId }) {
                           className="pl-cell pl-cell-ask"
                           onClick={() => level.askSize > 0 && handleLevelClick(level.price, 'no')}
                         >
+                          {settings.showCumulativeDepth && cumAskDepth[level.price] != null && (
+                            <div
+                              className="pl-volume-bar pl-volume-ask"
+                              style={{ width: `${(cumAskDepth[level.price] / maxCumAsk) * 100}%`, opacity: 0.25 }}
+                            />
+                          )}
                           {settings.showVolumeBars && level.askSize > 0 && (
                             <div
                               className="pl-volume-bar pl-volume-ask"
@@ -515,6 +552,11 @@ function PriceLadder({ windowId }) {
             </div>
             <div className="pl-footer-row pl-footer-totals">
               <span className="pl-total-bid">Bid: {totalBid}</span>
+              {settings.showCumulativeDepth && totalAsk > 0 && (
+                <span style={{ color: 'var(--text-muted)' }}>
+                  Imb: {(totalBid / totalAsk).toFixed(2)}
+                </span>
+              )}
               <span className="pl-total-ask">Ask: {totalAsk}</span>
             </div>
           </div>
