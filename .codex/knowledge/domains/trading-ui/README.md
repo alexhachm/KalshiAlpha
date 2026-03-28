@@ -11,5 +11,6 @@
 - `subscribeToOHLCV` callbacks receive `{ type, candle }` or `{ type, candles }` wrapper objects — always check `msg.type` and extract `msg.candle` before using candle fields.
 
 ## Changelog (last 5)
+- [T-41] Wrapped PopoutWindow Component with ErrorBoundary in WindowManager.jsx (matches Window.jsx docked panel pattern)
 - [T-39] Unwrapped {type,candle} in Chart.jsx subscribeToOHLCV callbacks (both normal + overlay modes)
 - [T-18] Removed dead `useKalshiConnection` export from `useKalshiData.js`

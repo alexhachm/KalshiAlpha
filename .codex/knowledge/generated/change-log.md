@@ -17,6 +17,12 @@
 - What changed: Verified all 8 research CLI case blocks already present from auto-save commit. PR #311 already open.
 - PR: https://github.com/alexhachm/setup-agents-codex10/pull/311
 
+## [41] Wrap PopoutWindow components with ErrorBoundary in WindowManager.jsx — 2026-03-28
+- Domain: trading-ui
+- Files: src/components/WindowManager.jsx
+- What changed: Imported ErrorBoundary and wrapped Component in PopoutWindow branch with ErrorBoundary, matching existing docked panel protection in Window.jsx.
+- PR: https://github.com/alexhachm/KalshiAlpha/pull/239
+
 ## [39] Fix real-time chart updates — unwrap {type, candle} wrapper in Chart.jsx — 2026-03-28
 - Domain: trading-ui
 - Files: src/components/quotes/Chart.jsx
