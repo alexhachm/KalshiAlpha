@@ -16,3 +16,9 @@
 - Files: coordinator/bin/mac10 (in setup-agents-codex10 repo)
 - What changed: Verified all 8 research CLI case blocks already present from auto-save commit. PR #311 already open.
 - PR: https://github.com/alexhachm/setup-agents-codex10/pull/311
+
+## [39] Fix real-time chart updates — unwrap {type, candle} wrapper in Chart.jsx — 2026-03-28
+- Domain: trading-ui
+- Files: src/components/quotes/Chart.jsx
+- What changed: subscribeToOHLCV callbacks now check msg.type === 'update' and extract msg.candle before passing to series.update(). Fixed both normal mode (~line 540) and overlay mode (~line 521) callbacks. Real-time candle updates now render correctly.
+- PR: https://github.com/alexhachm/KalshiAlpha/pull/237
