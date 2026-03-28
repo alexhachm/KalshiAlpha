@@ -10,8 +10,9 @@
 - **No test suite**: No test files or test runner. package.json has no test script. High-confidence improvement opportunity.
 - **No React error boundaries**: App has no error boundaries, so any component crash brings down the whole UI.
 - **No layout persistence**: Shell.jsx has a STUB comment for save/restore window layouts to localStorage.
-- **Token-bucket rate limiter missing**: kalshiApi.js relies only on 429 retry, no proactive rate limiting.
-- **WS command ack tracking missing**: kalshiWebSocket.js sends commands but doesn't track acknowledgements.
+- **Token-bucket rate limiter**: RESOLVED — kalshiApi.js now has TokenBucket class (lines 139-163).
+- **WS command ack tracking**: RESOLVED — kalshiWebSocket.js now has pendingCommands Map with timeout/resolve/reject (lines 23, 130-141, 251-263).
+- **Positions unrealized PnL always $0**: Positions.jsx:45 calls getPositionSummaries({}) with empty currentPrices, causing fallback to avgCost in omsService.js:395, which makes getUnrealizedPnl return 0 always. Fix submitted as req-159cb71f.
 - **Electron still present**: PROJECT_ARCHITECTURE.md says "NOT Electron" but electron/ dir exists with main.js and preload.js. Contradicts architectural intent.
 - **No backend services**: All backend infrastructure (Supabase, Railway, Redis) described in architecture doc is unbuilt.
 - **PriceLadder click-to-trade is broken**: handleLevelClick creates local-only working orders without API submission (req-eb3755f0 submitted).
@@ -43,7 +44,9 @@
 - **analytics-audit-alerts-oms.md**: Deep doc written for analyticsCalc.js, analyticsService.js, auditStateService.js, alertService.js, alertEngine.worker.js, omsEngine.js, omsService.js
 - **Hooks dead code found**: useKalshiData.js:130 exports `useKalshiConnection()` that is never imported — duplicate of the full version in useKalshiConnection.js
 - **Sharpe ratio bug found**: analyticsCalc.js:187 rfPerTrade formula wrong by factor of n when riskFreeRate!=0. Fix submitted as req-6f1a750c.
-- **Remaining areas**: interactionAuditService.js, changeTrackingService.js, displayFormat.js, mockData.js, researchLoop.js, dataFeed.js (deep), kalshiApi.js (deep), kalshiWebSocket.js (deep), scanner components, quote components, trade components (deep)
+- **Remaining areas**: interactionAuditService.js, changeTrackingService.js, displayFormat.js, researchLoop.js, scanner components (MarketClock exchange calendar STUB)
+- **Completed deep-dives (iter 11)**: mockData.js (clean, no bugs), kalshiApi.js (clean, rate limiter present), kalshiWebSocket.js (clean, ack tracking present), omsService.js (dedup STUB known), Positions.jsx (PnL bug found), NewsChat.jsx (clean, external-dependency STUBs only)
+- **Remaining implementable STUBs**: TradeLog fill rate/slippage/grouping, Accounts margin util/equity curve, OrderBook flow imbalance/aggregation, PriceLadder clustering/PnL/depth, EventLog persistence, LiveScanner row virtualization, MarketClock exchange calendar
 
 ## Infrastructure Notes
 - Coordinator is running (`ping` → `pong`)
