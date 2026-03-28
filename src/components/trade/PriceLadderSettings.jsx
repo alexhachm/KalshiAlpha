@@ -94,6 +94,14 @@ function PriceLadderSettings({ settings, onChange, onClose, grid }) {
               onChange={(e) => update('defaultSize', Math.max(1, Number(e.target.value)))}
             />
           </div>
+          <div className="pls-row">
+            <label>Cumulative Depth</label>
+            <input
+              type="checkbox"
+              checked={local.showCumulativeDepth ?? false}
+              onChange={(e) => update('showCumulativeDepth', e.target.checked)}
+            />
+          </div>
         </div>
         <div className="pls-footer">
           <button className="pls-btn pls-btn-save" onClick={handleSave}>Save</button>
