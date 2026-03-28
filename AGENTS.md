@@ -71,44 +71,49 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 37
-**Request ID:** req-0660f890
-**Subject:** Fix real-time OHLCV candle never closing in dataFeed.js
+**Task ID:** 39
+**Request ID:** req-59f610a8
+**Subject:** Fix real-time chart updates — unwrap {type, candle} wrapper in Chart.jsx
 **Tier:** 2
 **Priority:** normal
-**Domain:** api-layer
+**Domain:** trading-ui
 
 ## Description
 
-DOMAIN: api-layer
-FILES: src/services/dataFeed.js
+DOMAIN: trading-ui
+FILES: src/components/quotes/Chart.jsx
 VALIDATION: tier2
 TIER: 2
 
-Fix real-time OHLCV candle never closing in dataFeed.js subscribeToOHLCV.
+Fix real-time chart updates silently failing — Chart.jsx subscribeToOHLCV callback does not unwrap the { type, candle } wrapper object.
 
 ROOT CAUSE:
-- currentCandle variable (line 791) is created with a fixed timestamp on first trade (line 828)
-- Never reset when the timeframe boundary elapses
-- All subsequent trades update the same candle regardless of time passage
-- Chart shows a single ever-growing candle that never closes
+- subscribeToOHLCV (both mock and real) sends callback({ type: update, candle: {...} }) and callback({ type: history, candles: [...] })
+- Chart.jsx line 538 receives this as (bar) but treats bar as a flat candle
+- bar.time, bar.close, bar.open, bar.volume are all undefined because data is under bar.candle
+- Same bug in overlay mode (line 521-530)
 
 FIX:
-1. Calculate candle time boundaries based on the selected timeframe interval
-2. The timeframeToInterval map on line 793 already has the interval values needed
-3. On each trade, check if the trade falls in a new time period
-4. If so, close the current candle (emit as a final update) and start a new one with the new periods start time
-5. Ensure proper OHLCV values: new candle starts with trade price as open, previous candle is finalized
+1. In the subscribeToOHLCV callback (~line 538), check bar.type
+2. If type is history, handle candle array reload or safely ignore (history loaded separately)
+3. If type is update, extract bar.candle and use the unwrapped candle object
+4. Apply same fix for overlay mode callback at line 521
+5. Use unwrapped candle for mainSeriesRef.current.update(), volumeSeriesRef, and indicator buffer updates
+
+REFERENCE:
+- mockData.js:298-308: callback({ type: update, candle: { time, open, high, low, close, volume } })
+- dataFeed.js:858: callback({ type: update, candle: { ...currentCandle } })
 
 SUCCESS CRITERIA:
-- Real-time candles close and advance at timeframe boundaries
-- New candle starts with correct open price at boundary crossing
-- Previous candle emits final close before new candle begins
+- Real-time candle updates render on chart in both candlestick and line/area modes
+- Volume series updates correctly with each candle
+- Indicator overlays (SMA, EMA) compute correctly from live candle buffer
+- Overlay percent mode updates correctly
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/services/dataFeed.js
+- src/components/quotes/Chart.jsx
 
 ## Validation
 
@@ -117,9 +122,9 @@ SUCCESS CRITERIA:
 
 ## Worker Info
 
-- Worker ID: 3
-- Branch: agent-3
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-3
+- Worker ID: 2
+- Branch: agent-2
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-2
 
 ## Protocol
 

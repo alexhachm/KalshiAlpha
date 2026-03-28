@@ -518,7 +518,9 @@ function Chart({ windowId }) {
       const unsubs = []
 
       allTickers.forEach((t) => {
-        const unsub = subscribeToOHLCV(t, settings.timeframe, (bar) => {
+        const unsub = subscribeToOHLCV(t, settings.timeframe, (msg) => {
+          if (msg.type !== 'update') return
+          const bar = msg.candle
           const entry = overlaySeriesRef.current.find((o) => o.ticker === t)
           if (!entry) return
           const base = basePricesRef.current[t]
@@ -535,7 +537,9 @@ function Chart({ windowId }) {
     }
 
     // Normal mode
-    const unsub = subscribeToOHLCV(ticker, settings.timeframe, (bar) => {
+    const unsub = subscribeToOHLCV(ticker, settings.timeframe, (msg) => {
+      if (msg.type !== 'update') return
+      const bar = msg.candle
       if (!mainSeriesRef.current) return
       if (settings.chartType === 'candlestick') {
         mainSeriesRef.current.update(bar)
