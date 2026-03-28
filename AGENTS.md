@@ -71,9 +71,9 @@ On reset: full knowledge distillation before exiting.
 
 # Current Task
 
-**Task ID:** 39
-**Request ID:** req-59f610a8
-**Subject:** Fix real-time chart updates — unwrap {type, candle} wrapper in Chart.jsx
+**Task ID:** 40
+**Request ID:** req-1c142a91
+**Subject:** Implement log persistence in EventLog.jsx with sessionStorage
 **Tier:** 2
 **Priority:** normal
 **Domain:** trading-ui
@@ -81,39 +81,35 @@ On reset: full knowledge distillation before exiting.
 ## Description
 
 DOMAIN: trading-ui
-FILES: src/components/quotes/Chart.jsx
+FILES: src/components/trade/EventLog.jsx
 VALIDATION: tier2
 TIER: 2
 
-Fix real-time chart updates silently failing — Chart.jsx subscribeToOHLCV callback does not unwrap the { type, candle } wrapper object.
+Implement sessionStorage-backed log persistence with log rotation in EventLog.jsx.
 
-ROOT CAUSE:
-- subscribeToOHLCV (both mock and real) sends callback({ type: update, candle: {...} }) and callback({ type: history, candles: [...] })
-- Chart.jsx line 538 receives this as (bar) but treats bar as a flat candle
-- bar.time, bar.close, bar.open, bar.volume are all undefined because data is under bar.candle
-- Same bug in overlay mode (line 521-530)
+CONTEXT:
+- EventLog.jsx stores entries in useState([]) with zero persistence
+- STUB at line 305-311 documents this gap
+- All entries are destroyed on page reload
 
 FIX:
-1. In the subscribeToOHLCV callback (~line 538), check bar.type
-2. If type is history, handle candle array reload or safely ignore (history loaded separately)
-3. If type is update, extract bar.candle and use the unwrapped candle object
-4. Apply same fix for overlay mode callback at line 521
-5. Use unwrapped candle for mainSeriesRef.current.update(), volumeSeriesRef, and indicator buffer updates
+1. On log append (inside the useEffect that processes logBuffer), write entries to sessionStorage under a stable session key
+2. On component mount, load previous session entries from sessionStorage and prepend them with a session separator marker
+3. Implement log rotation capping at 10000 entries to prevent storage overflow
+4. Entries already have timestamp, level, source, message fields — just wrap the existing append logic with persistence
+5. Use a consistent sessionStorage key per window instance (windowId-based)
 
-REFERENCE:
-- mockData.js:298-308: callback({ type: update, candle: { time, open, high, low, close, volume } })
-- dataFeed.js:858: callback({ type: update, candle: { ...currentCandle } })
+NOTE: A previous attempt at this task (req-e6af6039) failed. Ensure the implementation is clean and builds successfully.
 
 SUCCESS CRITERIA:
-- Real-time candle updates render on chart in both candlestick and line/area modes
-- Volume series updates correctly with each candle
-- Indicator overlays (SMA, EMA) compute correctly from live candle buffer
-- Overlay percent mode updates correctly
+- Log entries persist across page reloads via sessionStorage
+- Previous session entries loaded on mount with clear separator
+- Log rotation caps at 10000 entries
 - Build passes (vite build)
 
 ## Files to Modify
 
-- src/components/quotes/Chart.jsx
+- src/components/trade/EventLog.jsx
 
 ## Validation
 
@@ -122,9 +118,9 @@ SUCCESS CRITERIA:
 
 ## Worker Info
 
-- Worker ID: 2
-- Branch: agent-2
-- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-2
+- Worker ID: 1
+- Branch: agent-1
+- Worktree: /mnt/c/Users/Owner/Desktop/kalshialpha/.worktrees/wt-1
 
 ## Protocol
 
