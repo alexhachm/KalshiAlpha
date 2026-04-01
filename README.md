@@ -1,4 +1,4 @@
+<!-- Managed by mac10 multi-agent system -->
 <!-- KalshiAlpha - Trading Terminal Application -->
-<!-- Note: msb sandbox disabled; worker runs via tmux fallback -->
 
 # KalshiAlpha
